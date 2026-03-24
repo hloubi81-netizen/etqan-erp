@@ -23,6 +23,7 @@ import ProductMovement from './pages/reports/ProductMovement';
 import AccountStatement from './pages/reports/AccountStatement';
 import Ledger from './pages/reports/Ledger';
 import TrialBalance from './pages/reports/TrialBalance';
+import FinancialDashboard from './pages/financial/FinancialDashboard';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/supplier-statement" element={<AccountStatement />} />
         <Route path="/reports/ledger" element={<Ledger />} />
         <Route path="/reports/trial-balance" element={<TrialBalance />} />
+        <Route path="/financial/dashboard" element={<FinancialDashboard />} />
         <Route path="/financial/income-statement" element={<IncomeStatement />} />
         <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
         <Route path="/financial/cash-flow" element={<CashFlow />} />

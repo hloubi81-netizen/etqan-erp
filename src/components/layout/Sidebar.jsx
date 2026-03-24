@@ -96,6 +96,7 @@ const menuItems = [
   label: "القوائم المالية",
   icon: BarChart3,
   children: [
+  { label: "داشبورد التحليل المالي", path: "/financial/dashboard", icon: BarChart3 },
   { label: "قائمة الدخل", path: "/financial/income-statement", icon: BarChart3 },
   { label: "المركز المالي", path: "/financial/balance-sheet", icon: Scale },
   { label: "التدفقات النقدية", path: "/financial/cash-flow", icon: Coins }]
