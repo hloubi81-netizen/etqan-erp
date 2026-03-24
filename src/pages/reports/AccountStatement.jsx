@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function AccountStatement() {
   const params = useParams();
@@ -148,7 +149,17 @@ export default function AccountStatement() {
       </Card>
 
       {results.length > 0 ? (
-        <div className="bg-card rounded-xl border overflow-hidden">
+        <>
+        <div className="flex justify-end mb-3">
+          <ExportButtons
+            columns={[
+              {key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},
+              {key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}
+            ]}
+            data={results} title={title} filename="account-statement" printId="account-statement-table"
+          />
+        </div>
+        <div id="account-statement-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -176,6 +187,8 @@ export default function AccountStatement() {
             </TableBody>
           </Table>
         </div>
+        </div>
+        </>
       ) : (
         <div className="bg-card rounded-xl border p-12 text-center text-muted-foreground">
           حدد الحساب واضغط عرض لإظهار كشف الحساب

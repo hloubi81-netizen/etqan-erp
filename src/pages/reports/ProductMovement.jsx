@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function ProductMovement() {
   const [products, setProducts] = useState([]);
@@ -140,7 +141,17 @@ export default function ProductMovement() {
       </Card>
 
       {results.length > 0 ? (
-        <div className="bg-card rounded-xl border overflow-hidden">
+        <>
+        <div className="flex justify-end mb-3">
+          <ExportButtons
+            columns={[
+              {key:"date",label:"التاريخ"},{key:"number",label:"الرقم"},{key:"type",label:"نوع العملية"},
+              {key:"product_name",label:"الصنف"},{key:"quantity",label:"الكمية"},{key:"price",label:"السعر"},{key:"warehouse",label:"المستودع"}
+            ]}
+            data={results} title="حركة المواد" filename="product-movement" printId="product-movement-table"
+          />
+        </div>
+        <div id="product-movement-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -168,6 +179,8 @@ export default function ProductMovement() {
             </TableBody>
           </Table>
         </div>
+        </div>
+        </>
       ) : (
         <div className="bg-card rounded-xl border p-12 text-center text-muted-foreground">
           حدد معايير البحث واضغط بحث لعرض التقرير

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function TrialBalance() {
   const [accounts, setAccounts] = useState([]);
@@ -124,7 +125,19 @@ export default function TrialBalance() {
       </Card>
 
       {results.length > 0 ? (
-        <div className="bg-card rounded-xl border overflow-hidden">
+        <>
+        <div className="flex justify-end mb-3">
+          <ExportButtons
+            columns={[
+              {key:"account_number",label:"رقم الحساب"},{key:"name",label:"اسم الحساب"},
+              {key:"opening_debit",label:"مدين افتتاحي"},{key:"opening_credit",label:"دائن افتتاحي"},
+              {key:"movement_debit",label:"حركة مدين"},{key:"movement_credit",label:"حركة دائن"},
+              {key:"final_debit",label:"رصيد مدين"},{key:"final_credit",label:"رصيد دائن"}
+            ]}
+            data={results} title="ميزان المراجعة" filename="trial-balance" printId="trial-balance-table"
+          />
+        </div>
+        <div id="trial-balance-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
@@ -175,6 +188,8 @@ export default function TrialBalance() {
             </TableBody>
           </Table>
         </div>
+        </div>
+        </>
       ) : (
         <div className="bg-card rounded-xl border p-12 text-center text-muted-foreground">
           اضغط عرض لإظهار ميزان المراجعة
