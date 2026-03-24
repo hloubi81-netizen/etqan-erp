@@ -14,14 +14,14 @@ export default function AppLayout() {
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="shrink-0"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          
+
+
+
+
+
+
+          
           <div className="flex-1" />
         </header>
 
@@ -30,6 +30,6 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
-    </div>
-  );
+    </div>);
+
 }
