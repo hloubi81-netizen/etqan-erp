@@ -21,24 +21,34 @@ export function exportToCSV(columns, data, filename = "export") {
 // ─── PDF Export ───────────────────────────────────────────────────────
 export function exportToPDF(title, columns, data, filename = "export") {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const pageW = doc.internal.pageSize.width;
   doc.setFontSize(14);
-  doc.text(title, doc.internal.pageSize.width / 2, 15, { align: "center" });
+  doc.text(title, pageW / 2, 15, { align: "center" });
 
-  const headers = [columns.map((c) => c.label)];
-  const rows = data.map((row) =>
-    columns.map((c) => {
+  const colWidth = (pageW - 20) / columns.length;
+  let y = 25;
+
+  // Header row
+  doc.setFillColor(37, 99, 235);
+  doc.rect(10, y, pageW - 20, 8, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  columns.forEach((c, i) => {
+    doc.text(c.label, pageW - 10 - colWidth * i - colWidth / 2, y + 5.5, { align: "center" });
+  });
+  y += 8;
+
+  // Data rows
+  doc.setTextColor(0, 0, 0);
+  data.forEach((row, ri) => {
+    if (y > 190) { doc.addPage(); y = 15; }
+    if (ri % 2 === 0) { doc.setFillColor(245, 247, 250); doc.rect(10, y, pageW - 20, 7, "F"); }
+    columns.forEach((c, i) => {
       const val = c.render ? c.render(row[c.key], row) : row[c.key];
-      return val !== null && val !== undefined ? String(val) : "";
-    })
-  );
-
-  doc.autoTable({
-    head: headers,
-    body: rows,
-    startY: 20,
-    styles: { font: "helvetica", fontSize: 8, halign: "right" },
-    headStyles: { fillColor: [37, 99, 235], textColor: 255 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+      const str = val !== null && val !== undefined ? String(val) : "";
+      doc.text(str, pageW - 10 - colWidth * i - colWidth / 2, y + 5, { align: "center" });
+    });
+    y += 7;
   });
 
   doc.save(`${filename}.pdf`);
