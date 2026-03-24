@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 // ─── CSV / Excel Export ───────────────────────────────────────────────
 export function exportToCSV(columns, data, filename = "export") {
