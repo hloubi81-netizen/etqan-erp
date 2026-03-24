@@ -5,12 +5,31 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-// Add page imports here
+
+import AppLayout from './components/layout/AppLayout';
+import Dashboard from './pages/Dashboard';
+import Groups from './pages/Groups';
+import Products from './pages/Products';
+import Warehouses from './pages/Warehouses';
+import CostCenters from './pages/CostCenters';
+import Accounts from './pages/Accounts';
+import Currencies from './pages/Currencies';
+import InvoicePatterns from './pages/InvoicePatterns';
+import Invoices from './pages/Invoices';
+import Vouchers from './pages/Vouchers';
+import StockTransfers from './pages/StockTransfers';
+import InventoryCount from './pages/InventoryCount';
+import ProductMovement from './pages/reports/ProductMovement';
+import AccountStatement from './pages/reports/AccountStatement';
+import Ledger from './pages/reports/Ledger';
+import TrialBalance from './pages/reports/TrialBalance';
+import IncomeStatement from './pages/financial/IncomeStatement';
+import BalanceSheet from './pages/financial/BalanceSheet';
+import CashFlow from './pages/financial/CashFlow';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -19,29 +38,47 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/groups" element={<Groups />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/warehouses" element={<Warehouses />} />
+        <Route path="/cost-centers" element={<CostCenters />} />
+        <Route path="/accounts" element={<Accounts />} />
+        <Route path="/currencies" element={<Currencies />} />
+        <Route path="/invoice-patterns" element={<InvoicePatterns />} />
+        <Route path="/invoices/:type" element={<Invoices />} />
+        <Route path="/vouchers/:type" element={<Vouchers />} />
+        <Route path="/transfers" element={<StockTransfers />} />
+        <Route path="/inventory-count" element={<InventoryCount />} />
+        <Route path="/reports/product-movement" element={<ProductMovement />} />
+        <Route path="/reports/client-movement" element={<ProductMovement />} />
+        <Route path="/reports/supplier-movement" element={<ProductMovement />} />
+        <Route path="/reports/client-statement" element={<AccountStatement />} />
+        <Route path="/reports/supplier-statement" element={<AccountStatement />} />
+        <Route path="/reports/ledger" element={<Ledger />} />
+        <Route path="/reports/trial-balance" element={<TrialBalance />} />
+        <Route path="/financial/income-statement" element={<IncomeStatement />} />
+        <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
+        <Route path="/financial/cash-flow" element={<CashFlow />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
