@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
+import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function Ledger() {
   const [accounts, setAccounts] = useState([]);
@@ -109,7 +110,17 @@ export default function Ledger() {
       </Card>
 
       {results.length > 0 ? (
-        <div className="bg-card rounded-xl border overflow-hidden">
+        <>
+        <div className="flex justify-end mb-3">
+          <ExportButtons
+            columns={[
+              {key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},
+              {key:"notes",label:"البيان"},{key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}
+            ]}
+            data={results} title="دفتر الأستاذ" filename="ledger" printId="ledger-table"
+          />
+        </div>
+        <div id="ledger-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
