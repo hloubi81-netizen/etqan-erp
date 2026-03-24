@@ -188,7 +188,6 @@ export default function TrialBalance() {
             </TableBody>
           </Table>
         </div>
-        </div>
         </>
       ) : (
         <div className="bg-card rounded-xl border p-12 text-center text-muted-foreground">
