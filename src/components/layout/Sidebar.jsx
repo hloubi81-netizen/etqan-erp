@@ -101,6 +101,11 @@ const menuItems = [
   { label: "المركز المالي", path: "/financial/balance-sheet", icon: Scale },
   { label: "التدفقات النقدية", path: "/financial/cash-flow", icon: Coins }]
 
+},
+{
+  label: "المستخدمون",
+  icon: Users,
+  path: "/users"
 }];
 
 
