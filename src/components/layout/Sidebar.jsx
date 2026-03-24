@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Package,
   FolderTree,
+  GitBranch,
   Warehouse as WarehouseIcon,
   CircleDollarSign,
   FileText,
@@ -101,6 +102,13 @@ const menuItems = [
   { label: "المركز المالي", path: "/financial/balance-sheet", icon: Scale },
   { label: "التدفقات النقدية", path: "/financial/cash-flow", icon: Coins }]
 
+},
+{
+  label: "الفروع والمعارض",
+  icon: GitBranch,
+  children: [
+  { label: "إدارة الفروع", path: "/branches", icon: GitBranch },
+  { label: "تقرير الفروع", path: "/reports/branches", icon: BarChart3 }]
 },
 {
   label: "المستخدمون",

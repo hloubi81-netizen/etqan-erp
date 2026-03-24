@@ -25,6 +25,8 @@ import Ledger from './pages/reports/Ledger';
 import TrialBalance from './pages/reports/TrialBalance';
 import Users from './pages/Users';
 import FinancialDashboard from './pages/financial/FinancialDashboard';
+import Branches from './pages/Branches';
+import BranchReport from './pages/reports/BranchReport';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
@@ -76,6 +78,8 @@ const AuthenticatedApp = () => {
         <Route path="/financial/income-statement" element={<IncomeStatement />} />
         <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
         <Route path="/financial/cash-flow" element={<CashFlow />} />
+        <Route path="/branches" element={<Branches />} />
+        <Route path="/reports/branches" element={<BranchReport />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
