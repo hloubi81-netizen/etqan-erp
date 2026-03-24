@@ -1,0 +1,263 @@
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import PageHeader from "../components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree } from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
+  const children = allAccounts.filter((a) => a.parent_account_id === account.id);
+  const hasChildren = children.length > 0;
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors group",
+          level === 0 && "bg-muted/30"
+        )}
+        style={{ paddingRight: `${level * 24 + 12}px` }}
+      >
+        {hasChildren ? (
+          <button onClick={() => setExpanded(!expanded)} className="shrink-0">
+            {expanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
+        ) : (
+          <div className="w-4" />
+        )}
+        <span className="text-sm font-medium flex-1">
+          <span className="text-muted-foreground ml-2">{account.account_number}</span>
+          {account.name}
+        </span>
+        {account.account_nature && (
+          <Badge variant="outline" className="text-[10px]">{account.account_nature}</Badge>
+        )}
+        {account.final_account && (
+          <Badge variant="secondary" className="text-[10px]">{account.final_account}</Badge>
+        )}
+        <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(account)}>
+            <Pencil className="h-3 w-3" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => onDelete(account)}>
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+      {expanded && children.map((child) => (
+        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} />
+      ))}
+    </div>
+  );
+}
+
+export default function Accounts() {
+  const [accounts, setAccounts] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({
+    account_number: "", name: "", parent_account_id: "", parent_account_name: "",
+    final_account: "", account_nature: "", financial_statement: "", currency: "",
+    is_parent: false, level: 0,
+  });
+
+  useEffect(() => { loadData(); }, []);
+
+  async function loadData() {
+    const [accs, currs] = await Promise.all([
+      base44.entities.Account.list(),
+      base44.entities.Currency.list(),
+    ]);
+    setAccounts(accs);
+    setCurrencies(currs);
+    setLoading(false);
+  }
+
+  function openNew() {
+    setEditing(null);
+    setForm({
+      account_number: "", name: "", parent_account_id: "", parent_account_name: "",
+      final_account: "", account_nature: "", financial_statement: "", currency: "",
+      is_parent: false, level: 0,
+    });
+    setDialogOpen(true);
+  }
+
+  function openEdit(acc) {
+    setEditing(acc);
+    setForm({
+      account_number: acc.account_number, name: acc.name,
+      parent_account_id: acc.parent_account_id || "",
+      parent_account_name: acc.parent_account_name || "",
+      final_account: acc.final_account || "",
+      account_nature: acc.account_nature || "",
+      financial_statement: acc.financial_statement || "",
+      currency: acc.currency || "",
+      is_parent: acc.is_parent || false,
+      level: acc.level || 0,
+    });
+    setDialogOpen(true);
+  }
+
+  async function handleSave() {
+    const payload = { ...form };
+    if (!payload.parent_account_id) {
+      delete payload.parent_account_id;
+      delete payload.parent_account_name;
+    }
+    if (editing) {
+      await base44.entities.Account.update(editing.id, payload);
+      toast.success("تم تحديث الحساب");
+    } else {
+      await base44.entities.Account.create(payload);
+      toast.success("تم إضافة الحساب");
+    }
+    setDialogOpen(false);
+    loadData();
+  }
+
+  async function handleDelete(acc) {
+    const hasChildren = accounts.some((a) => a.parent_account_id === acc.id);
+    if (hasChildren) {
+      toast.error("لا يمكن حذف حساب يحتوي على حسابات فرعية");
+      return;
+    }
+    if (confirm("هل أنت متأكد من حذف هذا الحساب؟")) {
+      await base44.entities.Account.delete(acc.id);
+      toast.success("تم الحذف");
+      loadData();
+    }
+  }
+
+  const rootAccounts = accounts.filter((a) => !a.parent_account_id);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
+
+  return (
+    <div>
+      <PageHeader title="شجرة الحسابات" subtitle="الدليل المحاسبي وفق المعايير الدولية" onAdd={openNew} addLabel="حساب جديد" />
+
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        {rootAccounts.length === 0 ? (
+          <div className="p-12 text-center">
+            <FolderTree className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">لا توجد حسابات بعد. ابدأ بإنشاء الحسابات الرئيسية</p>
+          </div>
+        ) : (
+          <div className="p-2">
+            {rootAccounts.map((acc) => (
+              <AccountNode key={acc.id} account={acc} allAccounts={accounts} level={0} onEdit={openEdit} onDelete={handleDelete} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? "تعديل الحساب" : "حساب جديد"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>رقم الحساب</Label>
+                <Input value={form.account_number} onChange={(e) => setForm({ ...form, account_number: e.target.value })} />
+              </div>
+              <div>
+                <Label>اسم الحساب</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>الحساب الرئيسي (اختياري)</Label>
+              <Select
+                value={form.parent_account_id}
+                onValueChange={(v) => {
+                  const parent = accounts.find((a) => a.id === v);
+                  setForm({
+                    ...form,
+                    parent_account_id: v === "none" ? "" : v,
+                    parent_account_name: parent ? parent.name : "",
+                    level: parent ? (parent.level || 0) + 1 : 0,
+                  });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="بدون (حساب رئيسي)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">بدون (حساب رئيسي)</SelectItem>
+                  {accounts.filter((a) => a.id !== editing?.id).map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.account_number} - {a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>الحساب الختامي</Label>
+                <Select value={form.final_account} onValueChange={(v) => setForm({ ...form, final_account: v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="الميزانية">الميزانية</SelectItem>
+                    <SelectItem value="الأرباح والخسائر">الأرباح والخسائر</SelectItem>
+                    <SelectItem value="المتاجرة">المتاجرة</SelectItem>
+                    <SelectItem value="التشغيل">التشغيل</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>طبيعة الحساب</Label>
+                <Select value={form.account_nature} onValueChange={(v) => setForm({ ...form, account_nature: v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="مدين">مدين</SelectItem>
+                    <SelectItem value="دائن">دائن</SelectItem>
+                    <SelectItem value="كلاهما">كلاهما</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>القائمة المالية</Label>
+                <Select value={form.financial_statement} onValueChange={(v) => setForm({ ...form, financial_statement: v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="قائمة الدخل">قائمة الدخل</SelectItem>
+                    <SelectItem value="المركز المالي">المركز المالي</SelectItem>
+                    <SelectItem value="التدفقات النقدية">التدفقات النقدية</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>عملة الحساب</Label>
+                <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
+                  <SelectTrigger><SelectValue placeholder="اختر العملة" /></SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((c) => (
+                      <SelectItem key={c.id} value={c.name}>{c.name} ({c.symbol})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button>
+            <Button onClick={handleSave} disabled={!form.name || !form.account_number}>حفظ</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
