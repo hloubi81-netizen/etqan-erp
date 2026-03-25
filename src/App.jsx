@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import AppLayout from './components/layout/AppLayout';
+import PlanGuard from './components/shared/PlanGuard';
 import Dashboard from './pages/Dashboard';
 import Groups from './pages/Groups';
 import Products from './pages/Products';
@@ -60,30 +61,30 @@ const AuthenticatedApp = () => {
         <Route path="/groups" element={<Groups />} />
         <Route path="/products" element={<Products />} />
         <Route path="/warehouses" element={<Warehouses />} />
-        <Route path="/cost-centers" element={<CostCenters />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/currencies" element={<Currencies />} />
-        <Route path="/invoice-patterns" element={<InvoicePatterns />} />
-        <Route path="/invoices/:type" element={<Invoices />} />
-        <Route path="/vouchers/:type" element={<Vouchers />} />
+        <Route path="/cost-centers" element={<PlanGuard plan="advanced"><CostCenters /></PlanGuard>} />
+        <Route path="/accounts" element={<PlanGuard plan="advanced"><Accounts /></PlanGuard>} />
+        <Route path="/currencies" element={<PlanGuard plan="advanced"><Currencies /></PlanGuard>} />
+        <Route path="/invoice-patterns" element={<PlanGuard plan="advanced"><InvoicePatterns /></PlanGuard>} />
+        <Route path="/invoices/:type" element={<PlanGuard plan="advanced"><Invoices /></PlanGuard>} />
+        <Route path="/vouchers/:type" element={<PlanGuard plan="advanced"><Vouchers /></PlanGuard>} />
         <Route path="/transfers" element={<StockTransfers />} />
         <Route path="/inventory-count" element={<InventoryCount />} />
-        <Route path="/reports/product-movement" element={<ProductMovement />} />
-        <Route path="/reports/client-movement" element={<ProductMovement />} />
-        <Route path="/reports/supplier-movement" element={<ProductMovement />} />
-        <Route path="/reports/client-statement" element={<AccountStatement />} />
-        <Route path="/reports/supplier-statement" element={<AccountStatement />} />
-        <Route path="/reports/ledger" element={<Ledger />} />
-        <Route path="/reports/trial-balance" element={<TrialBalance />} />
-        <Route path="/users" element={<Users />} />
-        <Route path="/financial/dashboard" element={<FinancialDashboard />} />
-        <Route path="/financial/income-statement" element={<IncomeStatement />} />
-        <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
-        <Route path="/financial/cash-flow" element={<CashFlow />} />
-        <Route path="/branches" element={<Branches />} />
-        <Route path="/reports/branches" element={<BranchReport />} />
-        <Route path="/costs/management" element={<CostManagement />} />
-        <Route path="/costs/report" element={<CostReport />} />
+        <Route path="/reports/product-movement" element={<PlanGuard plan="advanced"><ProductMovement /></PlanGuard>} />
+        <Route path="/reports/client-movement" element={<PlanGuard plan="advanced"><ProductMovement /></PlanGuard>} />
+        <Route path="/reports/supplier-movement" element={<PlanGuard plan="advanced"><ProductMovement /></PlanGuard>} />
+        <Route path="/reports/client-statement" element={<PlanGuard plan="advanced"><AccountStatement /></PlanGuard>} />
+        <Route path="/reports/supplier-statement" element={<PlanGuard plan="advanced"><AccountStatement /></PlanGuard>} />
+        <Route path="/reports/ledger" element={<PlanGuard plan="advanced"><Ledger /></PlanGuard>} />
+        <Route path="/reports/trial-balance" element={<PlanGuard plan="advanced"><TrialBalance /></PlanGuard>} />
+        <Route path="/users" element={<PlanGuard plan="admin"><Users /></PlanGuard>} />
+        <Route path="/financial/dashboard" element={<PlanGuard plan="premium"><FinancialDashboard /></PlanGuard>} />
+        <Route path="/financial/income-statement" element={<PlanGuard plan="premium"><IncomeStatement /></PlanGuard>} />
+        <Route path="/financial/balance-sheet" element={<PlanGuard plan="premium"><BalanceSheet /></PlanGuard>} />
+        <Route path="/financial/cash-flow" element={<PlanGuard plan="premium"><CashFlow /></PlanGuard>} />
+        <Route path="/branches" element={<PlanGuard plan="premium"><Branches /></PlanGuard>} />
+        <Route path="/reports/branches" element={<PlanGuard plan="premium"><BranchReport /></PlanGuard>} />
+        <Route path="/costs/management" element={<PlanGuard plan="advanced"><CostManagement /></PlanGuard>} />
+        <Route path="/costs/report" element={<PlanGuard plan="advanced"><CostReport /></PlanGuard>} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
