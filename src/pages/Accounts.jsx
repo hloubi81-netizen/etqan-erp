@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { defaultChartOfAccounts } from "../utils/defaultAccounts";
 import PageHeader from "../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +68,7 @@ export default function Accounts() {
   const [currencies, setCurrencies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -142,13 +144,54 @@ export default function Accounts() {
     }
   }
 
+  async function importDefaultAccounts() {
+    if (!confirm("سيتم إنشاء شجرة الحسابات الافتراضية وفق المعايير الدولية (IFRS). هل تريد المتابعة؟")) return;
+    setImporting(true);
+    try {
+      // Build id map by account_number for parent linking
+      const numToId = {};
+      // Create in order (parents first)
+      for (const acc of defaultChartOfAccounts) {
+        const payload = { ...acc };
+        const parentNum = payload._parent;
+        delete payload._parent;
+        if (parentNum && numToId[parentNum]) {
+          payload.parent_account_id = numToId[parentNum];
+          const parentAcc = defaultChartOfAccounts.find(a => a.account_number === parentNum);
+          if (parentAcc) payload.parent_account_name = parentAcc.name;
+        }
+        const created = await base44.entities.Account.create(payload);
+        numToId[acc.account_number] = created.id;
+      }
+      toast.success("تم تحميل شجرة الحسابات الافتراضية بنجاح!");
+      loadData();
+    } catch(e) {
+      toast.error("حدث خطأ أثناء التحميل");
+    }
+    setImporting(false);
+  }
+
   const rootAccounts = accounts.filter((a) => !a.parent_account_id);
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
     <div>
-      <PageHeader title="شجرة الحسابات" subtitle="الدليل المحاسبي وفق المعايير الدولية" onAdd={openNew} addLabel="حساب جديد" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">شجرة الحسابات</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">الدليل المحاسبي وفق المعايير الدولية (IFRS)</p>
+        </div>
+        <div className="flex gap-2">
+          {accounts.length === 0 && (
+            <Button variant="outline" onClick={importDefaultAccounts} disabled={importing} className="gap-2">
+              <Download className="h-4 w-4"/>
+              {importing ? "جاري التحميل..." : "تحميل الحسابات الافتراضية (IFRS)"}
+            </Button>
+          )}
+          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4"/>حساب جديد</Button>
+        </div>
+      </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         {rootAccounts.length === 0 ? (

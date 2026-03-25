@@ -5,6 +5,7 @@ import {
   Package,
   FolderTree,
   GitBranch,
+  Calculator,
   Warehouse as WarehouseIcon,
   CircleDollarSign,
   FileText,
@@ -102,6 +103,13 @@ const menuItems = [
   { label: "المركز المالي", path: "/financial/balance-sheet", icon: Scale },
   { label: "التدفقات النقدية", path: "/financial/cash-flow", icon: Coins }]
 
+},
+{
+  label: "نظام التكاليف",
+  icon: Calculator,
+  children: [
+  { label: "قيود التكاليف", path: "/costs/management", icon: Calculator },
+  { label: "قوائم التكاليف", path: "/costs/report", icon: BarChart3 }]
 },
 {
   label: "الفروع والمعارض",

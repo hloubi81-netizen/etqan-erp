@@ -27,6 +27,8 @@ import Users from './pages/Users';
 import FinancialDashboard from './pages/financial/FinancialDashboard';
 import Branches from './pages/Branches';
 import BranchReport from './pages/reports/BranchReport';
+import CostManagement from './pages/costs/CostManagement';
+import CostReport from './pages/costs/CostReport';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
@@ -80,6 +82,8 @@ const AuthenticatedApp = () => {
         <Route path="/financial/cash-flow" element={<CashFlow />} />
         <Route path="/branches" element={<Branches />} />
         <Route path="/reports/branches" element={<BranchReport />} />
+        <Route path="/costs/management" element={<CostManagement />} />
+        <Route path="/costs/report" element={<CostReport />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
