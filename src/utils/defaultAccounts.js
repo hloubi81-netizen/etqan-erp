@@ -1,0 +1,130 @@
+// شجرة الحسابات الافتراضية وفق المعايير الدولية (IFRS)
+export const defaultChartOfAccounts = [
+  // ═══════════════════════════════════════════════
+  // 1 - الأصول
+  // ═══════════════════════════════════════════════
+  { account_number: "1", name: "الأصول", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 0 },
+
+  { account_number: "11", name: "الأصول المتداولة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 1, _parent: "1" },
+  { account_number: "111", name: "النقد وما في حكمه", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "11" },
+  { account_number: "1111", name: "الصندوق الرئيسي", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "111" },
+  { account_number: "1112", name: "البنك الرئيسي", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "111" },
+  { account_number: "1113", name: "الودائع قصيرة الأجل", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "111" },
+  { account_number: "112", name: "المدينون والذمم المدينة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "11" },
+  { account_number: "1121", name: "العملاء", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "112" },
+  { account_number: "1122", name: "أوراق القبض", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "112" },
+  { account_number: "1123", name: "مخصص الديون المشكوك فيها", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "112" },
+  { account_number: "113", name: "المخزون", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "11" },
+  { account_number: "1131", name: "البضاعة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "113" },
+  { account_number: "1132", name: "المواد الخام", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "113" },
+  { account_number: "1133", name: "الإنتاج تحت التشغيل", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "113" },
+  { account_number: "1134", name: "البضاعة التامة الصنع", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "113" },
+  { account_number: "114", name: "المصروفات المدفوعة مقدماً", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "11" },
+  { account_number: "115", name: "الضريبة المدفوعة مقدماً", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "11" },
+  { account_number: "116", name: "استثمارات مالية متداولة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "11" },
+
+  { account_number: "12", name: "الأصول غير المتداولة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 1, _parent: "1" },
+  { account_number: "121", name: "الممتلكات والمنشآت والمعدات", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "12" },
+  { account_number: "1211", name: "الأراضي", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "1212", name: "المباني والإنشاءات", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "1213", name: "الآلات والمعدات", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "1214", name: "السيارات والمركبات", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "1215", name: "الأثاث والتجهيزات", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "1216", name: "مجمع الاستهلاك", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "121" },
+  { account_number: "122", name: "الأصول غير الملموسة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "12" },
+  { account_number: "1221", name: "الشهرة", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "122" },
+  { account_number: "1222", name: "براءات الاختراع والعلامات التجارية", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "122" },
+  { account_number: "1223", name: "برامج الحاسوب", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "122" },
+  { account_number: "123", name: "الاستثمارات طويلة الأجل", final_account: "الميزانية", account_nature: "مدين", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "12" },
+
+  // ═══════════════════════════════════════════════
+  // 2 - الالتزامات
+  // ═══════════════════════════════════════════════
+  { account_number: "2", name: "الالتزامات", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: true, level: 0 },
+
+  { account_number: "21", name: "الالتزامات المتداولة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: true, level: 1, _parent: "2" },
+  { account_number: "211", name: "الدائنون والذمم الدائنة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: true, level: 2, _parent: "21" },
+  { account_number: "2111", name: "الموردون", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "211" },
+  { account_number: "2112", name: "أوراق الدفع", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 3, _parent: "211" },
+  { account_number: "212", name: "المصروفات المستحقة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "21" },
+  { account_number: "213", name: "ضريبة القيمة المضافة المستحقة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "21" },
+  { account_number: "214", name: "مستحقات الموظفين", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "21" },
+  { account_number: "215", name: "الجزء المتداول من القروض", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "21" },
+  { account_number: "216", name: "الإيرادات المقبوضة مقدماً", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "21" },
+
+  { account_number: "22", name: "الالتزامات غير المتداولة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: true, level: 1, _parent: "2" },
+  { account_number: "221", name: "القروض طويلة الأجل", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "22" },
+  { account_number: "222", name: "مخصص مكافآت نهاية الخدمة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "22" },
+  { account_number: "223", name: "الالتزامات الضريبية المؤجلة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 2, _parent: "22" },
+
+  // ═══════════════════════════════════════════════
+  // 3 - حقوق الملكية
+  // ═══════════════════════════════════════════════
+  { account_number: "3", name: "حقوق الملكية", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: true, level: 0 },
+  { account_number: "31", name: "رأس المال المدفوع", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 1, _parent: "3" },
+  { account_number: "32", name: "الاحتياطيات القانونية", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 1, _parent: "3" },
+  { account_number: "33", name: "الاحتياطيات الأخرى", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 1, _parent: "3" },
+  { account_number: "34", name: "الأرباح المبقاة", final_account: "الميزانية", account_nature: "دائن", financial_statement: "المركز المالي", is_parent: false, level: 1, _parent: "3" },
+  { account_number: "35", name: "صافي ربح/خسارة الفترة", final_account: "الميزانية", account_nature: "كلاهما", financial_statement: "المركز المالي", is_parent: false, level: 1, _parent: "3" },
+
+  // ═══════════════════════════════════════════════
+  // 4 - الإيرادات
+  // ═══════════════════════════════════════════════
+  { account_number: "4", name: "الإيرادات", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: true, level: 0 },
+  { account_number: "41", name: "إيرادات المبيعات", final_account: "المتاجرة", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "4" },
+  { account_number: "411", name: "مبيعات البضاعة", final_account: "المتاجرة", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "41" },
+  { account_number: "412", name: "مبيعات الخدمات", final_account: "المتاجرة", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "41" },
+  { account_number: "413", name: "مردودات ومسموحات المبيعات", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "41" },
+  { account_number: "414", name: "خصومات المبيعات", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "41" },
+  { account_number: "42", name: "الإيرادات الأخرى", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "4" },
+  { account_number: "421", name: "إيرادات الفوائد", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "42" },
+  { account_number: "422", name: "إيرادات الإيجارات", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "42" },
+  { account_number: "423", name: "أرباح بيع الأصول", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "42" },
+  { account_number: "424", name: "إيرادات متنوعة", final_account: "الأرباح والخسائر", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "42" },
+
+  // ═══════════════════════════════════════════════
+  // 5 - تكلفة المبيعات
+  // ═══════════════════════════════════════════════
+  { account_number: "5", name: "تكلفة المبيعات", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 0 },
+  { account_number: "51", name: "تكلفة البضاعة المباعة", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 1, _parent: "5" },
+  { account_number: "52", name: "المشتريات", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "5" },
+  { account_number: "521", name: "المشتريات", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "52" },
+  { account_number: "522", name: "مردودات ومسموحات المشتريات", final_account: "المتاجرة", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "52" },
+  { account_number: "523", name: "خصومات المشتريات", final_account: "المتاجرة", account_nature: "دائن", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "52" },
+  { account_number: "53", name: "تكاليف الإنتاج المباشرة", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "5" },
+  { account_number: "531", name: "المواد الخام المستهلكة", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "53" },
+  { account_number: "532", name: "عمالة مباشرة", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "53" },
+  { account_number: "533", name: "تكاليف صناعية غير مباشرة", final_account: "المتاجرة", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "53" },
+
+  // ═══════════════════════════════════════════════
+  // 6 - المصروفات التشغيلية
+  // ═══════════════════════════════════════════════
+  { account_number: "6", name: "المصروفات التشغيلية", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 0 },
+  { account_number: "61", name: "مصروفات البيع والتوزيع", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "6" },
+  { account_number: "611", name: "رواتب ومزايا فريق المبيعات", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "61" },
+  { account_number: "612", name: "عمولات المبيعات", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "61" },
+  { account_number: "613", name: "مصاريف الدعاية والإعلان", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "61" },
+  { account_number: "614", name: "مصاريف الشحن والتوزيع", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "61" },
+  { account_number: "62", name: "المصروفات الإدارية والعمومية", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "6" },
+  { account_number: "621", name: "رواتب الإداريين", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "622", name: "إيجار المكاتب", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "623", name: "مصاريف الكهرباء والماء", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "624", name: "مصاريف الاتصالات", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "625", name: "مصاريف القرطاسية والمستلزمات", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "626", name: "استهلاك الأصول الثابتة", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "627", name: "المصاريف القانونية والاستشارات", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "628", name: "رسوم التدقيق والمحاسبة", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "62" },
+  { account_number: "63", name: "المصروفات المالية", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 1, _parent: "6" },
+  { account_number: "631", name: "فوائد القروض", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "63" },
+  { account_number: "632", name: "عمولات بنكية", final_account: "الأرباح والخسائر", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "63" },
+  { account_number: "633", name: "فروق العملة", final_account: "الأرباح والخسائر", account_nature: "كلاهما", financial_statement: "قائمة الدخل", is_parent: false, level: 2, _parent: "63" },
+
+  // ═══════════════════════════════════════════════
+  // 7 - حسابات التكاليف
+  // ═══════════════════════════════════════════════
+  { account_number: "7", name: "حسابات التكاليف", final_account: "التشغيل", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: true, level: 0 },
+  { account_number: "71", name: "تكاليف مراكز الإنتاج", final_account: "التشغيل", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 1, _parent: "7" },
+  { account_number: "72", name: "تكاليف مراكز الخدمة", final_account: "التشغيل", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 1, _parent: "7" },
+  { account_number: "73", name: "تكاليف مراكز الإدارة", final_account: "التشغيل", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 1, _parent: "7" },
+  { account_number: "74", name: "تكاليف مراكز البيع", final_account: "التشغيل", account_nature: "مدين", financial_statement: "قائمة الدخل", is_parent: false, level: 1, _parent: "7" },
+];
