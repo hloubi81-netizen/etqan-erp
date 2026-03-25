@@ -14,8 +14,8 @@ import { Shield, User, Mail, CheckCircle, XCircle } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
 
-const ROLE_LABELS = { admin: "مدير", accountant: "محاسب", inventory: "مخازن", viewer: "مشاهد", user: "مستخدم" };
-const ROLE_COLORS = { admin: "destructive", accountant: "default", inventory: "secondary", viewer: "outline", user: "outline" };
+const ROLE_LABELS = { admin: "مدير", basic: "أساسية", advanced: "متقدمة", premium: "مميزة", accountant: "محاسب", inventory: "مخازن", viewer: "مشاهد", user: "مستخدم" };
+const ROLE_COLORS = { admin: "destructive", basic: "outline", advanced: "default", premium: "secondary", accountant: "default", inventory: "secondary", viewer: "outline", user: "outline" };
 
 const ALL_PERMISSIONS = [
   { key: MODULES.DASHBOARD, label: "لوحة التحكم" },
@@ -40,6 +40,7 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editUser, setEditUser] = useState(null);
+  const [originalUser, setOriginalUser] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
@@ -129,7 +130,7 @@ export default function Users() {
                   variant="outline"
                   size="sm"
                   className="w-full gap-1.5 text-xs"
-                  onClick={() => { setEditUser({ ...u, permissions: u.permissions || [] }); setShowDialog(true); }}
+                  onClick={() => { const copy = { ...u, permissions: u.permissions || [] }; setEditUser(copy); setOriginalUser(copy); setShowDialog(true); }}
                 >
                   <Shield className="h-3.5 w-3.5" /> تعديل الصلاحيات
                 </Button>
@@ -177,10 +178,9 @@ export default function Users() {
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">مدير (كل الصلاحيات)</SelectItem>
-                        <SelectItem value="accountant">محاسب</SelectItem>
-                        <SelectItem value="inventory">مخازن</SelectItem>
-                        <SelectItem value="viewer">مشاهد</SelectItem>
-                        <SelectItem value="user">مستخدم</SelectItem>
+                        <SelectItem value="premium">نسخة مميزة (فروع + قوائم مالية)</SelectItem>
+                        <SelectItem value="advanced">نسخة متقدمة (محاسبة + مخازن + تكاليف)</SelectItem>
+                        <SelectItem value="basic">نسخة أساسية (مخازن فقط)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -218,6 +218,7 @@ export default function Users() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowDialog(false)}>إلغاء</Button>
+                <Button variant="ghost" onClick={() => setEditUser({ ...originalUser })} className="text-amber-600 hover:text-amber-700">التراجع عن التعديل</Button>
                 <Button onClick={handleSavePermissions}>حفظ الصلاحيات</Button>
               </DialogFooter>
             </DialogContent>
