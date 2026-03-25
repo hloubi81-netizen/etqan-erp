@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/lib/AuthContext";
+import { canAccess, PLANS } from "@/lib/planConfig";
 import {
   LayoutDashboard,
   Package,
@@ -26,27 +28,31 @@ import {
 "lucide-react";
 import { cn } from "@/lib/utils";
 
+// plan: الحد الأدنى من الخطة المطلوبة
 const menuItems = [
 {
   label: "لوحة التحكم",
   icon: LayoutDashboard,
-  path: "/"
+  path: "/",
+  plan: "basic"
 },
 {
   label: "البطاقات",
   icon: FolderTree,
+  plan: "basic",
   children: [
-  { label: "المجموعات", path: "/groups", icon: FolderTree },
-  { label: "المواد", path: "/products", icon: Package },
-  { label: "المستودعات", path: "/warehouses", icon: WarehouseIcon },
-  { label: "مراكز الكلفة", path: "/cost-centers", icon: Building2 }]
+  { label: "المجموعات", path: "/groups", icon: FolderTree, plan: "basic" },
+  { label: "المواد", path: "/products", icon: Package, plan: "basic" },
+  { label: "المستودعات", path: "/warehouses", icon: WarehouseIcon, plan: "basic" },
+  { label: "مراكز الكلفة", path: "/cost-centers", icon: Building2, plan: "advanced" }]
 
 },
 {
   label: "المحاسبة",
   icon: CircleDollarSign,
+  plan: "advanced",
   children: [
-  { label: "شجرة الحسابات", path: "/accounts", icon: FolderTree },
+  { label: "شجرة الحسابات", path: "/accounts", icon: FolderTree, plan: "advanced" },
   { label: "العملات", path: "/currencies", icon: Coins },
   { label: "أنماط الفواتير", path: "/invoice-patterns", icon: FileText }]
 
@@ -54,6 +60,7 @@ const menuItems = [
 {
   label: "الفواتير",
   icon: Receipt,
+  plan: "advanced",
   children: [
   { label: "فاتورة مبيعات", path: "/invoices/sales", icon: Receipt },
   { label: "فاتورة مشتريات", path: "/invoices/purchases", icon: Receipt },
@@ -65,6 +72,7 @@ const menuItems = [
 {
   label: "السندات",
   icon: FileText,
+  plan: "advanced",
   children: [
   { label: "سند قبض", path: "/vouchers/receipt", icon: FileText },
   { label: "سند دفع", path: "/vouchers/payment", icon: FileText },
@@ -76,14 +84,16 @@ const menuItems = [
 {
   label: "المخازن",
   icon: WarehouseIcon,
+  plan: "basic",
   children: [
-  { label: "مناقلات", path: "/transfers", icon: ArrowRightLeft },
-  { label: "جرد المواد", path: "/inventory-count", icon: ClipboardList }]
+  { label: "مناقلات", path: "/transfers", icon: ArrowRightLeft, plan: "basic" },
+  { label: "جرد المواد", path: "/inventory-count", icon: ClipboardList, plan: "basic" }]
 
 },
 {
   label: "التقارير",
   icon: BarChart3,
+  plan: "advanced",
   children: [
   { label: "حركة المواد", path: "/reports/product-movement", icon: Package },
   { label: "حركة حسب العملاء", path: "/reports/client-movement", icon: Users },
@@ -97,6 +107,7 @@ const menuItems = [
 {
   label: "القوائم المالية",
   icon: BarChart3,
+  plan: "premium",
   children: [
   { label: "داشبورد التحليل المالي", path: "/financial/dashboard", icon: BarChart3 },
   { label: "قائمة الدخل", path: "/financial/income-statement", icon: BarChart3 },
@@ -107,13 +118,15 @@ const menuItems = [
 {
   label: "نظام التكاليف",
   icon: Calculator,
+  plan: "advanced",
   children: [
-  { label: "قيود التكاليف", path: "/costs/management", icon: Calculator },
-  { label: "قوائم التكاليف", path: "/costs/report", icon: BarChart3 }]
+  { label: "قيود التكاليف", path: "/costs/management", icon: Calculator, plan: "advanced" },
+  { label: "قوائم التكاليف", path: "/costs/report", icon: BarChart3, plan: "advanced" }]
 },
 {
   label: "الفروع والمعارض",
   icon: GitBranch,
+  plan: "premium",
   children: [
   { label: "إدارة الفروع", path: "/branches", icon: GitBranch },
   { label: "تقرير الفروع", path: "/reports/branches", icon: BarChart3 }]
@@ -121,16 +134,19 @@ const menuItems = [
 {
   label: "المستخدمون",
   icon: Users,
-  path: "/users"
+  path: "/users",
+  plan: "admin"
 }];
 
 
-function SidebarItem({ item, isCollapsed }) {
+function SidebarItem({ item, isCollapsed, userRole }) {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   if (item.children) {
-    const isActive = item.children.some((c) => location.pathname === c.path);
+    const visibleChildren = item.children.filter(c => canAccess(userRole, c.plan || "basic"));
+    if (visibleChildren.length === 0) return null;
+    const isActive = visibleChildren.some((c) => location.pathname === c.path);
     return (
       <div>
         <button
@@ -157,7 +173,7 @@ function SidebarItem({ item, isCollapsed }) {
         </button>
         {isOpen && !isCollapsed &&
         <div className="mr-4 mt-1 space-y-0.5 border-r-2 border-sidebar-border pr-3">
-            {item.children.map((child) =>
+            {visibleChildren.map((child) =>
           <Link
             key={child.path}
             to={child.path}
@@ -195,6 +211,9 @@ function SidebarItem({ item, isCollapsed }) {
 }
 
 export default function Sidebar({ isOpen, onToggle }) {
+  const { user } = useAuth();
+  const userRole = user?.role || "basic";
+  const plan = PLANS[userRole];
   return (
     <>
       {/* Mobile overlay */}
@@ -213,13 +232,18 @@ export default function Sidebar({ isOpen, onToggle }) {
         )}>
         
         {/* Header */}
-        <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
+        <div className="p-4 flex flex-col gap-2 border-b border-sidebar-border">
           {isOpen &&
-          <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
-                <CircleDollarSign className="h-5 w-5 text-sidebar-primary-foreground" />
+          <div>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+                  <CircleDollarSign className="h-5 w-5 text-sidebar-primary-foreground" />
+                </div>
+                <span className="text-sidebar-foreground font-bold text-base">المحاسب</span>
               </div>
-              <span className="text-sidebar-foreground font-bold text-base">المحاسب</span>
+              {plan && (
+                <div className={`mt-2 text-xs px-2 py-1 rounded-full text-center font-semibold ${plan.color}`}>{plan.label}</div>
+              )}
             </div>
           }
           <button
@@ -232,8 +256,8 @@ export default function Sidebar({ isOpen, onToggle }) {
 
         {/* Menu */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-          {menuItems.map((item, i) =>
-          <SidebarItem key={i} item={item} isCollapsed={!isOpen} />
+          {menuItems.filter(item => canAccess(userRole, item.plan || "basic")).map((item, i) =>
+          <SidebarItem key={i} item={item} isCollapsed={!isOpen} userRole={userRole} />
           )}
         </nav>
       </aside>
