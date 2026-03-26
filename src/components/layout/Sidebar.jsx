@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   LayoutDashboard,
   Package,
@@ -125,12 +126,58 @@ const menuItems = [
 }];
 
 
+// Map menu sections to permission keys
+const ITEM_PERMISSIONS = {
+  "/": "dashboard",
+  "/groups": "warehouses",
+  "/products": "warehouses",
+  "/warehouses": "warehouses",
+  "/cost-centers": "costs",
+  "/accounts": "accounting",
+  "/currencies": "accounting",
+  "/invoice-patterns": "accounting",
+  "/invoices/sales": "invoices",
+  "/invoices/purchases": "invoices",
+  "/invoices/sales-return": "invoices",
+  "/invoices/purchases-return": "invoices",
+  "/invoices/opening-balance": "invoices",
+  "/vouchers/receipt": "vouchers",
+  "/vouchers/payment": "vouchers",
+  "/vouchers/daily": "vouchers",
+  "/vouchers/journal": "vouchers",
+  "/vouchers/opening": "vouchers",
+  "/transfers": "warehouses",
+  "/inventory-count": "warehouses",
+  "/reports/product-movement": "reports",
+  "/reports/client-movement": "reports",
+  "/reports/supplier-movement": "reports",
+  "/reports/client-statement": "reports",
+  "/reports/supplier-statement": "reports",
+  "/reports/ledger": "reports",
+  "/reports/trial-balance": "reports",
+  "/financial/dashboard": "financial",
+  "/financial/income-statement": "financial",
+  "/financial/balance-sheet": "financial",
+  "/financial/cash-flow": "financial",
+  "/costs/management": "costs",
+  "/costs/report": "costs",
+  "/branches": "branches",
+  "/reports/branches": "branches",
+  "/users": "users",
+};
+
 function SidebarItem({ item, isCollapsed }) {
+  const { canView, isAdmin } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   if (item.children) {
-    const isActive = item.children.some((c) => location.pathname === c.path);
+    const visibleChildren = item.children.filter(c => {
+      const sec = ITEM_PERMISSIONS[c.path];
+      return !sec || isAdmin() || canView(sec);
+    });
+    if (visibleChildren.length === 0) return null;
+    const isActive = visibleChildren.some((c) => location.pathname === c.path);
     return (
       <div>
         <button
@@ -157,7 +204,7 @@ function SidebarItem({ item, isCollapsed }) {
         </button>
         {isOpen && !isCollapsed &&
         <div className="mr-4 mt-1 space-y-0.5 border-r-2 border-sidebar-border pr-3">
-            {item.children.map((child) =>
+            {visibleChildren.map((child) =>
           <Link
             key={child.path}
             to={child.path}
