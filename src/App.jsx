@@ -29,6 +29,8 @@ import Branches from './pages/Branches';
 import BranchReport from './pages/reports/BranchReport';
 import CostManagement from './pages/costs/CostManagement';
 import CostReport from './pages/costs/CostReport';
+import SubscriptionManagement from './pages/SubscriptionManagement';
+import { SubscriptionProvider } from './hooks/useSubscription.jsx';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
@@ -84,6 +86,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/branches" element={<BranchReport />} />
         <Route path="/costs/management" element={<CostManagement />} />
         <Route path="/costs/report" element={<CostReport />} />
+        <Route path="/subscriptions" element={<SubscriptionManagement />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
@@ -93,12 +96,14 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
+      <SubscriptionProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <AuthenticatedApp />
         </Router>
         <Toaster />
       </QueryClientProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   )
 }

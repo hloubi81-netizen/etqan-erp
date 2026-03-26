@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useSubscription } from "@/hooks/useSubscription.jsx";
 import {
   LayoutDashboard,
   Package,
   FolderTree,
   GitBranch,
   Calculator,
+  Crown,
   Warehouse as WarehouseIcon,
   CircleDollarSign,
   FileText,
@@ -123,8 +125,53 @@ const menuItems = [
   label: "المستخدمون",
   icon: Users,
   path: "/users"
+},
+{
+  label: "الاشتراكات",
+  icon: Crown,
+  path: "/subscriptions"
 }];
 
+
+// Map menu items to subscription feature keys
+const ITEM_FEATURES = {
+  "/accounts": "accounting",
+  "/currencies": "accounting",
+  "/invoice-patterns": "accounting",
+  "/invoices/sales": "invoices",
+  "/invoices/purchases": "invoices",
+  "/invoices/sales-return": "invoices",
+  "/invoices/purchases-return": "invoices",
+  "/invoices/opening-balance": "invoices",
+  "/vouchers/receipt": "vouchers",
+  "/vouchers/payment": "vouchers",
+  "/vouchers/daily": "vouchers",
+  "/vouchers/journal": "vouchers",
+  "/vouchers/opening": "vouchers",
+  "/groups": "warehouses",
+  "/products": "warehouses",
+  "/warehouses": "warehouses",
+  "/transfers": "warehouses",
+  "/inventory-count": "warehouses",
+  "/costs/management": "costs",
+  "/costs/report": "costs",
+  "/cost-centers": "costs",
+  "/branches": "branches",
+  "/reports/branches": "branches",
+  "/reports/product-movement": "reports",
+  "/reports/client-movement": "reports",
+  "/reports/supplier-movement": "reports",
+  "/reports/client-statement": "reports",
+  "/reports/supplier-statement": "reports",
+  "/reports/ledger": "reports",
+  "/reports/trial-balance": "reports",
+  "/financial/dashboard": "financial",
+  "/financial/income-statement": "financial",
+  "/financial/balance-sheet": "financial",
+  "/financial/cash-flow": "financial",
+  "/users": "users",
+  "/subscriptions": "users",
+};
 
 // Map menu sections to permission keys
 const ITEM_PERMISSIONS = {
@@ -168,12 +215,15 @@ const ITEM_PERMISSIONS = {
 
 function SidebarItem({ item, isCollapsed }) {
   const { canView, isAdmin } = usePermissions();
+  const { hasFeature } = useSubscription() || { hasFeature: () => true };
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
   if (item.children) {
     const visibleChildren = item.children.filter(c => {
       const sec = ITEM_PERMISSIONS[c.path];
+      const feat = ITEM_FEATURES[c.path];
+      if (feat && !hasFeature(feat)) return false;
       return !sec || isAdmin() || canView(sec);
     });
     if (visibleChildren.length === 0) return null;
