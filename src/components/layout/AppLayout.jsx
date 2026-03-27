@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/hooks/useLang.jsx";
+import ThemePicker from "./ThemePicker";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -25,6 +26,7 @@ export default function AppLayout() {
 
           
           <div className="flex-1" />
+          <ThemePicker />
           <Button
             variant="outline"
             size="sm"
