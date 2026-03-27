@@ -44,7 +44,12 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
     setAccounts(accs);
     setCurrencies(currs);
     if (!voucher) {
-      setForm((prev) => ({ ...prev, voucher_number: String(existingVouchers.length + 1).padStart(4, "0") }));
+      const cashAccount = accs.find((a) => a.name?.includes("صندوق"));
+      setForm((prev) => ({
+        ...prev,
+        voucher_number: String(existingVouchers.length + 1).padStart(4, "0"),
+        ...(cashAccount && !isJournal ? { account_id: cashAccount.id, account_name: cashAccount.name } : {}),
+      }));
     }
   }
 
