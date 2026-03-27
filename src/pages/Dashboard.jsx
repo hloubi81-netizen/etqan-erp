@@ -16,6 +16,7 @@ import {
   ArrowDownLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AlertsPanel from "@/components/dashboard/AlertsPanel";
 
 function StatCard({ icon: Icon, label, value, trend, color }) {
   return (
@@ -108,6 +109,8 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold">{l('dashboardTitle')}</h1>
         <p className="text-sm text-muted-foreground mt-1">{l('dashboardSubtitle')}</p>
       </div>
+
+      <AlertsPanel lang={lang} />
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
