@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 import {
   Package,
   Receipt,
@@ -60,6 +62,8 @@ function QuickAction({ icon: Icon, label, path, color }) {
 }
 
 export default function Dashboard() {
+  const { lang } = useLang();
+  const l = (key) => tr(key, lang);
   const [stats, setStats] = useState({
     products: 0,
     invoices: 0,
@@ -101,31 +105,31 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">لوحة التحكم</h1>
-        <p className="text-sm text-muted-foreground mt-1">نظرة عامة على النظام المحاسبي</p>
+        <h1 className="text-2xl font-bold">{l('dashboardTitle')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{l('dashboardSubtitle')}</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Package} label="المواد" value={stats.products} color="bg-blue-600" />
-        <StatCard icon={Receipt} label="الفواتير" value={stats.invoices} color="bg-green-600" />
-        <StatCard icon={FileText} label="السندات" value={stats.vouchers} color="bg-purple-600" />
-        <StatCard icon={Warehouse} label="المستودعات" value={stats.warehouses} color="bg-orange-500" />
+        <StatCard icon={Package} label={l('productsLabel')} value={stats.products} color="bg-blue-600" />
+        <StatCard icon={Receipt} label={l('invoicesLabel')} value={stats.invoices} color="bg-green-600" />
+        <StatCard icon={FileText} label={l('vouchersLabel')} value={stats.vouchers} color="bg-purple-600" />
+        <StatCard icon={Warehouse} label={l('warehousesLabel')} value={stats.warehouses} color="bg-orange-500" />
       </div>
 
       {/* Quick Actions */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">وصول سريع</CardTitle>
+          <CardTitle className="text-base">{l('quickAccess')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            <QuickAction icon={Receipt} label="فاتورة مبيعات" path="/invoices/sales" color="bg-blue-600" />
-            <QuickAction icon={Receipt} label="فاتورة مشتريات" path="/invoices/purchases" color="bg-green-600" />
-            <QuickAction icon={FileText} label="سند قبض" path="/vouchers/receipt" color="bg-purple-600" />
-            <QuickAction icon={FileText} label="سند دفع" path="/vouchers/payment" color="bg-red-500" />
-            <QuickAction icon={Package} label="المواد" path="/products" color="bg-orange-500" />
-            <QuickAction icon={BarChart3} label="التقارير" path="/reports/product-movement" color="bg-teal-600" />
+            <QuickAction icon={Receipt} label={l('salesInvoice')} path="/invoices/sales" color="bg-blue-600" />
+            <QuickAction icon={Receipt} label={l('purchasesInvoice')} path="/invoices/purchases" color="bg-green-600" />
+            <QuickAction icon={FileText} label={l('receiptVoucher')} path="/vouchers/receipt" color="bg-purple-600" />
+            <QuickAction icon={FileText} label={l('paymentVoucher')} path="/vouchers/payment" color="bg-red-500" />
+            <QuickAction icon={Package} label={l('productsLabel')} path="/products" color="bg-orange-500" />
+            <QuickAction icon={BarChart3} label={l('reports')} path="/reports/product-movement" color="bg-teal-600" />
           </div>
         </CardContent>
       </Card>
@@ -133,11 +137,11 @@ export default function Dashboard() {
       {/* Recent Invoices */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">آخر الفواتير</CardTitle>
+          <CardTitle className="text-base">{l('recentInvoices')}</CardTitle>
         </CardHeader>
         <CardContent>
           {recentInvoices.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">لا توجد فواتير بعد</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{l('noInvoices')}</p>
           ) : (
             <div className="space-y-2">
               {recentInvoices.map((inv) => (
@@ -152,7 +156,7 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{inv.pattern_type} - {inv.invoice_number}</p>
-                      <p className="text-xs text-muted-foreground">{inv.client_name || "بدون عميل"}</p>
+                      <p className="text-xs text-muted-foreground">{inv.client_name || l('noClient')}</p>
                     </div>
                   </div>
                   <div className="text-left">

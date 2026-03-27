@@ -3,9 +3,11 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLang } from "@/hooks/useLang.jsx";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { lang, toggle } = useLang();
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -23,6 +25,15 @@ export default function AppLayout() {
 
           
           <div className="flex-1" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggle}
+            className="text-xs font-semibold px-3 h-8 gap-1.5"
+          >
+            <span className="text-base leading-none">{lang === 'ar' ? '🇬🇧' : '🇸🇦'}</span>
+            {lang === 'ar' ? 'EN' : 'AR'}
+          </Button>
         </header>
 
         {/* Main content */}

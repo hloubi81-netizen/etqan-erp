@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 import { useSubscription } from "@/hooks/useSubscription.jsx";
 import {
   LayoutDashboard,
@@ -29,108 +31,93 @@ import {
 "lucide-react";
 import { cn } from "@/lib/utils";
 
-const menuItems = [
-{
-  label: "لوحة التحكم",
-  icon: LayoutDashboard,
-  path: "/"
-},
-{
-  label: "البطاقات",
-  icon: FolderTree,
-  children: [
-  { label: "المجموعات", path: "/groups", icon: FolderTree },
-  { label: "المواد", path: "/products", icon: Package },
-  { label: "المستودعات", path: "/warehouses", icon: WarehouseIcon },
-  { label: "مراكز الكلفة", path: "/cost-centers", icon: Building2 }]
-
-},
-{
-  label: "المحاسبة",
-  icon: CircleDollarSign,
-  children: [
-  { label: "شجرة الحسابات", path: "/accounts", icon: FolderTree },
-  { label: "العملات", path: "/currencies", icon: Coins },
-  { label: "أنماط الفواتير", path: "/invoice-patterns", icon: FileText }]
-
-},
-{
-  label: "الفواتير",
-  icon: Receipt,
-  children: [
-  { label: "فاتورة مبيعات", path: "/invoices/sales", icon: Receipt },
-  { label: "فاتورة مشتريات", path: "/invoices/purchases", icon: Receipt },
-  { label: "مرتجع مبيعات", path: "/invoices/sales-return", icon: Receipt },
-  { label: "مرتجع مشتريات", path: "/invoices/purchases-return", icon: Receipt },
-  { label: "رصيد أول المدة", path: "/invoices/opening-balance", icon: Receipt }]
-
-},
-{
-  label: "السندات",
-  icon: FileText,
-  children: [
-  { label: "سند قبض", path: "/vouchers/receipt", icon: FileText },
-  { label: "سند دفع", path: "/vouchers/payment", icon: FileText },
-  { label: "سند يومية", path: "/vouchers/daily", icon: FileText },
-  { label: "سند قيد", path: "/vouchers/journal", icon: FileText },
-  { label: "سند قيد افتتاحي", path: "/vouchers/opening", icon: FileText }]
-
-},
-{
-  label: "المخازن",
-  icon: WarehouseIcon,
-  children: [
-  { label: "مناقلات", path: "/transfers", icon: ArrowRightLeft },
-  { label: "جرد المواد", path: "/inventory-count", icon: ClipboardList }]
-
-},
-{
-  label: "التقارير",
-  icon: BarChart3,
-  children: [
-  { label: "حركة المواد", path: "/reports/product-movement", icon: Package },
-  { label: "حركة حسب العملاء", path: "/reports/client-movement", icon: Users },
-  { label: "حركة حسب الموردين", path: "/reports/supplier-movement", icon: Truck },
-  { label: "كشف حساب عميل", path: "/reports/client-statement", icon: FileText },
-  { label: "كشف حساب مورد", path: "/reports/supplier-statement", icon: FileText },
-  { label: "دفتر الأستاذ", path: "/reports/ledger", icon: BookOpen },
-  { label: "ميزان المراجعة", path: "/reports/trial-balance", icon: Scale }]
-
-},
-{
-  label: "القوائم المالية",
-  icon: BarChart3,
-  children: [
-  { label: "داشبورد التحليل المالي", path: "/financial/dashboard", icon: BarChart3 },
-  { label: "قائمة الدخل", path: "/financial/income-statement", icon: BarChart3 },
-  { label: "المركز المالي", path: "/financial/balance-sheet", icon: Scale },
-  { label: "التدفقات النقدية", path: "/financial/cash-flow", icon: Coins }]
-
-},
-{
-  label: "نظام التكاليف",
-  icon: Calculator,
-  children: [
-  { label: "قيود التكاليف", path: "/costs/management", icon: Calculator },
-  { label: "قوائم التكاليف", path: "/costs/report", icon: BarChart3 }]
-},
-{
-  label: "الفروع والمعارض",
-  icon: GitBranch,
-  children: [
-  { label: "إدارة الفروع", path: "/branches", icon: GitBranch },
-  { label: "تقرير الفروع", path: "/reports/branches", icon: BarChart3 }]
-},
-{
-  label: "المستخدمون",
-  icon: Users,
-  path: "/users"
-},
-{
-  label: "الاشتراكات",
-  icon: Crown,
-  path: "/subscriptions"
-}];
+function getMenuItems(lang) {
+  const l = (key) => tr(key, lang);
+  return [
+  { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
+  {
+    label: l('cards'), icon: FolderTree,
+    children: [
+      { label: l('groups'), path: "/groups", icon: FolderTree },
+      { label: l('products'), path: "/products", icon: Package },
+      { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
+      { label: l('costCenters'), path: "/cost-centers", icon: Building2 }
+    ]
+  },
+  {
+    label: l('accounting'), icon: CircleDollarSign,
+    children: [
+      { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
+      { label: l('currencies'), path: "/currencies", icon: Coins },
+      { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText }
+    ]
+  },
+  {
+    label: l('invoices'), icon: Receipt,
+    children: [
+      { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
+      { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
+      { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
+      { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
+      { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt }
+    ]
+  },
+  {
+    label: l('vouchers'), icon: FileText,
+    children: [
+      { label: l('receiptVoucher'), path: "/vouchers/receipt", icon: FileText },
+      { label: l('paymentVoucher'), path: "/vouchers/payment", icon: FileText },
+      { label: l('dailyVoucher'), path: "/vouchers/daily", icon: FileText },
+      { label: l('journalVoucher'), path: "/vouchers/journal", icon: FileText },
+      { label: l('openingJournal'), path: "/vouchers/opening", icon: FileText }
+    ]
+  },
+  {
+    label: l('stockSection'), icon: WarehouseIcon,
+    children: [
+      { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
+      { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList }
+    ]
+  },
+  {
+    label: l('reports'), icon: BarChart3,
+    children: [
+      { label: l('productMovement'), path: "/reports/product-movement", icon: Package },
+      { label: l('clientMovement'), path: "/reports/client-movement", icon: Users },
+      { label: l('supplierMovement'), path: "/reports/supplier-movement", icon: Truck },
+      { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
+      { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
+      { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
+      { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale }
+    ]
+  },
+  {
+    label: l('financialStatements'), icon: BarChart3,
+    children: [
+      { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
+      { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
+      { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
+      { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins }
+    ]
+  },
+  {
+    label: l('costSystem'), icon: Calculator,
+    children: [
+      { label: l('costManagement'), path: "/costs/management", icon: Calculator },
+      { label: l('costReport'), path: "/costs/report", icon: BarChart3 }
+    ]
+  },
+  {
+    label: l('branches'), icon: GitBranch,
+    children: [
+      { label: l('manageBranches'), path: "/branches", icon: GitBranch },
+      { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }
+    ]
+  },
+  { label: l('users'), icon: Users, path: "/users" },
+  { label: l('subscriptions'), icon: Crown, path: "/subscriptions" }
+];
+}
 
 
 // Map menu items to subscription feature keys
@@ -292,6 +279,8 @@ function SidebarItem({ item, isCollapsed }) {
 }
 
 export default function Sidebar({ isOpen, onToggle }) {
+  const { lang } = useLang();
+  const menuItems = getMenuItems(lang);
   return (
     <>
       {/* Mobile overlay */}
@@ -316,7 +305,7 @@ export default function Sidebar({ isOpen, onToggle }) {
               <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
                 <CircleDollarSign className="h-5 w-5 text-sidebar-primary-foreground" />
               </div>
-              <span className="text-sidebar-foreground font-bold text-base">المحاسب</span>
+              <span className="text-sidebar-foreground font-bold text-base">{tr('appName', lang)}</span>
             </div>
           }
           <button

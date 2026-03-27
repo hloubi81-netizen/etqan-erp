@@ -31,6 +31,7 @@ import CostManagement from './pages/costs/CostManagement';
 import CostReport from './pages/costs/CostReport';
 import SubscriptionManagement from './pages/SubscriptionManagement';
 import { SubscriptionProvider } from './hooks/useSubscription.jsx';
+import { LangProvider } from './hooks/useLang.jsx';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
@@ -96,6 +97,7 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
+      <LangProvider>
       <SubscriptionProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
@@ -104,6 +106,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
       </SubscriptionProvider>
+      </LangProvider>
     </AuthProvider>
   )
 }
