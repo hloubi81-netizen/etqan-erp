@@ -34,6 +34,11 @@ import { SubscriptionProvider } from './hooks/useSubscription.jsx';
 import { LangProvider } from './hooks/useLang.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
 import IncomeStatement from './pages/financial/IncomeStatement';
+import POS from './pages/pos/POS';
+import POSHistory from './pages/pos/POSHistory';
+import Employees from './pages/hr/Employees';
+import Attendance from './pages/hr/Attendance';
+import Payroll from './pages/hr/Payroll';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import CashFlow from './pages/financial/CashFlow';
 
@@ -88,6 +93,11 @@ const AuthenticatedApp = () => {
         <Route path="/reports/branches" element={<BranchReport />} />
         <Route path="/costs/management" element={<CostManagement />} />
         <Route path="/costs/report" element={<CostReport />} />
+        <Route path="/pos" element={<POS />} />
+        <Route path="/pos/history" element={<POSHistory />} />
+        <Route path="/hr/employees" element={<Employees />} />
+        <Route path="/hr/attendance" element={<Attendance />} />
+        <Route path="/hr/payroll" element={<Payroll />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

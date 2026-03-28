@@ -27,7 +27,11 @@ import {
   X,
   Building2,
   Users,
-  Truck } from
+  Truck,
+  ShoppingCart,
+  UserCog,
+  CalendarCheck,
+  Banknote } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -115,7 +119,22 @@ function getMenuItems(lang) {
     ]
   },
   { label: l('users'), icon: Users, path: "/users" },
-  { label: l('subscriptions'), icon: Crown, path: "/subscriptions" }
+  { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+  {
+    label: "نقطة البيع", icon: ShoppingCart,
+    children: [
+      { label: "شاشة البيع", path: "/pos", icon: ShoppingCart },
+      { label: "سجل المبيعات", path: "/pos/history", icon: Receipt }
+    ]
+  },
+  {
+    label: "الموارد البشرية", icon: UserCog,
+    children: [
+      { label: "الموظفون", path: "/hr/employees", icon: Users },
+      { label: "الحضور والغياب", path: "/hr/attendance", icon: CalendarCheck },
+      { label: "الرواتب", path: "/hr/payroll", icon: Banknote }
+    ]
+  }
 ];
 }
 
