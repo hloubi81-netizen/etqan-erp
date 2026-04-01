@@ -7,7 +7,7 @@ import { useLang } from "@/hooks/useLang.jsx";
 import ThemePicker from "./ThemePicker";
 
 export default function AppLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { lang, toggle } = useLang();
 
   return (
@@ -17,14 +17,9 @@ export default function AppLayout() {
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center gap-3">
-          
-
-
-
-
-
-
-          
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Menu className="h-4 w-4" />
+          </Button>
           <div className="flex-1" />
           <ThemePicker />
           <Button
