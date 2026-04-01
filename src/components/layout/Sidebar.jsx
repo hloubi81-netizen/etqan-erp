@@ -31,7 +31,8 @@ import {
   ShoppingCart,
   UserCog,
   CalendarCheck,
-  Banknote } from
+  Banknote,
+  Landmark } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -121,6 +122,7 @@ function getMenuItems(lang) {
   },
   { label: l('users'), icon: Users, path: "/users" },
   { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+  { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
   {
     label: "نقطة البيع", icon: ShoppingCart,
     children: [

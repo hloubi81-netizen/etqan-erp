@@ -41,6 +41,7 @@ import Attendance from './pages/hr/Attendance';
 import Payroll from './pages/hr/Payroll';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import AdvancedReports from './pages/reports/AdvancedReports';
+import FixedAssets from './pages/assets/FixedAssets';
 import CashFlow from './pages/financial/CashFlow';
 
 const AuthenticatedApp = () => {
@@ -100,6 +101,7 @@ const AuthenticatedApp = () => {
         <Route path="/hr/attendance" element={<Attendance />} />
         <Route path="/hr/payroll" element={<Payroll />} />
         <Route path="/reports/advanced" element={<AdvancedReports />} />
+        <Route path="/assets" element={<FixedAssets />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
