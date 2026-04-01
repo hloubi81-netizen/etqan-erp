@@ -92,7 +92,8 @@ function getMenuItems(lang) {
       { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
       { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
       { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
-      { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale }
+      { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
+      { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 }
     ]
   },
   {
