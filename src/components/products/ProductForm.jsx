@@ -144,29 +144,56 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
 
           <TabsContent value="units" className="space-y-4 mt-4">
             <div className="flex justify-between items-center">
-              <Label className="text-base font-semibold">الوحدات</Label>
+              <div>
+                <Label className="text-base font-semibold">الوحدات</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">الوحدة الأولى هي الأساسية (معامل = 1). الوحدات الأخرى تحتوي على N من الوحدة الأساسية.</p>
+              </div>
               <Button variant="outline" size="sm" onClick={addUnit}>
                 <Plus className="h-3.5 w-3.5 ml-1" /> إضافة وحدة
               </Button>
             </div>
             {form.units.map((unit, idx) => (
-              <div key={idx} className="flex items-end gap-3 p-3 bg-muted/30 rounded-lg">
-                <div className="flex-1">
-                  <Label className="text-xs">اسم الوحدة</Label>
-                  <Input value={unit.name} onChange={(e) => updateUnit(idx, "name", e.target.value)} />
+              <div key={idx} className="p-3 bg-muted/30 rounded-lg space-y-2">
+                <div className="flex items-center gap-1 mb-1">
+                  {idx === 0 && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">الوحدة الأساسية</span>}
+                  {idx > 0 && <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">وحدة مركبة</span>}
                 </div>
-                <div className="flex-1">
-                  <Label className="text-xs">معامل التحويل</Label>
-                  <Input
-                    type="number"
-                    value={unit.conversion_factor}
-                    onChange={(e) => updateUnit(idx, "conversion_factor", parseFloat(e.target.value) || 0)}
-                  />
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <Label className="text-xs">اسم الوحدة</Label>
+                    <Input className="mt-1 h-8" value={unit.name} onChange={(e) => updateUnit(idx, "name", e.target.value)} placeholder={idx === 0 ? "قطعة" : "كرتونة"} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">يحتوي على (N {form.units[0]?.name || "وحدة"})</Label>
+                    <Input
+                      className="mt-1 h-8"
+                      type="number"
+                      value={unit.conversion_factor}
+                      disabled={idx === 0}
+                      onChange={(e) => updateUnit(idx, "conversion_factor", parseFloat(e.target.value) || 1)}
+                      placeholder="مثال: 12"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">سعر البيع (صفر = تلقائي)</Label>
+                    <Input
+                      className="mt-1 h-8"
+                      type="number"
+                      value={unit.price || ""}
+                      onChange={(e) => updateUnit(idx, "price", parseFloat(e.target.value) || 0)}
+                      placeholder={idx === 0 ? String(form.retail_price || "") : String((form.retail_price || 0) * (unit.conversion_factor || 1))}
+                    />
+                  </div>
                 </div>
                 {idx > 0 && (
-                  <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeUnit(idx)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground">
+                      1 {unit.name || "وحدة"} = {unit.conversion_factor || "?"} {form.units[0]?.name || "وحدة أساسية"} | السعر التلقائي: {((form.retail_price || 0) * (unit.conversion_factor || 1)).toLocaleString()}
+                    </p>
+                    <Button variant="ghost" size="sm" className="text-destructive h-7 text-xs" onClick={() => removeUnit(idx)}>
+                      <Trash2 className="h-3 w-3 ml-1" /> حذف
+                    </Button>
+                  </div>
                 )}
               </div>
             ))}

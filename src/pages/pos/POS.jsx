@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle } from "lucide-react";
+import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { toast } from "sonner";
 
 export default function POS() {
@@ -28,25 +29,52 @@ export default function POS() {
     p.name?.includes(search) || p.item_code?.includes(search) || p.barcode?.includes(search)
   );
 
-  function addToCart(product) {
+  function addToCart(product, selectedUnit = null) {
+    const unit = selectedUnit || getBaseUnit(product.units || [{ name: "قطعة", conversion_factor: 1 }]);
+    const price = priceForUnit(product.retail_price || 0, unit);
     setCart((prev) => {
-      const existing = prev.find((i) => i.product_id === product.id);
-      if (existing) return prev.map((i) => i.product_id === product.id ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.price } : i);
-      return [...prev, { product_id: product.id, product_name: product.name, quantity: 1, price: product.retail_price || 0, total: product.retail_price || 0 }];
+      const key = `${product.id}_${unit.name}`;
+      const existing = prev.find((i) => i.key === key);
+      if (existing) return prev.map((i) => i.key === key ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.price } : i);
+      return [...prev, {
+        key,
+        product_id: product.id,
+        product_name: product.name,
+        unit_name: unit.name,
+        conversion_factor: parseFloat(unit.conversion_factor) || 1,
+        quantity: 1,
+        price,
+        total: price,
+        available_units: product.units || [],
+      }];
     });
   }
 
-  function updateQty(id, delta) {
-    setCart((prev) => prev.map((i) => i.product_id === id ? { ...i, quantity: Math.max(1, i.quantity + delta), total: Math.max(1, i.quantity + delta) * i.price } : i));
+  function updateQty(key, delta) {
+    setCart((prev) => prev.map((i) => i.key === key ? { ...i, quantity: Math.max(1, i.quantity + delta), total: Math.max(1, i.quantity + delta) * i.price } : i));
   }
 
-  function updatePrice(id, price) {
+  function updatePrice(key, price) {
     const p = parseFloat(price) || 0;
-    setCart((prev) => prev.map((i) => i.product_id === id ? { ...i, price: p, total: i.quantity * p } : i));
+    setCart((prev) => prev.map((i) => i.key === key ? { ...i, price: p, total: i.quantity * p } : i));
   }
 
-  function removeFromCart(id) {
-    setCart((prev) => prev.filter((i) => i.product_id !== id));
+  function changeUnit(key, newUnitName, product) {
+    const unit = (product.units || []).find((u) => u.name === newUnitName);
+    if (!unit) return;
+    const price = priceForUnit(product.retail_price || 0, unit);
+    setCart((prev) => prev.map((i) => i.key === key ? {
+      ...i,
+      key: `${i.product_id}_${newUnitName}`,
+      unit_name: newUnitName,
+      conversion_factor: parseFloat(unit.conversion_factor) || 1,
+      price,
+      total: i.quantity * price,
+    } : i));
+  }
+
+  function removeFromCart(key) {
+    setCart((prev) => prev.filter((i) => i.key !== key));
   }
 
   const subtotal = cart.reduce((s, i) => s + i.total, 0);
@@ -60,10 +88,15 @@ export default function POS() {
     setSaving(true);
     const sessions = await base44.entities.POSSession.list();
     const num = String(sessions.length + 1).padStart(5, "0");
+    // تحويل البنود للوحدة الأساسية قبل الحفظ
+    const cartWithBase = cart.map((item) => ({
+      ...item,
+      base_quantity: toBaseUnit(item.quantity, { conversion_factor: item.conversion_factor }),
+    }));
     const rec = await base44.entities.POSSession.create({
       session_number: num,
       date: new Date().toISOString().split("T")[0],
-      items: cart,
+      items: cartWithBase,
       subtotal,
       discount: discountAmt,
       tax: 0,
@@ -152,36 +185,57 @@ export default function POS() {
           {cart.length === 0 && (
             <div className="text-center text-muted-foreground py-12 text-sm">أضف منتجات من القائمة</div>
           )}
-          {cart.map((item) => (
-            <div key={item.product_id} className="bg-muted/30 rounded-lg p-2.5">
-              <div className="flex items-start justify-between mb-1.5">
-                <button onClick={() => removeFromCart(item.product_id)} className="text-destructive/60 hover:text-destructive">
+          {cart.map((item) => {
+            const prod = products.find((p) => p.id === item.product_id);
+            return (
+            <div key={item.key} className="bg-muted/30 rounded-lg p-2.5">
+              <div className="flex items-start justify-between mb-1">
+                <button onClick={() => removeFromCart(item.key)} className="text-destructive/60 hover:text-destructive">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
-                <p className="text-xs font-semibold text-right flex-1 mr-1">{item.product_name}</p>
+                <div className="text-right flex-1 mr-1">
+                  <p className="text-xs font-semibold">{item.product_name}</p>
+                  {item.conversion_factor > 1 && (
+                    <p className="text-[10px] text-muted-foreground">{item.unit_name} = {item.conversion_factor} {prod?.units?.[0]?.name || "وحدة"} | إجمالي الأساسي: {toBaseUnit(item.quantity, { conversion_factor: item.conversion_factor })}</p>
+                  )}
+                </div>
               </div>
+              {/* Unit selector */}
+              {item.available_units?.length > 1 && (
+                <div className="mb-1.5">
+                  <Select value={item.unit_name} onValueChange={(v) => prod && changeUnit(item.key, v, prod)}>
+                    <SelectTrigger className="h-6 text-[10px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {item.available_units.map((u) => (
+                        <SelectItem key={u.name} value={u.name} className="text-xs">{u.name} ({u.conversion_factor} وحدة أساسية)</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-bold text-primary">{item.total.toLocaleString()}</p>
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
                     value={item.price}
-                    onChange={(e) => updatePrice(item.product_id, e.target.value)}
+                    onChange={(e) => updatePrice(item.key, e.target.value)}
                     className="h-7 w-20 text-xs text-center"
                   />
                   <div className="flex items-center gap-0.5">
-                    <button onClick={() => updateQty(item.product_id, -1)} className="h-6 w-6 rounded bg-muted flex items-center justify-center hover:bg-muted-foreground/20">
+                    <button onClick={() => updateQty(item.key, -1)} className="h-6 w-6 rounded bg-muted flex items-center justify-center hover:bg-muted-foreground/20">
                       <Minus className="h-3 w-3" />
                     </button>
                     <span className="text-xs font-bold w-6 text-center">{item.quantity}</span>
-                    <button onClick={() => updateQty(item.product_id, 1)} className="h-6 w-6 rounded bg-muted flex items-center justify-center hover:bg-muted-foreground/20">
+                    <button onClick={() => updateQty(item.key, 1)} className="h-6 w-6 rounded bg-muted flex items-center justify-center hover:bg-muted-foreground/20">
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Totals & Checkout */}

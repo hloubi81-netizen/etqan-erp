@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
+import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { applyJournalRules } from "@/utils/journalEngine";
 import { toast } from "sonner";
 
@@ -83,11 +84,24 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
       if (key === "product_id") {
         const prod = products.find((p) => p.id === value);
         if (prod) {
+          const baseUnit = getBaseUnit(prod.units || []);
           updated.product_name = prod.name;
+          updated.unit = baseUnit?.name || "قطعة";
+          updated.conversion_factor = parseFloat(baseUnit?.conversion_factor) || 1;
           updated.price = prod.retail_price || 0;
-          updated.unit = prod.units?.[0]?.name || "قطعة";
+          updated.available_units = prod.units || [];
         }
       }
+      if (key === "unit") {
+        const prod = products.find((p) => p.id === item.product_id);
+        if (prod) {
+          const selUnit = (prod.units || []).find((u) => u.name === value);
+          updated.conversion_factor = parseFloat(selUnit?.conversion_factor) || 1;
+          updated.price = priceForUnit(prod.retail_price || 0, selUnit);
+        }
+      }
+      const baseQty = toBaseUnit(updated.quantity || 0, { conversion_factor: updated.conversion_factor || 1 });
+      updated.base_quantity = baseQty;
       updated.total = (updated.quantity || 0) * (updated.price || 0) * (1 - (updated.discount_percent || 0) / 100) - (updated.discount_value || 0);
       return updated;
     });
@@ -204,23 +218,36 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               {form.items.map((item, idx) => (
                 <div key={idx} className="grid grid-cols-6 gap-2 items-end p-3 bg-muted/30 rounded-lg">
                   <div className="col-span-2">
-                    <Label className="text-xs">الصنف</Label>
-                    <Select value={item.product_id} onValueChange={(v) => updateItem(idx, "product_id", v)}>
-                      <SelectTrigger className="h-9"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>
-                        {products.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                   <Label className="text-xs">الصنف</Label>
+                   <Select value={item.product_id} onValueChange={(v) => updateItem(idx, "product_id", v)}>
+                     <SelectTrigger className="h-9"><SelectValue placeholder="اختر" /></SelectTrigger>
+                     <SelectContent>
+                       {products.map((p) => (
+                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">الكمية</Label>
-                    <Input className="h-9" type="number" value={item.quantity} onChange={(e) => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} />
+                   <Label className="text-xs">الوحدة</Label>
+                   <Select value={item.unit || ""} onValueChange={(v) => updateItem(idx, "unit", v)}>
+                     <SelectTrigger className="h-9"><SelectValue placeholder="-" /></SelectTrigger>
+                     <SelectContent>
+                       {(item.available_units || [{ name: item.unit || "قطعة", conversion_factor: 1 }]).map((u) => (
+                         <SelectItem key={u.name} value={u.name}>
+                           {u.name} {parseFloat(u.conversion_factor) > 1 ? `(×${u.conversion_factor})` : ""}
+                         </SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
                   </div>
                   <div>
-                    <Label className="text-xs">السعر</Label>
-                    <Input className="h-9" type="number" value={item.price} onChange={(e) => updateItem(idx, "price", parseFloat(e.target.value) || 0)} />
+                   <Label className="text-xs">الكمية</Label>
+                   <Input className="h-9" type="number" value={item.quantity} onChange={(e) => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} />
+                  </div>
+                  <div>
+                   <Label className="text-xs">السعر</Label>
+                   <Input className="h-9" type="number" value={item.price} onChange={(e) => updateItem(idx, "price", parseFloat(e.target.value) || 0)} />
                   </div>
                   <div>
                     <Label className="text-xs">الإجمالي</Label>
