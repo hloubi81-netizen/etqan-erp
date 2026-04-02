@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Zap } from "lucide-react";
+import { applyJournalRules } from "@/utils/journalEngine";
+import { toast } from "sonner";
 
 export default function VoucherForm({ open, onClose, onSave, voucher, voucherType }) {
   const [accounts, setAccounts] = useState([]);
@@ -228,7 +230,22 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
 
         <DialogFooter className="gap-2 mt-4">
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button onClick={() => onSave(form)} disabled={!canSave}>حفظ</Button>
+          <Button onClick={() => onSave({ ...form, status: "مسودة" })} disabled={!canSave} variant="outline">حفظ مسودة</Button>
+          <Button
+            onClick={async () => {
+              const saved = { ...form, status: "مرحّل" };
+              await onSave(saved);
+              const triggerMap = { "سند قبض": "سند قبض", "سند دفع": "سند صرف", "سند يومية": "سند يومية" };
+              const trigger = triggerMap[voucherType] || voucherType;
+              const result = await applyJournalRules(trigger, saved, "سند", saved.voucher_number);
+              if (result.posted > 0) toast.success(`تم ترحيل ${result.posted} قيد يومية تلقائياً`);
+              if (result.errors.length > 0) toast.error(result.errors[0]);
+            }}
+            disabled={!canSave}
+            className="gap-1.5"
+          >
+            <Zap className="h-3.5 w-3.5" />حفظ وترحيل
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Zap } from "lucide-react";
+import { applyJournalRules } from "@/utils/journalEngine";
+import { toast } from "sonner";
 
 export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceType }) {
   const [products, setProducts] = useState([]);
@@ -299,7 +301,24 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
         <DialogFooter className="gap-2 mt-4">
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button onClick={() => onSave(form)} disabled={!form.invoice_number}>حفظ</Button>
+          <Button onClick={() => onSave({ ...form, status: "مسودة" })} disabled={!form.invoice_number} variant="outline">حفظ مسودة</Button>
+          <Button
+            onClick={async () => {
+              const saved = { ...form, status: "مرحّلة" };
+              await onSave(saved);
+              const trigger = invoiceType.includes("مشتريات") ? "فاتورة مشتريات"
+                : invoiceType.includes("مرتجع مبيعات") ? "مرتجع مبيعات"
+                : invoiceType.includes("مرتجع مشتريات") ? "مرتجع مشتريات"
+                : "فاتورة مبيعات";
+              const result = await applyJournalRules(trigger, saved, "فاتورة", saved.invoice_number);
+              if (result.posted > 0) toast.success(`تم ترحيل ${result.posted} قيد يومية تلقائياً`);
+              if (result.errors.length > 0) toast.error(result.errors[0]);
+            }}
+            disabled={!form.invoice_number}
+            className="gap-1.5"
+          >
+            <Zap className="h-3.5 w-3.5" />حفظ وترحيل
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

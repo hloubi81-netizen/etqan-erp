@@ -1,0 +1,67 @@
+{
+  "name": "JournalRule",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0642\u0627\u0639\u062f\u0629"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "\u0641\u0627\u062a\u0648\u0631\u0629 \u0645\u0628\u064a\u0639\u0627\u062a",
+        "\u0641\u0627\u062a\u0648\u0631\u0629 \u0645\u0634\u062a\u0631\u064a\u0627\u062a",
+        "\u0645\u0631\u062a\u062c\u0639 \u0645\u0628\u064a\u0639\u0627\u062a",
+        "\u0645\u0631\u062a\u062c\u0639 \u0645\u0634\u062a\u0631\u064a\u0627\u062a",
+        "\u0633\u0646\u062f \u0642\u0628\u0636",
+        "\u0633\u0646\u062f \u0635\u0631\u0641",
+        "\u0633\u0646\u062f \u064a\u0648\u0645\u064a\u0629"
+      ],
+      "title": "\u0627\u0644\u062d\u062f\u062b \u0627\u0644\u0645\u0634\u063a\u0651\u0644"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "\u0627\u0644\u0643\u0644",
+        "\u0646\u0642\u062f\u0627\u064b",
+        "\u0622\u062c\u0644",
+        "\u0628\u0646\u0643"
+      ],
+      "title": "\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u062f\u0641\u0639"
+    },
+    "debit_account_id": {
+      "type": "string",
+      "title": "\u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u062f\u064a\u0646"
+    },
+    "debit_account_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u062f\u064a\u0646"
+    },
+    "credit_account_id": {
+      "type": "string",
+      "title": "\u062d\u0633\u0627\u0628 \u0627\u0644\u062f\u0627\u0626\u0646"
+    },
+    "credit_account_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u062d\u0633\u0627\u0628 \u0627\u0644\u062f\u0627\u0626\u0646"
+    },
+    "description_template": {
+      "type": "string",
+      "title": "\u0642\u0627\u0644\u0628 \u0627\u0644\u0628\u064a\u0627\u0646"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "\u0646\u0634\u0637"
+    },
+    "notes": {
+      "type": "string",
+      "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+    }
+  },
+  "required": [
+    "name",
+    "trigger",
+    "debit_account_id",
+    "credit_account_id"
+  ]
+}
