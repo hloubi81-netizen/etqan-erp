@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ export default function POS() {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
+  const searchRef = useRef(null);
   const [discount, setDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("نقداً");
   const [paid, setPaid] = useState("");
@@ -23,7 +24,34 @@ export default function POS() {
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
+    // تركيز تلقائي على خانة البحث عند فتح الشاشة
+    setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
+
+  function handleSearchKeyDown(e) {
+    if (e.key === "Enter") {
+      // ماسح الباركود يرسل Enter بعد المسح
+      const term = search.trim();
+      if (!term) return;
+      const match = products.find(
+        (p) => p.barcode === term || p.item_code === term
+      );
+      if (match) {
+        addToCart(match);
+        setSearch("");
+        toast.success(`تم إضافة: ${match.name}`);
+      } else {
+        // إذا كان النص بحثاً ولم يكن باركود، تجاهل Enter
+        if (filtered.length === 1) {
+          addToCart(filtered[0]);
+          setSearch("");
+          toast.success(`تم إضافة: ${filtered[0].name}`);
+        } else {
+          toast.error("لم يتم العثور على منتج بهذا الباركود");
+        }
+      }
+    }
+  }
 
   const filtered = products.filter((p) =>
     p.name?.includes(search) || p.item_code?.includes(search) || p.barcode?.includes(search)
@@ -133,9 +161,11 @@ export default function POS() {
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="ابحث بالاسم أو الكود أو الباركود..."
+              ref={searchRef}
+              placeholder="ابحث بالاسم أو الكود أو الباركود — أو امسح الباركود…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
               className="pr-9"
             />
           </div>
