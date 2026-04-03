@@ -116,6 +116,7 @@ function getMenuItems(lang) {
     { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+    { label: "تسجيل شركة جديدة", icon: Sparkles, path: "/register-company" },
   ];
 }
 

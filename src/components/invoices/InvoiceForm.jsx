@@ -18,6 +18,12 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   const [currencies, setCurrencies] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
 
+  // العملة المختارة وسعر صرفها
+  const selectedCurrency = currencies.find((c) => c.name === form.currency);
+  const exchangeRate = selectedCurrency?.exchange_rate || 1;
+  const isLocalCurrency = !selectedCurrency || selectedCurrency.is_local;
+  const totalInLocal = isLocalCurrency ? form.total : form.total * exchangeRate;
+
   const [form, setForm] = useState({
     invoice_number: invoice?.invoice_number || "",
     pattern_type: invoiceType,
@@ -310,7 +316,14 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             )}
             <div className="flex justify-between text-base font-bold border-t pt-2">
               <span>الإجمالي</span>
-              <span>{form.total.toLocaleString()}</span>
+              <div className="text-left">
+                <span>{form.total.toLocaleString()} {form.currency || ""}</span>
+                {!isLocalCurrency && (
+                  <p className="text-xs text-muted-foreground font-normal">
+                    سعر الصرف: {exchangeRate} | بالعملة المحلية: <strong>{totalInLocal.toLocaleString()}</strong>
+                  </p>
+                )}
+              </div>
             </div>
             {form.remaining_amount > 0 && (
               <div className="flex justify-between text-sm text-destructive">
