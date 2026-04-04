@@ -16,8 +16,8 @@ export default function AppLayout() {
       
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="h-8 w-8 text-muted-foreground hover:text-foreground">
+        <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center gap-3" role="banner">
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className="h-11 w-11 min-h-[44px] min-w-[44px] text-muted-foreground hover:text-foreground" aria-label="فتح القائمة">
             <Menu className="h-4 w-4" />
           </Button>
           <div className="flex-1" />
@@ -26,7 +26,8 @@ export default function AppLayout() {
             variant="outline"
             size="sm"
             onClick={toggle}
-            className="text-xs font-semibold px-3 h-8 gap-1.5"
+            className="text-xs font-semibold px-3 h-11 min-h-[44px] gap-1.5"
+            aria-label={lang === 'ar' ? 'Switch to English' : 'التبديل للعربية'}
           >
             <span className="text-base leading-none">{lang === 'ar' ? '🇬🇧' : '🇸🇦'}</span>
             {lang === 'ar' ? 'EN' : 'AR'}
@@ -34,7 +35,7 @@ export default function AppLayout() {
         </header>
 
         {/* Main content */}
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto" role="main">
           <Outlet />
         </main>
       </div>
