@@ -1,0 +1,119 @@
+{
+  "name": "CostEntry",
+  "type": "object",
+  "properties": {
+    "entry_number": {
+      "type": "string",
+      "title": "\u0631\u0642\u0645 \u0627\u0644\u0642\u064a\u062f"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u0627\u0644\u062a\u0627\u0631\u064a\u062e"
+    },
+    "period": {
+      "type": "string",
+      "title": "\u0627\u0644\u0641\u062a\u0631\u0629 (\u0634\u0647\u0631/\u0633\u0646\u0629)"
+    },
+    "stage_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0625\u0646\u062a\u0627\u062c\u064a\u0629"
+    },
+    "stage_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "cost_type": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0648\u0627\u062f \u0645\u0628\u0627\u0634\u0631\u0629",
+        "\u0639\u0645\u0627\u0644\u0629 \u0645\u0628\u0627\u0634\u0631\u0629",
+        "\u062a\u0643\u0627\u0644\u064a\u0641 \u0635\u0646\u0627\u0639\u064a\u0629 \u063a\u064a\u0631 \u0645\u0628\u0627\u0634\u0631\u0629",
+        "\u062a\u0643\u0627\u0644\u064a\u0641 \u0645\u062d\u0648\u0644\u0629 \u0645\u0646 \u0645\u0631\u062d\u0644\u0629 \u0633\u0627\u0628\u0642\u0629"
+      ],
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u062a\u0643\u0644\u0641\u0629"
+    },
+    "account_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u062d\u0633\u0627\u0628"
+    },
+    "account_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u062d\u0633\u0627\u0628"
+    },
+    "description": {
+      "type": "string",
+      "title": "\u0627\u0644\u0628\u064a\u0627\u0646"
+    },
+    "quantity": {
+      "type": "number",
+      "title": "\u0627\u0644\u0643\u0645\u064a\u0629"
+    },
+    "unit": {
+      "type": "string",
+      "title": "\u0627\u0644\u0648\u062d\u062f\u0629"
+    },
+    "unit_cost": {
+      "type": "number",
+      "title": "\u062a\u0643\u0644\u0641\u0629 \u0627\u0644\u0648\u062d\u062f\u0629"
+    },
+    "total_cost": {
+      "type": "number",
+      "title": "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u062a\u0643\u0644\u0641\u0629"
+    },
+    "completed_units": {
+      "type": "number",
+      "title": "\u0648\u062d\u062f\u0627\u062a \u0645\u0643\u062a\u0645\u0644\u0629"
+    },
+    "wip_units": {
+      "type": "number",
+      "title": "\u0648\u062d\u062f\u0627\u062a \u062a\u062d\u062a \u0627\u0644\u062a\u0634\u063a\u064a\u0644"
+    },
+    "wip_completion_pct": {
+      "type": "number",
+      "title": "\u0646\u0633\u0628\u0629 \u0627\u0643\u062a\u0645\u0627\u0644 \u062a\u062d\u062a \u0627\u0644\u062a\u0634\u063a\u064a\u0644 %"
+    },
+    "equivalent_units": {
+      "type": "number",
+      "title": "\u0648\u062d\u062f\u0627\u062a \u0645\u0639\u0627\u062f\u0644\u0629"
+    },
+    "cost_per_equiv_unit": {
+      "type": "number",
+      "title": "\u062a\u0643\u0644\u0641\u0629 \u0627\u0644\u0648\u062d\u062f\u0629 \u0627\u0644\u0645\u0639\u0627\u062f\u0644\u0629"
+    },
+    "from_stage_id": {
+      "type": "string",
+      "title": "\u0645\u062d\u0648\u0644\u0629 \u0645\u0646 \u0645\u0631\u062d\u0644\u0629"
+    },
+    "from_stage_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0635\u062f\u0631"
+    },
+    "branch_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0641\u0631\u0639"
+    },
+    "branch_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0641\u0631\u0639"
+    },
+    "notes": {
+      "type": "string",
+      "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0633\u0648\u062f\u0629",
+        "\u0645\u0631\u062d\u0651\u0644"
+      ],
+      "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
+    }
+  },
+  "required": [
+    "date",
+    "stage_id",
+    "cost_type",
+    "total_cost"
+  ]
+}
