@@ -42,7 +42,6 @@ import Payroll from './pages/hr/Payroll';
 import BalanceSheet from './pages/financial/BalanceSheet';
 import AdvancedReports from './pages/reports/AdvancedReports';
 import FixedAssets from './pages/assets/FixedAssets';
-import CompanyRegistration from './pages/CompanyRegistration';
 import JournalRules from './pages/accounting/JournalRules';
 import CashFlow from './pages/financial/CashFlow';
 
@@ -106,7 +105,6 @@ const AuthenticatedApp = () => {
         <Route path="/assets" element={<FixedAssets />} />
         <Route path="/accounting/journal-rules" element={<JournalRules />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
-        <Route path="/register-company" element={<CompanyRegistration />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

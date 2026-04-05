@@ -21,28 +21,12 @@ export default function POS() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastReceipt, setLastReceipt] = useState(null);
-  const [currencies, setCurrencies] = useState([]);
-  const [selectedCurrency, setSelectedCurrency] = useState(null);
 
   useEffect(() => {
-    Promise.all([
-      base44.entities.Product.list(),
-      base44.entities.Currency.list(),
-    ]).then(([prods, currs]) => {
-      setProducts(prods);
-      setCurrencies(currs);
-      const local = currs.find((c) => c.is_local);
-      setSelectedCurrency(local || null);
-      setLoading(false);
-    });
+    base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
+    // تركيز تلقائي على خانة البحث عند فتح الشاشة
     setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
-
-  const exchangeRate = selectedCurrency?.exchange_rate || 1;
-  const isLocal = !selectedCurrency || selectedCurrency.is_local;
-  function convertToDisplay(amount) {
-    return isLocal ? amount : amount / exchangeRate;
-  }
 
   function handleSearchKeyDown(e) {
     if (e.key === "Enter") {
@@ -221,21 +205,9 @@ export default function POS() {
             <ShoppingCart className="h-5 w-5 text-primary" />
             <span className="font-bold">السلة ({cart.length})</span>
           </div>
-          <div className="flex items-center gap-2">
-            {currencies.length > 1 && (
-              <Select value={selectedCurrency?.id || ""} onValueChange={(v) => setSelectedCurrency(currencies.find((c) => c.id === v) || null)}>
-                <SelectTrigger className="h-7 text-xs w-24"><SelectValue placeholder="عملة" /></SelectTrigger>
-                <SelectContent>
-                  {currencies.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.symbol} {c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <button onClick={resetAll} className="text-muted-foreground hover:text-destructive transition-colors">
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          </div>
+          <button onClick={resetAll} className="text-muted-foreground hover:text-destructive transition-colors">
+            <RotateCcw className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Cart items */}
@@ -312,15 +284,9 @@ export default function POS() {
           </div>
 
           <div className="bg-muted/30 rounded-lg p-3 space-y-1.5 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">المجموع</span><span>{convertToDisplay(subtotal).toLocaleString()} {selectedCurrency?.symbol || ""}</span></div>
-            {discountAmt > 0 && <div className="flex justify-between text-red-500"><span>الخصم</span><span>- {convertToDisplay(discountAmt).toLocaleString()}</span></div>}
-            <div className="flex justify-between font-bold text-base border-t border-border pt-1.5 mt-1">
-              <span>الإجمالي</span>
-              <div className="text-left">
-                <span className="text-primary">{convertToDisplay(total).toLocaleString()} {selectedCurrency?.symbol || ""}</span>
-                {!isLocal && <p className="text-[10px] text-muted-foreground font-normal">بالمحلي: {total.toLocaleString()} | صرف: {exchangeRate}</p>}
-              </div>
-            </div>
+            <div className="flex justify-between"><span className="text-muted-foreground">المجموع</span><span>{subtotal.toLocaleString()}</span></div>
+            {discountAmt > 0 && <div className="flex justify-between text-red-500"><span>الخصم</span><span>- {discountAmt.toLocaleString()}</span></div>}
+            <div className="flex justify-between font-bold text-base border-t border-border pt-1.5 mt-1"><span>الإجمالي</span><span className="text-primary">{total.toLocaleString()}</span></div>
           </div>
 
           {paymentMethod === "نقداً" && (
