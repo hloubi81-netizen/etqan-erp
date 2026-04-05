@@ -66,7 +66,12 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
     if (!invoice) {
       const nextNum = invs.length + 1;
-      setForm((prev) => ({ ...prev, invoice_number: String(nextNum).padStart(4, "0") }));
+      const localCurr = currs.find(c => c.is_local);
+      setForm((prev) => ({
+        ...prev,
+        invoice_number: String(nextNum).padStart(4, "0"),
+        currency: localCurr?.name || (currs.length > 0 ? currs[0].name : prev.currency),
+      }));
     }
   }
 
