@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Save, Eye, Upload, FileText, LayoutTemplate, Type, Printer } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import PrintTemplate from "@/components/shared/PrintTemplate";
 import InvoicePrintPreview from "@/components/invoices/InvoicePrintPreview";
 
 const DEFAULT_CONFIG = {
@@ -34,145 +32,12 @@ const DEFAULT_CONFIG = {
   primary_color: "#4338ca",
 };
 
-// Sample data per document type
-function PreviewByType({ config, docType }) {
-  const sampleItems = [
-    { name: "منتج أول", qty: 2, unit: "قطعة", price: 150, total: 300 },
-    { name: "منتج ثاني", qty: 1, unit: "كرتون", price: 500, total: 500 },
-  ];
-
-  const TABLE = ({ cols, rows }) => (
-    <table className="w-full text-xs border-collapse">
-      <thead>
-        <tr style={{ backgroundColor: (config.primary_color || "#4338ca") + "18" }}>
-          {cols.map((c, i) => <th key={i} className="text-right py-2 px-2 font-semibold border-b">{c}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, i) => (
-          <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-            {r.map((cell, j) => <td key={j} className="py-1.5 px-2 border-b border-gray-100">{cell}</td>)}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-
-  if (docType === "invoice" || docType === "purchase") {
-    const isReturn = false;
-    const typeLabel = docType === "invoice" ? "فاتورة مبيعات" : "فاتورة مشتريات";
-    return (
-      <PrintTemplate config={config} docType="invoice" title={typeLabel} number="INV-0042"
-        date={new Date().toLocaleDateString("ar-SA")}
-        meta={[{ label: docType === "invoice" ? "العميل" : "المورد", value: "شركة الأمل للتجارة" }, { label: "طريقة الدفع", value: "نقداً" }]}
-        totals={[
-          { label: "المجموع الفرعي", value: "800 ر.س" },
-          { label: "ضريبة القيمة المضافة (15%)", value: "120 ر.س" },
-          { label: "الإجمالي", value: "920 ر.س", bold: true },
-        ]}>
-        <TABLE cols={["#", "الصنف", "الكمية", "الوحدة", "السعر", "الإجمالي"]}
-          rows={sampleItems.map((it, i) => [i+1, it.name, it.qty, it.unit, it.price.toLocaleString(), it.total.toLocaleString()])} />
-      </PrintTemplate>
-    );
-  }
-
-  if (docType === "receipt" || docType === "payment") {
-    const isReceipt = docType === "receipt";
-    return (
-      <PrintTemplate config={config} docType="voucher" title={isReceipt ? "سند قبض" : "سند صرف"}
-        number={isReceipt ? "RCV-0015" : "PAY-0008"} date={new Date().toLocaleDateString("ar-SA")}
-        meta={[
-          { label: isReceipt ? "المستلم من" : "الصرف إلى", value: "شركة الأمل للتجارة" },
-          { label: "طريقة الدفع", value: "نقداً" },
-          { label: "المبلغ بالأرقام", value: "5,000 ر.س" },
-        ]}
-        totals={[{ label: "إجمالي المبلغ", value: "5,000 ر.س", bold: true }]}
-        notes="خمسة آلاف ريال سعودي فقط لا غير">
-        <div className="py-2 text-xs text-gray-600 bg-gray-50 rounded p-3">
-          <p>الحساب: <span className="font-semibold">الصندوق النقدي</span></p>
-          <p className="mt-1">الحساب المقابل: <span className="font-semibold">حسابات العملاء</span></p>
-          <p className="mt-1">البيان: <span className="font-semibold">تحصيل مستحقات الفاتورة INV-0042</span></p>
-        </div>
-      </PrintTemplate>
-    );
-  }
-
-  if (docType === "journal") {
-    return (
-      <PrintTemplate config={config} docType="voucher" title="قيد يومية" number="JRN-0033"
-        date={new Date().toLocaleDateString("ar-SA")}
-        meta={[{ label: "النوع", value: "سند يومية" }, { label: "المرجع", value: "INV-0042" }]}
-        totals={[
-          { label: "إجمالي المدين", value: "5,000 ر.س" },
-          { label: "إجمالي الدائن", value: "5,000 ر.س", bold: true },
-        ]}>
-        <TABLE cols={["الحساب", "البيان", "مدين", "دائن"]}
-          rows={[
-            ["حسابات العملاء", "تسوية مبيعات", "5,000", ""],
-            ["المبيعات", "إيرادات البيع", "", "4,347"],
-            ["ضريبة القيمة المضافة", "ضريبة 15%", "", "653"],
-          ]} />
-      </PrintTemplate>
-    );
-  }
-
-  if (docType === "salary") {
-    return (
-      <PrintTemplate config={config} docType="salary" title="كشف راتب"
-        number="SAL-2026-04" date={new Date().toLocaleDateString("ar-SA")}
-        meta={[
-          { label: "الموظف", value: "أحمد محمد الأحمد" },
-          { label: "الفترة", value: "أبريل 2026" },
-          { label: "القسم", value: "المحاسبة" },
-        ]}
-        totals={[
-          { label: "الراتب الأساسي", value: "8,000 ر.س" },
-          { label: "البدلات", value: "2,000 ر.س" },
-          { label: "الخصومات", value: "(500 ر.س)" },
-          { label: "صافي الراتب", value: "9,500 ر.س", bold: true },
-        ]}>
-        <TABLE cols={["البند", "المبلغ"]}
-          rows={[
-            ["الراتب الأساسي", "8,000 ر.س"],
-            ["بدل سكن", "1,200 ر.س"],
-            ["بدل مواصلات", "800 ر.س"],
-            ["خصم تأخير", "(500 ر.س)"],
-          ]} />
-      </PrintTemplate>
-    );
-  }
-
-  // report
-  return (
-    <PrintTemplate config={config} docType="report" title="تقرير كشف حساب"
-      number="RPT-0021" date={new Date().toLocaleDateString("ar-SA")}
-      meta={[
-        { label: "الحساب", value: "شركة الأمل للتجارة" },
-        { label: "الفترة", value: "يناير - أبريل 2026" },
-      ]}
-      totals={[
-        { label: "إجمالي المدين", value: "25,000 ر.س" },
-        { label: "إجمالي الدائن", value: "18,000 ر.س" },
-        { label: "الرصيد", value: "7,000 ر.س مدين", bold: true },
-      ]}>
-      <TABLE cols={["التاريخ", "البيان", "مدين", "دائن", "الرصيد"]}
-        rows={[
-          ["01/01/2026", "رصيد أول المدة", "5,000", "", "5,000"],
-          ["15/02/2026", "فاتورة INV-0010", "10,000", "", "15,000"],
-          ["03/03/2026", "سند قبض RCV-0005", "", "8,000", "7,000"],
-          ["20/04/2026", "فاتورة INV-0042", "10,000", "", "17,000"],
-        ]} />
-    </PrintTemplate>
-  );
-}
-
 export default function InvoicePrintSettings() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [configId, setConfigId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewDocType, setPreviewDocType] = useState("invoice");
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -211,18 +76,18 @@ export default function InvoicePrintSettings() {
   }
 
   function handlePrint() {
-    const el = document.getElementById("invoice-preview-content");
-    if (!el) return;
-    const win = window.open("", "_blank");
-    win.document.write(`
+    const printWindow = window.open("", "_blank");
+    const previewEl = document.getElementById("invoice-preview-content");
+    if (!previewEl || !printWindow) return;
+    printWindow.document.write(`
       <html><head>
-        <title>معاينة المستند</title>
+        <title>معاينة الفاتورة</title>
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-        <style>body { margin: 0; direction: rtl; font-family: Cairo, sans-serif; } @media print { body { margin: 0; } @page { margin: 10mm; } }</style>
-      </head><body>${el.innerHTML}</body></html>
+        <style>body { margin: 0; direction: rtl; font-family: Cairo, sans-serif; } @media print { body { margin: 0; } }</style>
+      </head><body>${previewEl.innerHTML}</body></html>
     `);
-    win.document.close();
-    setTimeout(() => { win.print(); }, 500);
+    printWindow.document.close();
+    setTimeout(() => { printWindow.print(); }, 500);
   }
 
   return (
@@ -441,29 +306,15 @@ export default function InvoicePrintSettings() {
         {/* Live Preview Panel */}
         {previewOpen && (
           <div>
-            <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-semibold text-muted-foreground">معاينة حية</p>
-              <div className="flex gap-2 items-center">
-                <Select value={previewDocType} onValueChange={setPreviewDocType}>
-                  <SelectTrigger className="h-8 text-xs w-44"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="invoice">فاتورة مبيعات</SelectItem>
-                    <SelectItem value="purchase">فاتورة مشتريات</SelectItem>
-                    <SelectItem value="receipt">سند قبض</SelectItem>
-                    <SelectItem value="payment">سند دفع</SelectItem>
-                    <SelectItem value="journal">قيد يومية</SelectItem>
-                    <SelectItem value="report">تقرير</SelectItem>
-                    <SelectItem value="salary">كشف راتب</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button size="sm" variant="outline" onClick={handlePrint} className="gap-2 text-xs">
-                  <Printer className="h-3.5 w-3.5" /> طباعة
-                </Button>
-              </div>
+              <Button size="sm" variant="outline" onClick={handlePrint} className="gap-2 text-xs">
+                <Printer className="h-3.5 w-3.5" /> طباعة
+              </Button>
             </div>
             <div className="border rounded-xl overflow-hidden bg-gray-100 p-4 overflow-y-auto max-h-[calc(100vh-160px)]">
               <div id="invoice-preview-content">
-                <PreviewByType config={config} docType={previewDocType} />
+                <InvoicePrintPreview config={config} />
               </div>
             </div>
           </div>
