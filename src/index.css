@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --font-cairo: 'Cairo', sans-serif;
+    --font-cairo: 'Outfit', sans-serif;
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
