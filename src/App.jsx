@@ -44,6 +44,7 @@ import AdvancedReports from './pages/reports/AdvancedReports';
 import FixedAssets from './pages/assets/FixedAssets';
 import JournalRules from './pages/accounting/JournalRules';
 import CashFlow from './pages/financial/CashFlow';
+import Settings from './pages/Settings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -105,6 +106,7 @@ const AuthenticatedApp = () => {
         <Route path="/assets" element={<FixedAssets />} />
         <Route path="/accounting/journal-rules" element={<JournalRules />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -9,7 +9,7 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Zap
+  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +116,7 @@ function getMenuItems(lang) {
     { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+    { label: "الإعدادات", icon: Settings, path: "/settings" },
   ];
 }
 
