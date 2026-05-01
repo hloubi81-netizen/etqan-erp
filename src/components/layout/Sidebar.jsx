@@ -159,7 +159,7 @@ const ITEM_PERMISSIONS = {
   "/branches": "branches", "/reports/branches": "branches", "/users": "users",
 };
 
-function SidebarItem({ item, expanded }) {
+function SidebarItem({ item, expanded, onNavigate }) {
   const { canView, isAdmin } = usePermissions();
   const { hasFeature } = useSubscription() || { hasFeature: () => true };
   const [isOpen, setIsOpen] = useState(false);
@@ -204,8 +204,9 @@ function SidebarItem({ item, expanded }) {
               <Link
                 key={child.path}
                 to={child.path}
+                onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all duration-150",
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all duration-150",
                   location.pathname === child.path
                     ? "bg-white text-indigo-700 font-semibold shadow-sm"
                     : "text-white/55 hover:bg-white/10 hover:text-white"
@@ -225,6 +226,7 @@ function SidebarItem({ item, expanded }) {
   return (
     <Link
       to={item.path}
+      onClick={onNavigate}
       className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group",
         isActive ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
@@ -260,10 +262,12 @@ export default function Sidebar({ isOpen, onToggle }) {
         onMouseLeave={() => setHovered(false)}
         className={cn(
           "fixed top-0 right-0 h-full z-50 flex flex-col transition-all duration-300 ease-in-out",
-          "lg:sticky lg:top-0 lg:z-auto",
-          // width: collapsed = 64px, expanded = 240px
-          expanded ? "w-60" : "w-0 lg:w-16",
-          isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen",
+          // Mobile: full width when open, hidden when closed
+          // Desktop: collapsed = 64px, expanded = 240px
+          "lg:w-16",
+          expanded && "lg:w-60",
+          isOpen ? "w-72 translate-x-0" : "w-72 translate-x-full lg:translate-x-0",
           // Gradient background
           "bg-gradient-to-b from-indigo-950 via-indigo-900 to-violet-950"
         )}
@@ -273,27 +277,33 @@ export default function Sidebar({ isOpen, onToggle }) {
         <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
 
         {/* Header */}
-        <div className={cn("p-3 flex items-center border-b border-white/10", expanded ? "gap-3" : "justify-center")}>
+        <div className={cn("p-3 flex items-center border-b border-white/10", (expanded || isOpen) ? "gap-3" : "justify-center")}>
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center shadow-lg shrink-0">
             <Sparkles className="h-4.5 w-4.5 text-white" />
           </div>
-          {expanded && (
-            <div>
+          {(expanded || isOpen) && (
+            <div className="flex-1">
               <p className="text-white font-bold text-base leading-tight">اتقان</p>
               <p className="text-indigo-300 text-[10px]">نظام الإدارة المالية</p>
             </div>
+          )}
+          {/* Close button on mobile */}
+          {isOpen && (
+            <button onClick={onToggle} className="lg:hidden text-white/60 hover:text-white p-1">
+              ✕
+            </button>
           )}
         </div>
 
         {/* Menu */}
         <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 scrollbar-thin">
           {menuItems.map((item, i) => (
-            <SidebarItem key={i} item={item} expanded={expanded} />
+            <SidebarItem key={i} item={item} expanded={expanded || isOpen} onNavigate={() => { if (isOpen) onToggle(); }} />
           ))}
         </nav>
 
         {/* Footer */}
-        {expanded && (
+        {(expanded || isOpen) && (
           <div className="p-3 border-t border-white/10">
             <p className="text-white/30 text-[10px] text-center">v2.0 • اتقان ERP</p>
           </div>
