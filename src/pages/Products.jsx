@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import ProductForm from "../components/products/ProductForm";
+import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -84,12 +85,37 @@ export default function Products() {
 
   return (
     <div>
-      <PageHeader
-        title="المواد والأصناف"
-        subtitle="إدارة المنتجات والمواد مع التسعير والوحدات"
-        onAdd={openNew}
-        addLabel="مادة جديدة"
-      />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">المواد والأصناف</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">إدارة المنتجات والمواد مع التسعير والوحدات</p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <ExcelImport
+            entityName="Product"
+            templateName="نموذج_استيراد_المنتجات.xlsx"
+            onSuccess={loadData}
+            columns={[
+              { key: "item_code", label: "رمز الصنف", required: true },
+              { key: "name", label: "اسم الصنف", required: true },
+              { key: "origin", label: "المنشأ" },
+              { key: "color", label: "اللون" },
+              { key: "size", label: "القياس" },
+              { key: "barcode", label: "الباركود" },
+              { key: "cost_price", label: "سعر التكلفة", type: "number" },
+              { key: "wholesale_price", label: "سعر الجملة", type: "number" },
+              { key: "retail_price", label: "سعر المستهلك", type: "number" },
+            ]}
+          />
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-2 h-9 px-4 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            مادة جديدة
+          </button>
+        </div>
+      </div>
 
       <DataTable
         columns={columns}

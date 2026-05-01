@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle } from "lucide-react";
+import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -182,13 +183,26 @@ export default function Accounts() {
           <h1 className="text-2xl font-bold">شجرة الحسابات</h1>
           <p className="text-sm text-muted-foreground mt-0.5">الدليل المحاسبي وفق المعايير الدولية (IFRS)</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {accounts.length === 0 && (
             <Button variant="outline" onClick={importDefaultAccounts} disabled={importing} className="gap-2">
               <Download className="h-4 w-4"/>
               {importing ? "جاري التحميل..." : "تحميل الحسابات الافتراضية (IFRS)"}
             </Button>
           )}
+          <ExcelImport
+            entityName="Account"
+            templateName="نموذج_استيراد_الحسابات.xlsx"
+            onSuccess={loadData}
+            columns={[
+              { key: "account_number", label: "رقم الحساب", required: true },
+              { key: "name", label: "اسم الحساب", required: true },
+              { key: "final_account", label: "الحساب الختامي" },
+              { key: "account_nature", label: "طبيعة الحساب" },
+              { key: "financial_statement", label: "القائمة المالية" },
+              { key: "currency", label: "العملة" },
+            ]}
+          />
           <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4"/>حساب جديد</Button>
         </div>
       </div>
