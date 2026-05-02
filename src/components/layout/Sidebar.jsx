@@ -9,7 +9,7 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings
+  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -159,7 +159,7 @@ const ITEM_PERMISSIONS = {
   "/branches": "branches", "/reports/branches": "branches", "/users": "users",
 };
 
-function SidebarItem({ item, expanded, onNavigate }) {
+function SidebarItem({ item, onNavigate }) {
   const { canView, isAdmin } = usePermissions();
   const { hasFeature } = useSubscription() || { hasFeature: () => true };
   const [isOpen, setIsOpen] = useState(false);
@@ -180,39 +180,31 @@ function SidebarItem({ item, expanded, onNavigate }) {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group",
+            "w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-sm transition-colors group",
             isActive
-              ? "bg-white/15 text-white"
-              : "text-white/60 hover:bg-white/10 hover:text-white"
+              ? "bg-blue-50 text-blue-700 font-medium"
+              : "text-gray-700 hover:bg-gray-100"
           )}
         >
-          <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-            isActive ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
-          )}>
-            <item.icon className="h-3.5 w-3.5" />
-          </div>
-          {expanded && (
-            <>
-              <span className="flex-1 text-right text-xs font-medium">{item.label}</span>
-              <ChevronDown className={cn("h-3 w-3 transition-transform duration-200 opacity-50", isOpen && "rotate-180")} />
-            </>
-          )}
+          <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-blue-600" : "text-gray-500")} />
+          <span className="flex-1 text-right text-[13px]">{item.label}</span>
+          <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform duration-200", isOpen && "rotate-180")} />
         </button>
-        {isOpen && expanded && (
-          <div className="mr-5 mt-0.5 mb-1 space-y-0.5 border-r border-white/10 pr-2">
+        {isOpen && (
+          <div className="mr-6 mt-0.5 mb-1 border-r-2 border-blue-100 pr-0">
             {visibleChildren.map((child) => (
               <Link
                 key={child.path}
                 to={child.path}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all duration-150",
+                  "flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors",
                   location.pathname === child.path
-                    ? "bg-white text-indigo-700 font-semibold shadow-sm"
-                    : "text-white/55 hover:bg-white/10 hover:text-white"
+                    ? "text-blue-700 font-semibold bg-blue-50 border-r-2 border-blue-600 -mr-[2px]"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
                 )}
               >
-                <child.icon className="h-3 w-3 shrink-0" />
+                <child.icon className="h-3.5 w-3.5 shrink-0 opacity-70" />
                 <span>{child.label}</span>
               </Link>
             ))}
@@ -228,86 +220,67 @@ function SidebarItem({ item, expanded, onNavigate }) {
       to={item.path}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 group",
-        isActive ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white"
+        "flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] transition-colors",
+        isActive
+          ? "bg-blue-50 text-blue-700 font-semibold border-r-2 border-blue-600"
+          : "text-gray-700 hover:bg-gray-100"
       )}
     >
-      <div className={cn("h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-        isActive ? "bg-white/20" : "bg-white/5 group-hover:bg-white/10"
-      )}>
-        <item.icon className="h-3.5 w-3.5" />
-      </div>
-      {expanded && <span className="text-xs font-medium">{item.label}</span>}
+      <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-blue-600" : "text-gray-500")} />
+      <span>{item.label}</span>
     </Link>
   );
 }
 
 export default function Sidebar({ isOpen, onToggle }) {
   const { lang } = useLang();
-  const [hovered, setHovered] = useState(false);
   const menuItems = getMenuItems(lang);
-
-  // On desktop: auto-expand on hover OR if pinned open
-  const expanded = isOpen || hovered;
 
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={onToggle} />
+        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onToggle} />
       )}
 
       <aside
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         className={cn(
-          "fixed top-0 right-0 h-full z-50 flex flex-col transition-all duration-300 ease-in-out",
-          "lg:sticky lg:top-0 lg:z-auto lg:h-screen",
-          // Mobile: full width when open, hidden when closed
-          // Desktop: collapsed = 64px, expanded = 240px
-          "lg:w-16",
-          expanded && "lg:w-60",
-          isOpen ? "w-72 translate-x-0" : "w-72 translate-x-full lg:translate-x-0",
-          // Gradient background
-          "bg-gradient-to-b from-indigo-950 via-indigo-900 to-violet-950"
+          "fixed top-0 right-0 h-full z-50 flex flex-col transition-all duration-300",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0",
+          "w-64 bg-white border-l border-gray-200",
+          isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0",
         )}
-        style={{ boxShadow: "4px 0 24px rgba(0,0,0,0.25)" }}
+        style={{ boxShadow: "-2px 0 8px rgba(0,0,0,0.06)" }}
       >
-        {/* Decorative glow */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none" />
-
-        {/* Header */}
-        <div className={cn("p-3 flex items-center border-b border-white/10", (expanded || isOpen) ? "gap-3" : "justify-center")}>
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center shadow-lg shrink-0">
-            <Sparkles className="h-4.5 w-4.5 text-white" />
+        {/* Header - Office style brand bar */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white shrink-0">
+          <div className="h-8 w-8 rounded bg-white/20 flex items-center justify-center shrink-0">
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
-          {(expanded || isOpen) && (
-            <div className="flex-1">
-              <p className="text-white font-bold text-base leading-tight">اتقان</p>
-              <p className="text-indigo-300 text-[10px]">نظام الإدارة المالية</p>
-            </div>
-          )}
-          {/* Close button on mobile */}
-          {isOpen && (
-            <button onClick={onToggle} className="lg:hidden text-white/60 hover:text-white p-1">
-              ✕
-            </button>
-          )}
+          <div className="flex-1">
+            <p className="font-bold text-sm leading-tight">اتقان ERP</p>
+            <p className="text-blue-200 text-[10px]">نظام الإدارة المالية</p>
+          </div>
+          <button onClick={onToggle} className="lg:hidden text-white/80 hover:text-white p-1">
+            <ChevronLeft className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Menu */}
-        <nav className="flex-1 overflow-y-auto p-2 space-y-0.5 scrollbar-thin">
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-2 px-1 space-y-0.5">
           {menuItems.map((item, i) => (
-            <SidebarItem key={i} item={item} expanded={expanded || isOpen} onNavigate={() => { if (isOpen) onToggle(); }} />
+            <SidebarItem
+              key={i}
+              item={item}
+              onNavigate={() => { if (isOpen) onToggle(); }}
+            />
           ))}
         </nav>
 
         {/* Footer */}
-        {(expanded || isOpen) && (
-          <div className="p-3 border-t border-white/10">
-            <p className="text-white/30 text-[10px] text-center">v2.0 • اتقان ERP</p>
-          </div>
-        )}
+        <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
+          <p className="text-gray-400 text-[10px] text-center">v2.0 • اتقان ERP</p>
+        </div>
       </aside>
     </>
   );
