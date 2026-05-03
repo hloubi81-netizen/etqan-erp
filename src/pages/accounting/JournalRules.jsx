@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil, Trash2, Zap, CheckCircle, Download, Info } from "lucide-react";
 import { toast } from "sonner";
 import { DEFAULT_RULES } from "@/utils/journalEngine";
+import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
 const TRIGGERS = ["فاتورة مبيعات", "فاتورة مشتريات", "مرتجع مبيعات", "مرتجع مشتريات", "سند قبض", "سند صرف", "سند يومية"];
 const PAYMENT_METHODS = ["الكل", "نقداً", "آجل", "بنك"];
@@ -226,23 +227,23 @@ export default function JournalRules() {
             {/* Debit Account */}
             <div>
               <Label className="text-xs">حساب المدين (Debit)*</Label>
-              <Select value={form.debit_account_id || ""} onValueChange={(v) => setAccount("debit_account_id", "debit_account_name", v)}>
-                <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="اختر حساباً" /></SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.account_number} - {a.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <AccountSearchInput
+                accounts={accounts}
+                value={form.debit_account_id || ""}
+                onChange={(id, name) => setAccount("debit_account_id", "debit_account_name", id)}
+                placeholder="ابحث عن حساب المدين..."
+              />
             </div>
 
             {/* Credit Account */}
             <div>
               <Label className="text-xs">حساب الدائن (Credit)*</Label>
-              <Select value={form.credit_account_id || ""} onValueChange={(v) => setAccount("credit_account_id", "credit_account_name", v)}>
-                <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="اختر حساباً" /></SelectTrigger>
-                <SelectContent className="max-h-48">
-                  {accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.account_number} - {a.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <AccountSearchInput
+                accounts={accounts}
+                value={form.credit_account_id || ""}
+                onChange={(id, name) => setAccount("credit_account_id", "credit_account_name", id)}
+                placeholder="ابحث عن حساب الدائن..."
+              />
             </div>
 
             {/* Description Template */}

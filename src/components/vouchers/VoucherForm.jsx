@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, Zap } from "lucide-react";
 import { applyJournalRules } from "@/utils/journalEngine";
 import { toast } from "sonner";
+import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
 export default function VoucherForm({ open, onClose, onSave, voucher, voucherType }) {
   const [accounts, setAccounts] = useState([]);
@@ -125,37 +126,21 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>{voucherType === "سند قبض" ? "الحساب (الصندوق)" : "الحساب"}</Label>
-                  <Select
+                  <AccountSearchInput
+                    accounts={accounts}
                     value={form.account_id}
-                    onValueChange={(v) => {
-                      const acc = accounts.find((a) => a.id === v);
-                      setForm({ ...form, account_id: v, account_name: acc?.name || "" });
-                    }}
-                  >
-                    <SelectTrigger><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(id, name) => setForm({ ...form, account_id: id, account_name: name })}
+                    placeholder="ابحث عن الحساب..."
+                  />
                 </div>
                 <div>
                   <Label>الحساب المقابل</Label>
-                  <Select
+                  <AccountSearchInput
+                    accounts={accounts}
                     value={form.counter_account_id}
-                    onValueChange={(v) => {
-                      const acc = accounts.find((a) => a.id === v);
-                      setForm({ ...form, counter_account_id: v, counter_account_name: acc?.name || "" });
-                    }}
-                  >
-                    <SelectTrigger><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(id, name) => setForm({ ...form, counter_account_id: id, counter_account_name: name })}
+                    placeholder="ابحث عن الحساب المقابل..."
+                  />
                 </div>
               </div>
               <div>
@@ -179,15 +164,13 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
                 {form.entries.map((entry, idx) => (
                   <div key={idx} className="grid grid-cols-5 gap-2 items-end p-3 bg-muted/30 rounded-lg">
                     <div className="col-span-2">
-                      <Label className="text-xs">الحساب</Label>
-                      <Select value={entry.account_id} onValueChange={(v) => updateEntry(idx, "account_id", v)}>
-                        <SelectTrigger className="h-9"><SelectValue placeholder="اختر" /></SelectTrigger>
-                        <SelectContent>
-                          {accounts.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                     <Label className="text-xs">الحساب</Label>
+                     <AccountSearchInput
+                       accounts={accounts}
+                       value={entry.account_id}
+                       onChange={(id, name) => updateEntry(idx, "account_id", id)}
+                       placeholder="ابحث عن الحساب..."
+                     />
                     </div>
                     <div>
                       <Label className="text-xs">مدين</Label>

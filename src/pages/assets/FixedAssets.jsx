@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, Building2, TrendingDown, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
 const EMPTY = {
   asset_number: "", name: "", category: "آلات ومعدات", purchase_date: "",
@@ -287,15 +288,12 @@ export default function FixedAssets() {
               ].map(([idKey, nameKey, lbl]) => (
                 <div key={idKey}>
                   <Label className="text-xs">{lbl}</Label>
-                  <Select value={form[idKey] || ""} onValueChange={(v) => {
-                    const acc = accounts.find((a) => a.id === v);
-                    setForm((p) => ({ ...p, [idKey]: v, [nameKey]: acc?.name || "" }));
-                  }}>
-                    <SelectTrigger className="mt-1 h-8 text-xs"><SelectValue placeholder="اختر حساباً" /></SelectTrigger>
-                    <SelectContent>
-                      {accounts.map((acc) => <SelectItem key={acc.id} value={acc.id}>{acc.account_number} - {acc.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <AccountSearchInput
+                    accounts={accounts}
+                    value={form[idKey] || ""}
+                    onChange={(id, name) => setForm((p) => ({ ...p, [idKey]: id, [nameKey]: name }))}
+                    placeholder={`ابحث عن ${lbl}...`}
+                  />
                 </div>
               ))}
             </TabsContent>
