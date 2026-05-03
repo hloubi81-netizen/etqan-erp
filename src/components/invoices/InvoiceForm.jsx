@@ -10,6 +10,7 @@ import { Plus, Trash2, Zap } from "lucide-react";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { applyJournalRules } from "@/utils/journalEngine";
 import { toast } from "sonner";
+import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
 export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceType }) {
   const [products, setProducts] = useState([]);
@@ -150,20 +151,12 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             </div>
             <div>
               <Label>{invoiceType.includes("مبيعات") ? "العميل" : "المورد"}</Label>
-              <Select
+              <AccountSearchInput
+                accounts={accounts}
                 value={form.client_account_id}
-                onValueChange={(v) => {
-                  const acc = accounts.find((a) => a.id === v);
-                  setForm({ ...form, client_account_id: v, client_name: acc?.name || "" });
-                }}
-              >
-                <SelectTrigger><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
-                <SelectContent>
-                  {accounts.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(id, name) => setForm({ ...form, client_account_id: id, client_name: name })}
+                placeholder={`ابحث عن ${invoiceType.includes("مبيعات") ? "العميل" : "المورد"}...`}
+              />
             </div>
             <div>
               <Label>المستودع</Label>
