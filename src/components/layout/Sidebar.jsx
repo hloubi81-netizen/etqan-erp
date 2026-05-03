@@ -9,7 +9,7 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft
+  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +32,8 @@ function getMenuItems(lang) {
         { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
         { label: l('currencies'), path: "/currencies", icon: Coins },
         { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
-        { label: "قواعد اليومية التلقائية", path: "/accounting/journal-rules", icon: Zap }
+        { label: "قواعد اليومية التلقائية", path: "/accounting/journal-rules", icon: Zap },
+        { label: "التسويات البنكية", path: "/accounting/bank-reconciliation", icon: Landmark }
       ]
     },
     {
@@ -59,7 +60,8 @@ function getMenuItems(lang) {
       label: l('stockSection'), icon: WarehouseIcon,
       children: [
         { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
-        { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList }
+        { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
+        { label: "تنبيهات المخزون", path: "/inventory/stock-alerts", icon: ClipboardList }
       ]
     },
     {
@@ -110,7 +112,8 @@ function getMenuItems(lang) {
       children: [
         { label: "الموظفون", path: "/hr/employees", icon: Users },
         { label: "الحضور والغياب", path: "/hr/attendance", icon: CalendarCheck },
-        { label: "الرواتب", path: "/hr/payroll", icon: Banknote }
+        { label: "الرواتب", path: "/hr/payroll", icon: Banknote },
+        { label: "طلبات الإجازات", path: "/hr/leaves", icon: CalendarCheck }
       ]
     },
     { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },

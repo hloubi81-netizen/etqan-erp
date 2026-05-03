@@ -45,6 +45,9 @@ import FixedAssets from './pages/assets/FixedAssets';
 import JournalRules from './pages/accounting/JournalRules';
 import CashFlow from './pages/financial/CashFlow';
 import Settings from './pages/Settings';
+import LeaveRequests from './pages/hr/LeaveRequests';
+import BankReconciliation from './pages/accounting/BankReconciliation';
+import StockAlerts from './pages/inventory/StockAlerts';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -107,6 +110,9 @@ const AuthenticatedApp = () => {
         <Route path="/accounting/journal-rules" element={<JournalRules />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/hr/leaves" element={<LeaveRequests />} />
+        <Route path="/accounting/bank-reconciliation" element={<BankReconciliation />} />
+        <Route path="/inventory/stock-alerts" element={<StockAlerts />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,0 +1,44 @@
+{
+  "name": "StockAlert",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0646\u062a\u062c"
+    },
+    "product_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0646\u062a\u062c"
+    },
+    "warehouse_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639"
+    },
+    "warehouse_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u0648\u062f\u0639"
+    },
+    "min_quantity": {
+      "type": "number",
+      "title": "\u0627\u0644\u062d\u062f \u0627\u0644\u0623\u062f\u0646\u0649 \u0644\u0644\u0645\u062e\u0632\u0648\u0646"
+    },
+    "max_quantity": {
+      "type": "number",
+      "title": "\u0627\u0644\u062d\u062f \u0627\u0644\u0623\u0642\u0635\u0649 \u0644\u0644\u0645\u062e\u0632\u0648\u0646"
+    },
+    "reorder_quantity": {
+      "type": "number",
+      "title": "\u0643\u0645\u064a\u0629 \u0625\u0639\u0627\u062f\u0629 \u0627\u0644\u0637\u0644\u0628"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "\u0646\u0634\u0637",
+      "default": true
+    }
+  },
+  "required": [
+    "product_id",
+    "warehouse_id",
+    "min_quantity"
+  ]
+}

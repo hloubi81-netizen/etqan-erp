@@ -1,0 +1,83 @@
+{
+  "name": "BankReconciliation",
+  "type": "object",
+  "properties": {
+    "reconciliation_number": {
+      "type": "string",
+      "title": "\u0631\u0642\u0645 \u0627\u0644\u062a\u0633\u0648\u064a\u0629"
+    },
+    "account_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u062d\u0633\u0627\u0628 \u0627\u0644\u0628\u0646\u0643\u064a"
+    },
+    "account_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u062d\u0633\u0627\u0628"
+    },
+    "period": {
+      "type": "string",
+      "title": "\u0627\u0644\u0641\u062a\u0631\u0629"
+    },
+    "bank_balance": {
+      "type": "number",
+      "title": "\u0631\u0635\u064a\u062f \u0627\u0644\u0628\u0646\u0643 (\u0643\u0634\u0641 \u0627\u0644\u062d\u0633\u0627\u0628)"
+    },
+    "book_balance": {
+      "type": "number",
+      "title": "\u0627\u0644\u0631\u0635\u064a\u062f \u0627\u0644\u062f\u0641\u062a\u0631\u064a"
+    },
+    "difference": {
+      "type": "number",
+      "title": "\u0627\u0644\u0641\u0631\u0642"
+    },
+    "transactions": {
+      "type": "array",
+      "title": "\u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0627\u062a",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "\u0625\u064a\u062f\u0627\u0639",
+              "\u0633\u062d\u0628"
+            ]
+          },
+          "matched": {
+            "type": "boolean"
+          },
+          "voucher_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0641\u062a\u0648\u062d\u0629",
+        "\u0645\u063a\u0644\u0642\u0629"
+      ],
+      "default": "\u0645\u0641\u062a\u0648\u062d\u0629",
+      "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
+    },
+    "notes": {
+      "type": "string",
+      "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+    }
+  },
+  "required": [
+    "reconciliation_number",
+    "account_id",
+    "period"
+  ]
+}

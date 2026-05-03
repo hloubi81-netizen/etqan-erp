@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { Menu, Bell, Search, ChevronDown } from "lucide-react";
+import { Menu, Bell, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLang } from "@/hooks/useLang.jsx";
 import ThemePicker from "./ThemePicker";
 import { base44 } from "@/api/base44Client";
 import { useEffect } from "react";
+import GlobalSearch from "./GlobalSearch";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,16 +40,9 @@ export default function AppLayout() {
               <span>اتقان</span>
             </div>
 
-            {/* Search bar */}
+            {/* Global Search */}
             <div className="flex-1 max-w-sm">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="بحث..."
-                  className="w-full pr-9 pl-3 py-1.5 text-sm border border-gray-200 rounded bg-gray-50 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
-                />
-              </div>
+              <GlobalSearch />
             </div>
 
             <div className="flex-1" />
