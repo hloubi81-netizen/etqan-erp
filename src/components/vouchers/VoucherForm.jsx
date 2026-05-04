@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
-import { applyJournalRules } from "@/utils/journalEngine";
+import { applyJournalRules, updateVoucherAccountBalances } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
@@ -218,6 +218,9 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
             onClick={async () => {
               const saved = { ...form, status: "مرحّل" };
               await onSave(saved);
+              // تحديث أرصدة حسابات السند مباشرة
+              await updateVoucherAccountBalances(saved);
+              // تطبيق قواعد اليومية التلقائية (وتحديث أرصدة حساباتها)
               const triggerMap = { "سند قبض": "سند قبض", "سند دفع": "سند صرف", "سند يومية": "سند يومية" };
               const trigger = triggerMap[voucherType] || voucherType;
               const result = await applyJournalRules(trigger, saved, "سند", saved.voucher_number);
