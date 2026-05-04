@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
-import { applyJournalRules } from "@/utils/journalEngine";
+import { applyJournalRules, refreshAccountBalances } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
@@ -352,6 +352,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             onClick={async () => {
               const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
               await onSave(saved);
+              // تحديث فوري لرصيد حساب العميل/المورد
+              if (saved.client_account_id) await refreshAccountBalances([saved.client_account_id]);
               const trigger = invoiceType.includes("مشتريات") ? "فاتورة مشتريات"
                 : invoiceType.includes("مرتجع مبيعات") ? "مرتجع مبيعات"
                 : invoiceType.includes("مرتجع مشتريات") ? "مرتجع مشتريات"

@@ -6,52 +6,68 @@ import { base44 } from "@/api/base44Client";
  */
 
 /**
- * تحديث رصيد حساب معين بناءً على جميع قيوده في اليومية
+ * إعادة حساب رصيد حساب معين وتحديثه في قاعدة البيانات
+ * المصادر: JournalEntry + السندات المرحّلة (entries) + السندات البسيطة
  */
-async function updateAccountBalance(accountId) {
+async function recalcAndUpdateAccount(accountId) {
   if (!accountId) return;
-  const allEntries = await base44.entities.JournalEntry.list();
+
+  const [allEntries, allVouchers] = await Promise.all([
+    base44.entities.JournalEntry.list(),
+    base44.entities.Voucher.filter({ status: "مرحّل" }),
+  ]);
+
   let debitTotal = 0;
   let creditTotal = 0;
+
+  // من قيود اليومية التلقائية
   for (const entry of allEntries) {
-    if (entry.debit_account_id === accountId) debitTotal += (entry.amount || 0);
+    if (entry.debit_account_id === accountId)  debitTotal  += (entry.amount || 0);
     if (entry.credit_account_id === accountId) creditTotal += (entry.amount || 0);
   }
-  // للسندات اليومية (entries[]) نعالجها أيضاً من Voucher
-  const vouchers = await base44.entities.Voucher.list();
-  for (const v of vouchers) {
-    if (v.status !== "مرحّل") continue;
-    for (const e of (v.entries || [])) {
-      if (e.account_id === accountId) {
-        debitTotal += (e.debit || 0);
-        creditTotal += (e.credit || 0);
+
+  // من السندات المرحّلة
+  for (const v of allVouchers) {
+    // سند بسيط (قبض / دفع)
+    if (!v.entries || v.entries.length === 0) {
+      if (v.account_id === accountId)         debitTotal  += (v.amount || 0); // الصندوق يُدان بالقبض
+      if (v.counter_account_id === accountId) creditTotal += (v.amount || 0);
+    } else {
+      // سند قيد (entries[])
+      for (const e of v.entries) {
+        if (e.account_id === accountId) {
+          debitTotal  += (e.debit  || 0);
+          creditTotal += (e.credit || 0);
+        }
       }
     }
   }
-  const balance = debitTotal - creditTotal;
+
   await base44.entities.Account.update(accountId, {
-    debit_balance: debitTotal,
+    debit_balance:  debitTotal,
     credit_balance: creditTotal,
-    balance: Math.abs(balance),
+    balance:        Math.abs(debitTotal - creditTotal),
   });
 }
 
 /**
- * توليد قيد يومية تلقائي بناءً على القواعد المعرّفة
- * @param {string} trigger - نوع الحدث (فاتورة مبيعات، سند قبض، ...)
- * @param {object} sourceDoc - مستند المصدر (الفاتورة أو السند)
- * @param {string} sourceType - نوع المصدر للقيد
- * @param {string} sourceNumber - رقم المستند
- * @returns {Promise<{posted: number, errors: string[]}>}
+ * تحديث أرصدة مجموعة من معرّفات الحسابات
+ */
+export async function refreshAccountBalances(accountIds = []) {
+  const unique = [...new Set(accountIds.filter(Boolean))];
+  await Promise.all(unique.map((id) => recalcAndUpdateAccount(id)));
+}
+
+/**
+ * توليد قيد يومية تلقائي بناءً على القواعد المعرّفة وتحديث أرصدة الحسابات
  */
 export async function applyJournalRules(trigger, sourceDoc, sourceType, sourceNumber) {
   const rules = await base44.entities.JournalRule.filter({ trigger, is_active: true });
 
   const results = { posted: 0, errors: [] };
-  const affectedAccountIds = new Set();
+  const affectedIds = new Set();
 
   for (const rule of rules) {
-    // فلترة حسب طريقة الدفع إن وُجدت
     if (rule.payment_method && rule.payment_method !== "الكل") {
       const docPayment = sourceDoc.payment_method;
       if (docPayment && docPayment !== rule.payment_method) continue;
@@ -60,7 +76,6 @@ export async function applyJournalRules(trigger, sourceDoc, sourceType, sourceNu
     const amount = sourceDoc.total || sourceDoc.amount || 0;
     if (amount <= 0) continue;
 
-    // بناء بيان القيد
     const notes = buildDescription(rule.description_template, sourceDoc, sourceNumber);
 
     try {
@@ -78,37 +93,17 @@ export async function applyJournalRules(trigger, sourceDoc, sourceType, sourceNu
         notes,
       });
       results.posted++;
-      if (rule.debit_account_id) affectedAccountIds.add(rule.debit_account_id);
-      if (rule.credit_account_id) affectedAccountIds.add(rule.credit_account_id);
+      if (rule.debit_account_id)  affectedIds.add(rule.debit_account_id);
+      if (rule.credit_account_id) affectedIds.add(rule.credit_account_id);
     } catch (e) {
       results.errors.push(`خطأ في قاعدة "${rule.name}": ${e.message}`);
     }
   }
 
-  // تحديث أرصدة الحسابات المتأثرة
-  for (const accountId of affectedAccountIds) {
-    try { await updateAccountBalance(accountId); } catch (_) {}
-  }
+  // تحديث فوري لأرصدة الحسابات المتأثرة
+  await refreshAccountBalances([...affectedIds]);
 
   return results;
-}
-
-/**
- * تحديث أرصدة الحسابات بعد ترحيل سند يومية يدوي (entries[])
- * @param {object} voucher - السند المرحّل
- */
-export async function updateVoucherAccountBalances(voucher) {
-  const affectedAccountIds = new Set();
-  // سند بسيط (قبض/دفع)
-  if (voucher.account_id) affectedAccountIds.add(voucher.account_id);
-  if (voucher.counter_account_id) affectedAccountIds.add(voucher.counter_account_id);
-  // سند قيد (entries)
-  for (const e of (voucher.entries || [])) {
-    if (e.account_id) affectedAccountIds.add(e.account_id);
-  }
-  for (const accountId of affectedAccountIds) {
-    try { await updateAccountBalance(accountId); } catch (_) {}
-  }
 }
 
 function buildDescription(template, doc, sourceNumber) {
