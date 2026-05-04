@@ -12,7 +12,16 @@ import { applyJournalRules } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
-export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceType }) {
+const EMPTY_ITEM = () => ({ product_id: "", product_name: "", quantity: 1, unit: "", price: 0, discount_percent: 0, discount_value: 0, total: 0 });
+const MIN_ROWS = 10;
+
+function buildDefaultItems(existing) {
+  const rows = existing?.length ? [...existing] : [];
+  while (rows.length < MIN_ROWS) rows.push(EMPTY_ITEM());
+  return rows;
+}
+
+export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceType, pattern }) {
   const [products, setProducts] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -21,15 +30,17 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
   const [form, setForm] = useState({
     invoice_number: invoice?.invoice_number || "",
+    pattern_id: invoice?.pattern_id || pattern?.id || "",
+    pattern_name: invoice?.pattern_name || pattern?.name || "",
     pattern_type: invoiceType,
     date: invoice?.date || new Date().toISOString().split("T")[0],
     client_account_id: invoice?.client_account_id || "",
     client_name: invoice?.client_name || "",
-    warehouse_id: invoice?.warehouse_id || "",
+    warehouse_id: invoice?.warehouse_id || pattern?.default_warehouse_id || "",
     warehouse_name: invoice?.warehouse_name || "",
     payment_method: invoice?.payment_method || "نقداً",
-    currency: invoice?.currency || "",
-    items: invoice?.items || [],
+    currency: invoice?.currency || pattern?.default_currency || "",
+    items: buildDefaultItems(invoice?.items),
     subtotal: invoice?.subtotal || 0,
     discount_value: invoice?.discount_value || 0,
     discount_percent: invoice?.discount_percent || 0,
@@ -61,21 +72,33 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
     if (!invoice) {
       const nextNum = invs.length + 1;
-      setForm((prev) => ({ ...prev, invoice_number: String(nextNum).padStart(4, "0") }));
+      // apply pattern defaults if warehouse not yet set
+      const wh = pattern?.default_warehouse_id ? whs.find(w => w.id === pattern.default_warehouse_id) : null;
+      setForm((prev) => ({
+        ...prev,
+        invoice_number: String(nextNum).padStart(4, "0"),
+        warehouse_id: prev.warehouse_id || (wh?.id ?? ""),
+        warehouse_name: prev.warehouse_name || (wh?.name ?? ""),
+        currency: prev.currency || pattern?.default_currency || (currs.find(c => c.is_local)?.name ?? ""),
+      }));
     }
   }
 
   function addItem() {
     setForm((prev) => ({
       ...prev,
-      items: [...prev.items, { product_id: "", product_name: "", quantity: 1, unit: "", price: 0, discount_percent: 0, discount_value: 0, total: 0 }],
+      items: [...prev.items, EMPTY_ITEM()],
     }));
   }
 
   function removeItem(idx) {
-    const newItems = form.items.filter((_, i) => i !== idx);
-    setForm((prev) => ({ ...prev, items: newItems }));
-    recalculate(newItems, form.discount_percent, form.discount_value);
+    const newItems = form.items.map((item, i) => i === idx ? EMPTY_ITEM() : item);
+    // If all last rows are empty, keep MIN_ROWS; otherwise trim trailing empty beyond MIN_ROWS
+    const trimmed = newItems.length > MIN_ROWS
+      ? newItems.filter((item, i) => i < MIN_ROWS || item.product_id !== "")
+      : newItems;
+    setForm((prev) => ({ ...prev, items: trimmed }));
+    recalculate(trimmed, form.discount_percent, form.discount_value);
   }
 
   function updateItem(idx, key, value) {
@@ -135,7 +158,10 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{invoice ? "تعديل" : "إنشاء"} فاتورة {invoiceType}</DialogTitle>
+          <DialogTitle>
+          {invoice ? "تعديل" : "إنشاء"} فاتورة {invoiceType}
+          {form.pattern_name && <span className="text-sm font-normal text-muted-foreground mr-2">| نمط: {form.pattern_name}</span>}
+        </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -321,10 +347,10 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
         <DialogFooter className="gap-2 mt-4">
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button onClick={() => onSave({ ...form, status: "مسودة" })} disabled={!form.invoice_number} variant="outline">حفظ مسودة</Button>
+          <Button onClick={() => onSave({ ...form, items: form.items.filter(i => i.product_id), status: "مسودة" })} disabled={!form.invoice_number} variant="outline">حفظ مسودة</Button>
           <Button
             onClick={async () => {
-              const saved = { ...form, status: "مرحّلة" };
+              const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
               await onSave(saved);
               const trigger = invoiceType.includes("مشتريات") ? "فاتورة مشتريات"
                 : invoiceType.includes("مرتجع مبيعات") ? "مرتجع مبيعات"
