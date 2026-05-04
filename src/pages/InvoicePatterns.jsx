@@ -30,11 +30,11 @@ export default function InvoicePatterns() {
 
   async function loadData() {
     const [p, a, w, cc, c] = await Promise.all([
-      base44.entities.InvoicePattern.list(),
-      base44.entities.Account.list(),
-      base44.entities.Warehouse.list(),
-      base44.entities.CostCenter.list(),
-      base44.entities.Currency.list(),
+      base44.entities.InvoicePattern.list().catch(() => []),
+      base44.entities.Account.list().catch(() => []),
+      base44.entities.Warehouse.list().catch(() => []),
+      base44.entities.CostCenter.list().catch(() => []),
+      base44.entities.Currency.list().catch(() => []),
     ]);
     setPatterns(p); setAccounts(a); setWarehouses(w); setCostCenters(cc); setCurrencies(c);
     setLoading(false);
