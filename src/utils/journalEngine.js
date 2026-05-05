@@ -14,7 +14,7 @@ async function recalcAndUpdateAccount(accountId) {
 
   const [allEntries, allVouchers] = await Promise.all([
     base44.entities.JournalEntry.list(),
-    base44.entities.Voucher.filter({ status: "مرحّل" }),
+    base44.entities.Voucher.filter({ status: "مرحّل" }).catch(() => []),
   ]);
 
   let debitTotal = 0;

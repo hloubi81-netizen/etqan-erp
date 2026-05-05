@@ -70,10 +70,10 @@ export default function Dashboard() {
     else setLoading(true);
 
     const [products, allInvoices, vouchers, warehouses, employees] = await Promise.all([
-      base44.entities.Product.list(),
-      base44.entities.Invoice.list("-date", 50),
-      base44.entities.Voucher.list("-date", 100),
-      base44.entities.Warehouse.list(),
+      base44.entities.Product.list().catch(() => []),
+      base44.entities.Invoice.list("-date", 50).catch(() => []),
+      base44.entities.Voucher.list("-date", 100).catch(() => []),
+      base44.entities.Warehouse.list().catch(() => []),
       base44.entities.Employee.list().catch(() => []),
     ]);
 
