@@ -1,0 +1,45 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "sender_email": {
+      "type": "string",
+      "title": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0633\u0650\u0644"
+    },
+    "sender_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u0633\u0650\u0644"
+    },
+    "recipient_email": {
+      "type": "string",
+      "title": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0633\u062a\u0642\u0628\u0650\u0644"
+    },
+    "recipient_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u0642\u0628\u0650\u0644"
+    },
+    "subject": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0648\u0636\u0648\u0639"
+    },
+    "body": {
+      "type": "string",
+      "title": "\u0646\u0635 \u0627\u0644\u0631\u0633\u0627\u0644\u0629"
+    },
+    "is_read": {
+      "type": "boolean",
+      "title": "\u0645\u0642\u0631\u0648\u0621\u0629",
+      "default": false
+    },
+    "parent_message_id": {
+      "type": "string",
+      "title": "\u0631\u062f \u0639\u0644\u0649 \u0631\u0633\u0627\u0644\u0629"
+    }
+  },
+  "required": [
+    "sender_email",
+    "recipient_email",
+    "subject",
+    "body"
+  ]
+}

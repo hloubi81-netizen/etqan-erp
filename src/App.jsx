@@ -56,6 +56,7 @@ import NotificationsCenter from './pages/notifications/NotificationsCenter';
 import CustomReports from './pages/reports/CustomReports';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Messages from './pages/Messages';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -129,6 +130,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/custom" element={<CustomReports />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/messages" element={<Messages />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

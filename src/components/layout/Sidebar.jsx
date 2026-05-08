@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -119,6 +119,7 @@ function getMenuItems(lang) {
     },
     { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
     { label: "الإشعارات والتنبيهات", icon: Bell, path: "/notifications" },
+    { label: "الرسائل الداخلية", icon: Mail, path: "/messages" },
     {
       label: l('reports'), icon: BarChart3,
       children: [
