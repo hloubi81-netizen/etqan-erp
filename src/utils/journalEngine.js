@@ -6,34 +6,22 @@ import { base44 } from "@/api/base44Client";
  */
 
 /**
- * إعادة حساب رصيد حساب معين وتحديثه في قاعدة البيانات
- * المصادر: JournalEntry + السندات المرحّلة (entries) + السندات البسيطة
+ * حساب رصيد حساب معين من البيانات المُحمَّلة مسبقاً
  */
-async function recalcAndUpdateAccount(accountId) {
-  if (!accountId) return;
-
-  const [allEntries, allVouchers] = await Promise.all([
-    base44.entities.JournalEntry.list(),
-    base44.entities.Voucher.filter({ status: "مرحّل" }).catch(() => []),
-  ]);
-
+function calcAccountBalance(accountId, allEntries, allVouchers) {
   let debitTotal = 0;
   let creditTotal = 0;
 
-  // من قيود اليومية التلقائية
   for (const entry of allEntries) {
     if (entry.debit_account_id === accountId)  debitTotal  += (entry.amount || 0);
     if (entry.credit_account_id === accountId) creditTotal += (entry.amount || 0);
   }
 
-  // من السندات المرحّلة
   for (const v of allVouchers) {
-    // سند بسيط (قبض / دفع)
     if (!v.entries || v.entries.length === 0) {
-      if (v.account_id === accountId)         debitTotal  += (v.amount || 0); // الصندوق يُدان بالقبض
+      if (v.account_id === accountId)         debitTotal  += (v.amount || 0);
       if (v.counter_account_id === accountId) creditTotal += (v.amount || 0);
     } else {
-      // سند قيد (entries[])
       for (const e of v.entries) {
         if (e.account_id === accountId) {
           debitTotal  += (e.debit  || 0);
@@ -43,19 +31,30 @@ async function recalcAndUpdateAccount(accountId) {
     }
   }
 
-  await base44.entities.Account.update(accountId, {
-    debit_balance:  debitTotal,
-    credit_balance: creditTotal,
-    balance:        Math.abs(debitTotal - creditTotal),
-  });
+  return { debitTotal, creditTotal };
 }
 
 /**
  * تحديث أرصدة مجموعة من معرّفات الحسابات
+ * يجلب البيانات مرة واحدة فقط لجميع الحسابات
  */
 export async function refreshAccountBalances(accountIds = []) {
   const unique = [...new Set(accountIds.filter(Boolean))];
-  await Promise.all(unique.map((id) => recalcAndUpdateAccount(id)));
+  if (unique.length === 0) return;
+
+  const [allEntries, allVouchers] = await Promise.all([
+    base44.entities.JournalEntry.list().catch(() => []),
+    base44.entities.Voucher.filter({ status: "مرحّل" }).catch(() => []),
+  ]);
+
+  await Promise.all(unique.map((accountId) => {
+    const { debitTotal, creditTotal } = calcAccountBalance(accountId, allEntries, allVouchers);
+    return base44.entities.Account.update(accountId, {
+      debit_balance:  debitTotal,
+      credit_balance: creditTotal,
+      balance:        Math.abs(debitTotal - creditTotal),
+    });
+  }));
 }
 
 /**
