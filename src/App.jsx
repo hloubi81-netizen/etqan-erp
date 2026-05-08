@@ -54,6 +54,8 @@ import BudgetManagement from './pages/budget/BudgetManagement';
 import CRM from './pages/crm/CRM';
 import NotificationsCenter from './pages/notifications/NotificationsCenter';
 import CustomReports from './pages/reports/CustomReports';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -125,6 +127,8 @@ const AuthenticatedApp = () => {
         <Route path="/crm" element={<CRM />} />
         <Route path="/notifications" element={<NotificationsCenter />} />
         <Route path="/reports/custom" element={<CustomReports />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

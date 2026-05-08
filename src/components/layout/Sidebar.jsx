@@ -298,7 +298,12 @@ export default function Sidebar({ isOpen, onToggle }) {
         </nav>
 
         {/* Footer */}
-        <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
+        <div className="px-3 py-2 border-t border-gray-100 bg-gray-50 space-y-1">
+          <div className="flex justify-center gap-3 text-[11px] text-gray-400">
+            <Link to="/about" className="hover:text-primary transition-colors">عن النظام</Link>
+            <span>•</span>
+            <Link to="/contact" className="hover:text-primary transition-colors">تواصل معنا</Link>
+          </div>
           <p className="text-gray-400 text-[10px] text-center">v2.0 • اتقان ERP</p>
         </div>
       </aside>
