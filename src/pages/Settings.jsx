@@ -13,6 +13,7 @@ import {
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
   UserCog, Landmark, Save, Check
 } from "lucide-react";
+import BackupPanel from "@/components/settings/BackupPanel";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -342,20 +343,8 @@ export default function Settings() {
       case "backup":
         return (
           <div className="space-y-4">
-            <SectionHeader title="النسخ الاحتياطي" desc="إدارة البيانات والنسخ الاحتياطية" />
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl border bg-muted/30 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm">آخر نسخة احتياطية</p>
-                  <p className="text-xs text-muted-foreground">البيانات محمية على خوادم Base44</p>
-                </div>
-                <Badge className="bg-green-100 text-green-700">آمن</Badge>
-              </div>
-              <Button variant="outline" className="w-full" disabled>
-                <Database className="h-4 w-4 ml-2" />
-                تصدير نسخة احتياطية (قريباً)
-              </Button>
-            </div>
+            <SectionHeader title="النسخ الاحتياطي" desc="تصدير واستيراد جميع بيانات النظام" />
+            <BackupPanel />
           </div>
         );
 

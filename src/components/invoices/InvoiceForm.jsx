@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, Zap } from "lucide-react";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { refreshAccountBalances } from "@/utils/journalEngine";
+import { deductSalesInventory, addPurchaseInventory } from "@/utils/inventoryEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
@@ -396,9 +397,25 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             onClick={async () => {
               const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
               await onSave(saved);
+
+              // تحديث أرصدة الحسابات
               if (saved.client_account_id) await refreshAccountBalances([saved.client_account_id]);
+
+              // ترحيل المخزون تلقائياً
+              let inventoryMsg = "";
+              if (saved.pattern_type?.includes("مبيعات")) {
+                const { warnings } = await deductSalesInventory(saved);
+                inventoryMsg = " وخصم المخزون";
+                if (warnings.length) warnings.forEach(w => toast.warning(w));
+              } else if (saved.pattern_type?.includes("مشتريات")) {
+                await addPurchaseInventory(saved);
+                inventoryMsg = " وإضافة المخزون";
+              }
+
+              // قيد مركز التكلفة
               if (saved.cost_center_id) await createCostEntryFromInvoice(saved, costCenters);
-              toast.success("تم ترحيل الفاتورة وتحديث الأرصدة" + (saved.cost_center_id ? " وقيد مركز التكلفة" : ""));
+
+              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}`);
             }}
             disabled={!form.invoice_number}
             className="gap-1.5"
