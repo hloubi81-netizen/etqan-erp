@@ -6,6 +6,7 @@ import InvoiceForm from "../components/invoices/InvoiceForm";
 import DataTable from "../components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { logActivity } from "@/utils/activityLogger";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -66,17 +67,25 @@ export default function Invoices() {
   async function handleDelete(inv) {
     if (confirm("هل أنت متأكد من حذف هذه الفاتورة؟")) {
       await base44.entities.Invoice.delete(inv.id);
+      await logActivity({ action: "حذف", documentType: "فاتورة", documentNumber: inv.invoice_number, documentSubtype: inv.pattern_type, documentId: inv.id, amount: inv.total, details: `حذف فاتورة ${inv.pattern_type} - ${inv.client_name || ""}` });
       toast.success("تم حذف الفاتورة");
       loadData();
     }
   }
 
   async function handleSave(data) {
+    let savedId = data.id;
     if (editing) {
       await base44.entities.Invoice.update(editing.id, data);
+      savedId = editing.id;
+      const action = data.status === "مرحّلة" && editing.status !== "مرحّلة" ? "ترحيل" : "تعديل";
+      await logActivity({ action, documentType: "فاتورة", documentNumber: data.invoice_number, documentSubtype: data.pattern_type, documentId: savedId, amount: data.total, details: `${action} فاتورة ${data.pattern_type} - ${data.client_name || ""}` });
       toast.success("تم تحديث الفاتورة");
     } else {
-      await base44.entities.Invoice.create(data);
+      const created = await base44.entities.Invoice.create(data);
+      savedId = created?.id;
+      const action = data.status === "مرحّلة" ? "ترحيل" : "إنشاء";
+      await logActivity({ action, documentType: "فاتورة", documentNumber: data.invoice_number, documentSubtype: data.pattern_type, documentId: savedId, amount: data.total, details: `${action} فاتورة ${data.pattern_type} - ${data.client_name || ""}` });
       toast.success("تم إنشاء الفاتورة");
     }
     setDialogOpen(false);

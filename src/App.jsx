@@ -48,6 +48,7 @@ import Settings from './pages/Settings';
 import LeaveRequests from './pages/hr/LeaveRequests';
 import BankReconciliation from './pages/accounting/BankReconciliation';
 import StockAlerts from './pages/inventory/StockAlerts';
+import ActivityLogPage from './pages/reports/ActivityLog';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
         <Route path="/hr/leaves" element={<LeaveRequests />} />
         <Route path="/accounting/bank-reconciliation" element={<BankReconciliation />} />
         <Route path="/inventory/stock-alerts" element={<StockAlerts />} />
+        <Route path="/reports/activity-log" element={<ActivityLogPage />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

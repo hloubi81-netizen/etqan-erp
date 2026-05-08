@@ -6,6 +6,7 @@ import VoucherForm from "../components/vouchers/VoucherForm";
 import DataTable from "../components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { logActivity } from "@/utils/activityLogger";
 
 const TYPE_MAP = {
   receipt: "سند قبض",
@@ -38,6 +39,7 @@ export default function Vouchers() {
   async function handleDelete(v) {
     if (confirm("هل أنت متأكد؟")) {
       await base44.entities.Voucher.delete(v.id);
+      await logActivity({ action: "حذف", documentType: "سند", documentNumber: v.voucher_number, documentSubtype: voucherType, documentId: v.id, amount: v.amount || v.total_debit, details: `حذف ${voucherType} ${v.voucher_number}` });
       toast.success("تم الحذف");
       loadData();
     }
@@ -46,9 +48,13 @@ export default function Vouchers() {
   async function handleSave(data) {
     if (editing) {
       await base44.entities.Voucher.update(editing.id, data);
+      const action = data.status === "مرحّل" && editing.status !== "مرحّل" ? "ترحيل" : "تعديل";
+      await logActivity({ action, documentType: "سند", documentNumber: data.voucher_number, documentSubtype: voucherType, documentId: editing.id, amount: data.amount || data.total_debit, details: `${action} ${voucherType} ${data.voucher_number}` });
       toast.success("تم التحديث");
     } else {
-      await base44.entities.Voucher.create(data);
+      const created = await base44.entities.Voucher.create(data);
+      const action = data.status === "مرحّل" ? "ترحيل" : "إنشاء";
+      await logActivity({ action, documentType: "سند", documentNumber: data.voucher_number, documentSubtype: voucherType, documentId: created?.id, amount: data.amount || data.total_debit, details: `${action} ${voucherType} ${data.voucher_number}` });
       toast.success("تم الإنشاء");
     }
     setDialogOpen(false);
