@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import PermissionGuard from "../components/shared/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
 import PageHeader from "../components/shared/PageHeader";
 import DataTable from "../components/shared/DataTable";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function StockTransfers() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [transfers, setTransfers] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [products, setProducts] = useState([]);
@@ -85,9 +88,16 @@ export default function StockTransfers() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
+    <PermissionGuard module="warehouses">
     <div>
-      <PageHeader title="المناقلات" subtitle="مناقلات المواد بين المستودعات" onAdd={openNew} addLabel="مناقلة جديدة" />
-      <DataTable columns={columns} data={transfers} onEdit={(t) => { setEditing(t); setForm(t); setDialogOpen(true); }} onDelete={handleDelete} emptyMessage="لا توجد مناقلات" />
+      <PageHeader title="المناقلات" subtitle="مناقلات المواد بين المستودعات" onAdd={canCreate("warehouses") ? openNew : null} addLabel="مناقلة جديدة" />
+      <DataTable
+        columns={columns}
+        data={transfers}
+        onEdit={canEdit("warehouses") ? (t) => { setEditing(t); setForm(t); setDialogOpen(true); } : null}
+        onDelete={canDelete("warehouses") ? handleDelete : null}
+        emptyMessage="لا توجد مناقلات"
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -137,5 +147,6 @@ export default function StockTransfers() {
         </DialogContent>
       </Dialog>
     </div>
+    </PermissionGuard>
   );
 }

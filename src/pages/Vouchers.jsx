@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import PermissionGuard from "../components/shared/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useParams } from "react-router-dom";
 import PageHeader from "../components/shared/PageHeader";
 import VoucherForm from "../components/vouchers/VoucherForm";
@@ -17,6 +19,7 @@ const TYPE_MAP = {
 };
 
 export default function Vouchers() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const params = useParams();
   const voucherType = TYPE_MAP[params.type] || "سند قبض";
   const [vouchers, setVouchers] = useState([]);
@@ -80,9 +83,16 @@ export default function Vouchers() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
+    <PermissionGuard module="vouchers">
     <div>
-      <PageHeader title={voucherType} subtitle={`إدارة ${voucherType}`} onAdd={openNew} addLabel={`${voucherType} جديد`} />
-      <DataTable columns={columns} data={vouchers} onEdit={openEdit} onDelete={handleDelete} emptyMessage="لا توجد سندات" />
+      <PageHeader title={voucherType} subtitle={`إدارة ${voucherType}`} onAdd={canCreate("vouchers") ? openNew : null} addLabel={`${voucherType} جديد`} />
+      <DataTable
+        columns={columns}
+        data={vouchers}
+        onEdit={canEdit("vouchers") ? openEdit : null}
+        onDelete={canDelete("vouchers") ? handleDelete : null}
+        emptyMessage="لا توجد سندات"
+      />
       
       {dialogOpen && (
         <VoucherForm
@@ -94,5 +104,6 @@ export default function Vouchers() {
         />
       )}
     </div>
+    </PermissionGuard>
   );
 }

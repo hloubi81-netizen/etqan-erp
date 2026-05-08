@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import PermissionGuard from "../components/shared/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -23,6 +25,7 @@ const TYPE_MAP = {
 export default function Invoices() {
   const params = useParams();
   const invoiceType = TYPE_MAP[params.type] || "مبيعات";
+  const { canView, canCreate, canEdit, canDelete } = usePermissions();
   const [invoices, setInvoices] = useState([]);
   const [patterns, setPatterns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -107,14 +110,21 @@ export default function Invoices() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
+    <PermissionGuard module="invoices">
     <div>
       <PageHeader
         title={`فاتورة ${invoiceType}`}
         subtitle={`إدارة فواتير ${invoiceType}`}
-        onAdd={openNew}
+        onAdd={canCreate("invoices") ? openNew : null}
         addLabel="فاتورة جديدة"
       />
-      <DataTable columns={columns} data={invoices} onEdit={openEdit} onDelete={handleDelete} emptyMessage="لا توجد فواتير" />
+      <DataTable
+        columns={columns}
+        data={invoices}
+        onEdit={canEdit("invoices") ? openEdit : null}
+        onDelete={canDelete("invoices") ? handleDelete : null}
+        emptyMessage="لا توجد فواتير"
+      />
 
       {/* Pattern Picker Dialog */}
       <Dialog open={patternPickerOpen} onOpenChange={setPatternPickerOpen}>
@@ -153,5 +163,6 @@ export default function Invoices() {
         />
       )}
     </div>
+    </PermissionGuard>
   );
 }
