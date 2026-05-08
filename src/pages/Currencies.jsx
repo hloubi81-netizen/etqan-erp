@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { autoUpdateExchangeRates } from "@/utils/currencyEngine";
+import { RefreshCw } from "lucide-react";
 
 export default function Currencies() {
   const [currencies, setCurrencies] = useState([]);
@@ -16,6 +18,7 @@ export default function Currencies() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: "", symbol: "", unit_name: "", sub_unit: "", exchange_rate: 1, is_local: false });
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -57,6 +60,19 @@ export default function Currencies() {
     }
   }
 
+  async function handleAutoUpdate() {
+    setUpdating(true);
+    const { updated, errors } = await autoUpdateExchangeRates();
+    setUpdating(false);
+    if (updated > 0) {
+      toast.success(`تم تحديث ${updated} عملة بأسعار الصرف الحالية`);
+      loadData();
+    } else {
+      toast.warning("لم يتم تحديث أي عملة. تأكد من وجود عملات أجنبية مضافة.");
+    }
+    if (errors.length) errors.forEach(e => toast.error(e));
+  }
+
   const columns = [
     { key: "name", label: "اسم العملة" },
     { key: "symbol", label: "الرمز" },
@@ -70,7 +86,13 @@ export default function Currencies() {
 
   return (
     <div>
-      <PageHeader title="العملات" subtitle="إدارة العملات وأسعار الصرف" onAdd={openNew} addLabel="عملة جديدة" />
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <PageHeader title="العملات" subtitle="إدارة العملات وأسعار الصرف" onAdd={openNew} addLabel="عملة جديدة" />
+        <Button variant="outline" onClick={handleAutoUpdate} disabled={updating} className="gap-2">
+          <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
+          {updating ? "جاري التحديث..." : "تحديث أسعار الصرف تلقائياً"}
+        </Button>
+      </div>
       <DataTable columns={columns} data={currencies} onEdit={openEdit} onDelete={handleDelete} emptyMessage="لا توجد عملات" />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

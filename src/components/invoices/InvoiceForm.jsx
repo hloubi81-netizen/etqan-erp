@@ -10,6 +10,7 @@ import { Plus, Trash2, Zap } from "lucide-react";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { refreshAccountBalances } from "@/utils/journalEngine";
 import { deductSalesInventory, addPurchaseInventory } from "@/utils/inventoryEngine";
+import { createCurrencyDiffEntry, toLocalCurrency } from "@/utils/currencyEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
@@ -62,12 +63,14 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     warehouse_name: invoice?.warehouse_name || "",
     payment_method: invoice?.payment_method || "نقداً",
     currency: invoice?.currency || pattern?.default_currency || "",
+    exchange_rate: invoice?.exchange_rate || 1,
     items: buildDefaultItems(invoice?.items),
     subtotal: invoice?.subtotal || 0,
     discount_value: invoice?.discount_value || 0,
     discount_percent: invoice?.discount_percent || 0,
     tax_amount: invoice?.tax_amount || 0,
     total: invoice?.total || 0,
+    total_local: invoice?.total_local || 0,
     paid_amount: invoice?.paid_amount || 0,
     remaining_amount: invoice?.remaining_amount || 0,
     notes: invoice?.notes || "",
@@ -100,12 +103,16 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
       const nextNum = invs.length + 1;
       const wh = pattern?.default_warehouse_id ? whs.find(w => w.id === pattern.default_warehouse_id) : null;
       const cc = pattern?.cost_center_id ? ccs.find(c => c.id === pattern.cost_center_id) : null;
+      const localCur = currs.find(c => c.is_local);
+      const defaultCurName = pattern?.default_currency || localCur?.name || "";
+      const defaultCur = currs.find(c => c.name === defaultCurName);
       setForm((prev) => ({
         ...prev,
         invoice_number: String(nextNum).padStart(4, "0"),
         warehouse_id: prev.warehouse_id || (wh?.id ?? ""),
         warehouse_name: prev.warehouse_name || (wh?.name ?? ""),
-        currency: prev.currency || pattern?.default_currency || (currs.find(c => c.is_local)?.name ?? ""),
+        currency: prev.currency || defaultCurName,
+        exchange_rate: defaultCur?.exchange_rate || 1,
         cost_center_id: prev.cost_center_id || (cc?.id ?? ""),
         cost_center_name: prev.cost_center_name || (cc?.name ?? ""),
       }));
@@ -161,14 +168,16 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     recalculate(newItems, form.discount_percent, form.discount_value);
   }
 
-  function recalculate(items, discPct, discVal) {
+  function recalculate(items, discPct, discVal, overrideRate) {
     const subtotal = items.reduce((sum, item) => sum + (item.total || 0), 0);
     let discount = discVal || 0;
     if (discPct > 0) discount = subtotal * discPct / 100;
     const afterDiscount = subtotal - discount;
-    const taxAmount = 0; // can be extended
+    const taxAmount = 0;
     const total = afterDiscount + taxAmount;
     const paid = form.payment_method === "نقداً" ? total : form.paid_amount;
+    const rate = overrideRate !== undefined ? overrideRate : form.exchange_rate;
+    const total_local = toLocalCurrency(total, rate);
     setForm((prev) => ({
       ...prev,
       items,
@@ -177,8 +186,10 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
       discount_percent: discPct,
       tax_amount: taxAmount,
       total,
+      total_local,
       paid_amount: paid,
       remaining_amount: total - paid,
+      exchange_rate: rate,
     }));
   }
 
@@ -242,14 +253,34 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             </div>
             <div>
               <Label>العملة</Label>
-              <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
+              <Select value={form.currency} onValueChange={(v) => {
+                const cur = currencies.find(c => c.name === v);
+                const rate = cur?.exchange_rate || 1;
+                const total_local = toLocalCurrency(form.total, rate);
+                setForm(prev => ({ ...prev, currency: v, exchange_rate: rate, total_local }));
+              }}>
                 <SelectTrigger><SelectValue placeholder="اختر العملة" /></SelectTrigger>
                 <SelectContent>
                   {currencies.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name} {c.is_local ? "🏠" : `(${c.exchange_rate})`}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>سعر الصرف</Label>
+              <Input
+                type="number"
+                value={form.exchange_rate}
+                onChange={(e) => {
+                  const rate = parseFloat(e.target.value) || 1;
+                  recalculate(form.items, form.discount_percent, form.discount_value, rate);
+                }}
+                min="0.0001"
+                step="0.0001"
+              />
             </div>
             <div>
               <Label>مركز التكلفة</Label>
@@ -373,9 +404,15 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               </div>
             )}
             <div className="flex justify-between text-base font-bold border-t pt-2">
-              <span>الإجمالي</span>
+              <span>الإجمالي {form.currency && `(${form.currency})`}</span>
               <span>{form.total.toLocaleString()}</span>
             </div>
+            {form.exchange_rate !== 1 && form.total_local > 0 && (
+              <div className="flex justify-between text-sm text-blue-600 bg-blue-50 rounded px-2 py-1">
+                <span>الإجمالي بالعملة المحلية (× {form.exchange_rate})</span>
+                <span className="font-semibold">{form.total_local.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
             {form.remaining_amount > 0 && (
               <div className="flex justify-between text-sm text-destructive">
                 <span>المتبقي</span>
@@ -415,7 +452,29 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               // قيد مركز التكلفة
               if (saved.cost_center_id) await createCostEntryFromInvoice(saved, costCenters);
 
-              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}`);
+              // قيد فرق العملة (إن وُجد)
+              let fxMsg = "";
+              if (saved.exchange_rate && saved.exchange_rate !== 1 && saved.total > 0) {
+                const localAmount = toLocalCurrency(saved.total, saved.exchange_rate);
+                const fxEntry = await createCurrencyDiffEntry({
+                  sourceDoc: saved,
+                  sourceType: saved.pattern_type,
+                  sourceNumber: saved.invoice_number,
+                  foreignAmount: saved.total,
+                  localAmount,
+                  foreignCurrency: saved.currency,
+                  exchangeRate: saved.exchange_rate,
+                  gainAccountId: saved.client_account_id,
+                  gainAccountName: saved.client_name,
+                  lossAccountId: saved.client_account_id,
+                  lossAccountName: saved.client_name,
+                  clientAccountId: saved.client_account_id,
+                  clientAccountName: saved.client_name,
+                }).catch(() => null);
+                if (fxEntry) fxMsg = " وقيد فرق الصرف";
+              }
+
+              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}${fxMsg}`);
             }}
             disabled={!form.invoice_number}
             className="gap-1.5"
