@@ -9,7 +9,8 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell
+  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell,
+  ShoppingBag, TrendingUp, PieChart, MessageSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -65,20 +66,6 @@ function getMenuItems(lang) {
       ]
     },
     {
-      label: l('reports'), icon: BarChart3,
-      children: [
-        { label: l('productMovement'), path: "/reports/product-movement", icon: Package },
-        { label: l('clientMovement'), path: "/reports/client-movement", icon: Users },
-        { label: l('supplierMovement'), path: "/reports/supplier-movement", icon: Truck },
-        { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
-        { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
-        { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
-        { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
-        { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 },
-        { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList }
-      ]
-    },
-    {
       label: l('financialStatements'), icon: BarChart3,
       children: [
         { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
@@ -118,6 +105,35 @@ function getMenuItems(lang) {
       ]
     },
     { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
+    {
+      label: "أوامر الشراء والبيع", icon: ShoppingBag,
+      children: [
+        { label: "أوامر الشراء وعروض الأسعار", path: "/orders", icon: ShoppingBag },
+      ]
+    },
+    {
+      label: "الميزانية والتخطيط", icon: PieChart,
+      children: [
+        { label: "إدارة الميزانيات", path: "/budget", icon: PieChart },
+      ]
+    },
+    { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
+    { label: "الإشعارات والتنبيهات", icon: Bell, path: "/notifications" },
+    {
+      label: l('reports'), icon: BarChart3,
+      children: [
+        { label: l('productMovement'), path: "/reports/product-movement", icon: Package },
+        { label: l('clientMovement'), path: "/reports/client-movement", icon: Users },
+        { label: l('supplierMovement'), path: "/reports/supplier-movement", icon: Truck },
+        { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
+        { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
+        { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
+        { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
+        { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 },
+        { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList },
+        { label: "التقارير المخصصة", path: "/reports/custom", icon: TrendingUp },
+      ]
+    },
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
     { label: "الإعدادات", icon: Settings, path: "/settings" },

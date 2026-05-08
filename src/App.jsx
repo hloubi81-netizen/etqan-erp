@@ -49,6 +49,11 @@ import LeaveRequests from './pages/hr/LeaveRequests';
 import BankReconciliation from './pages/accounting/BankReconciliation';
 import StockAlerts from './pages/inventory/StockAlerts';
 import ActivityLogPage from './pages/reports/ActivityLog';
+import PurchaseOrders from './pages/orders/PurchaseOrders';
+import BudgetManagement from './pages/budget/BudgetManagement';
+import CRM from './pages/crm/CRM';
+import NotificationsCenter from './pages/notifications/NotificationsCenter';
+import CustomReports from './pages/reports/CustomReports';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -115,6 +120,11 @@ const AuthenticatedApp = () => {
         <Route path="/accounting/bank-reconciliation" element={<BankReconciliation />} />
         <Route path="/inventory/stock-alerts" element={<StockAlerts />} />
         <Route path="/reports/activity-log" element={<ActivityLogPage />} />
+        <Route path="/orders" element={<PurchaseOrders />} />
+        <Route path="/budget" element={<BudgetManagement />} />
+        <Route path="/crm" element={<CRM />} />
+        <Route path="/notifications" element={<NotificationsCenter />} />
+        <Route path="/reports/custom" element={<CustomReports />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
