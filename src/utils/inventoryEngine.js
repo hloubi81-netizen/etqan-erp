@@ -67,6 +67,9 @@ export async function deductSalesInventory(invoice) {
     console.error("خطأ في تسجيل حركة المخزون:", e);
   }
 
+  // فحص التنبيهات بعد خصم المبيعات
+  checkStockAlerts(invoice.warehouse_id, allInvoices, allTransfers).catch(() => {});
+
   return { success: true, warnings };
 }
 
@@ -109,6 +112,9 @@ export async function addPurchaseInventory(invoice) {
     console.error("خطأ في تسجيل حركة المخزون:", e);
   }
 
+  // فحص التنبيهات بعد إضافة المشتريات (للتحقق من حالة الفائض)
+  checkStockAlerts(invoice.warehouse_id, allInvoices, allTransfers).catch(() => {});
+
   return { success: true };
 }
 
@@ -145,6 +151,57 @@ export function calcCurrentStock(productId, warehouseId, allInvoices, allTransfe
   }
 
   return Math.max(0, qty);
+}
+
+/**
+ * فحص تنبيهات المخزون بعد كل عملية ترحيل
+ * يُنشئ إشعاراً في Notification عند وصول أي منتج لحد الطلب الأدنى
+ */
+export async function checkStockAlerts(warehouseId, allInvoices, allTransfers) {
+  const [alerts] = await Promise.all([
+    base44.entities.StockAlert.filter({ is_active: true }).catch(() => []),
+  ]);
+
+  const relevantAlerts = warehouseId
+    ? alerts.filter(a => a.warehouse_id === warehouseId)
+    : alerts;
+
+  if (!relevantAlerts.length) return;
+
+  // جلب الإشعارات الموجودة لتفادي التكرار (اليوم الحالي)
+  const today = new Date().toISOString().split("T")[0];
+  const existingNotifs = await base44.entities.Notification.filter({ type: "تنبيه مخزون" }).catch(() => []);
+  const todayNotifKeys = new Set(
+    existingNotifs
+      .filter(n => n.trigger_date === today)
+      .map(n => n.related_id)
+  );
+
+  const toCreate = [];
+
+  for (const alert of relevantAlerts) {
+    const currentStock = calcCurrentStock(alert.product_id, alert.warehouse_id, allInvoices, allTransfers);
+    const alertKey = `${alert.product_id}-${alert.warehouse_id}`;
+
+    if (currentStock <= alert.min_quantity && !todayNotifKeys.has(alertKey)) {
+      const level = currentStock === 0 ? "نفدت الكمية" : "وصل للحد الأدنى";
+      toCreate.push({
+        title: `⚠️ تنبيه مخزون: ${alert.product_name}`,
+        message: `${level} في مستودع "${alert.warehouse_name}" — الكمية الحالية: ${currentStock} | الحد الأدنى: ${alert.min_quantity}${alert.reorder_quantity ? ` | كمية الطلب المقترحة: ${alert.reorder_quantity}` : ""}`,
+        type: "تنبيه مخزون",
+        related_module: "StockAlert",
+        related_id: alertKey,
+        is_read: false,
+        trigger_date: today,
+      });
+    }
+  }
+
+  if (toCreate.length > 0) {
+    await Promise.all(toCreate.map(n => base44.entities.Notification.create(n).catch(() => {})));
+  }
+
+  return toCreate.length;
 }
 
 /**

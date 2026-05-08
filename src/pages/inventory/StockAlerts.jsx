@@ -8,8 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Bell, BellOff, AlertTriangle, Package, Pencil, Trash2 } from "lucide-react";
+import { Plus, Bell, BellOff, AlertTriangle, Package, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { checkStockAlerts, calcCurrentStock } from "@/utils/inventoryEngine";
 
 const EMPTY = { product_id: "", product_name: "", warehouse_id: "", warehouse_name: "", min_quantity: 0, max_quantity: 0, reorder_quantity: 0, is_active: true };
 
@@ -22,6 +23,7 @@ export default function StockAlerts() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -79,6 +81,18 @@ export default function StockAlerts() {
     setAlerts((p) => p.filter((a) => a.id !== id));
   }
 
+  async function runCheck() {
+    setChecking(true);
+    const [allInvoices, allTransfers] = await Promise.all([
+      base44.entities.Invoice.filter({ status: "مرحّلة" }).catch(() => []),
+      base44.entities.StockTransfer.list().catch(() => []),
+    ]);
+    const count = await checkStockAlerts(null, allInvoices, allTransfers);
+    setChecking(false);
+    if (count > 0) toast.warning(`تم إنشاء ${count} إشعار تنبيه جديد`);
+    else toast.success("جميع مستويات المخزون ضمن الحدود الطبيعية");
+  }
+
   const critical = alerts.filter((a) => a.is_active && getAlertLevel(a) === "critical").length;
   const warning = alerts.filter((a) => a.is_active && getAlertLevel(a) === "warning").length;
 
@@ -89,7 +103,13 @@ export default function StockAlerts() {
           <h1 className="text-2xl font-bold">تنبيهات المخزون</h1>
           <p className="text-sm text-muted-foreground mt-1">تحديد حدود التنبيه لمستويات المخزون</p>
         </div>
-        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" />إضافة تنبيه</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={runCheck} disabled={checking} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${checking ? "animate-spin" : ""}`} />
+            {checking ? "جاري الفحص..." : "فحص الآن"}
+          </Button>
+          <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" />إضافة تنبيه</Button>
+        </div>
       </div>
 
       {/* Summary */}
