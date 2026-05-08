@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { exportToPDF } from "@/utils/exportUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"];
 const COST_TYPES = ["مواد مباشرة", "عمالة مباشرة", "تكاليف صناعية غير مباشرة", "مصروفات إدارية", "مصروفات بيع", "مصروفات مالية", "أخرى"];
@@ -62,7 +63,18 @@ export default function CostReport() {
     });
     const byBranch = Object.entries(byBranchMap).map(([name, value]) => ({ name, value }));
 
-    setReport({ data, total, byType, byCC, byBranch });
+    // Per cost center breakdown
+    const perCC = costCenters.map(cc => {
+      const ccData = data.filter(e => e.cost_center_id === cc.id);
+      const ccTotal = ccData.reduce((s, e) => s + (e.total_cost || 0), 0);
+      const byType = COST_TYPES.map(t => ({
+        name: t,
+        value: ccData.filter(e => e.cost_type === t).reduce((s, e) => s + (e.total_cost || 0), 0),
+      })).filter(t => t.value > 0);
+      return { cc, data: ccData, total: ccTotal, byType };
+    }).filter(r => r.data.length > 0);
+
+    setReport({ data, total, byType, byCC, byBranch, perCC });
   }
 
   const fmt = v => (v || 0).toLocaleString("ar-SA", { minimumFractionDigits: 2 });
@@ -125,7 +137,15 @@ export default function CostReport() {
       </Card>
 
       {report && (
-        <>
+        <Tabs defaultValue="summary">
+          <TabsList className="mb-2">
+            <TabsTrigger value="summary">ملخص عام</TabsTrigger>
+            {report.perCC.map(r => (
+              <TabsTrigger key={r.cc.id} value={r.cc.id}>{r.cc.name}</TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value="summary">
           {/* KPI */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Card><CardContent className="pt-4 pb-4 text-center">
@@ -236,7 +256,81 @@ export default function CostReport() {
               </div>
             </CardContent>
           </Card>
-        </>
+          </TabsContent>
+
+          {report.perCC.map(r => (
+            <TabsContent key={r.cc.id} value={r.cc.id}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card><CardContent className="pt-4 pb-4 text-center">
+                    <p className="text-xs text-muted-foreground">إجمالي تكاليف {r.cc.name}</p>
+                    <p className="text-2xl font-bold text-primary mt-1">{fmt(r.total)}</p>
+                  </CardContent></Card>
+                  <Card><CardContent className="pt-4 pb-4 text-center">
+                    <p className="text-xs text-muted-foreground">عدد القيود</p>
+                    <p className="text-2xl font-bold mt-1">{r.data.length}</p>
+                  </CardContent></Card>
+                  <Card><CardContent className="pt-4 pb-4 text-center">
+                    <p className="text-xs text-muted-foreground">متوسط التكلفة</p>
+                    <p className="text-2xl font-bold text-amber-600 mt-1">{fmt(r.data.length ? r.total / r.data.length : 0)}</p>
+                  </CardContent></Card>
+                </div>
+
+                {r.byType.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">توزيع التكاليف حسب النوع - {r.cc.name}</CardTitle></CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={r.byType} margin={{ right: 10, left: 10 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0"/>
+                          <XAxis dataKey="name" tick={{ fontSize: 10 }}/>
+                          <YAxis tick={{ fontSize: 10 }}/>
+                          <Tooltip formatter={v => v.toLocaleString()}/>
+                          <Bar dataKey="value" name="التكلفة" fill="#2563eb" radius={[4,4,0,0]}/>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-muted/50 border-b">
+                            <th className="text-right px-4 py-3 text-xs font-semibold">التاريخ</th>
+                            <th className="text-right px-4 py-3 text-xs font-semibold">نوع التكلفة</th>
+                            <th className="text-right px-4 py-3 text-xs font-semibold">البيان</th>
+                            <th className="text-right px-4 py-3 text-xs font-semibold">الكمية</th>
+                            <th className="text-right px-4 py-3 text-xs font-semibold">تكلفة الوحدة</th>
+                            <th className="text-right px-4 py-3 text-xs font-semibold">الإجمالي</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {r.data.map((e, i) => (
+                            <tr key={e.id} className={i % 2 === 0 ? "" : "bg-muted/20"}>
+                              <td className="px-4 py-2.5">{e.date}</td>
+                              <td className="px-4 py-2.5">{e.cost_type}</td>
+                              <td className="px-4 py-2.5 text-muted-foreground">{e.description}</td>
+                              <td className="px-4 py-2.5">{e.quantity} {e.unit}</td>
+                              <td className="px-4 py-2.5">{fmt(e.unit_cost)}</td>
+                              <td className="px-4 py-2.5 font-semibold text-primary">{fmt(e.total_cost)}</td>
+                            </tr>
+                          ))}
+                          <tr className="bg-muted/50 font-bold border-t-2">
+                            <td colSpan={5} className="px-4 py-3">الإجمالي</td>
+                            <td className="px-4 py-3 text-primary">{fmt(r.total)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
       )}
 
       {!report && (

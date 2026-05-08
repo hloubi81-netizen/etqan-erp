@@ -12,6 +12,26 @@ import { refreshAccountBalances } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
+async function createCostEntryFromInvoice(invoice, costCenters) {
+  if (!invoice.cost_center_id || !invoice.total || invoice.total <= 0) return;
+  const cc = costCenters.find(c => c.id === invoice.cost_center_id);
+  const costType = invoice.pattern_type?.includes("مشتريات") ? "مواد مباشرة" : "مصروفات بيع";
+  await base44.entities.CostEntry.create({
+    date: invoice.date,
+    cost_center_id: invoice.cost_center_id,
+    cost_center_name: cc?.name || invoice.cost_center_id,
+    cost_type: costType,
+    description: `${invoice.pattern_type} - فاتورة ${invoice.invoice_number} - ${invoice.client_name || ""}`,
+    quantity: 1,
+    unit: "فاتورة",
+    unit_cost: invoice.total,
+    total_cost: invoice.total,
+    period: invoice.date?.slice(0, 7),
+    status: "مرحّل",
+    notes: `مصدر: فاتورة ${invoice.invoice_number}`,
+  });
+}
+
 const EMPTY_ITEM = () => ({ product_id: "", product_name: "", quantity: 1, unit: "", price: 0, discount_percent: 0, discount_value: 0, total: 0 });
 const MIN_ROWS = 10;
 
@@ -26,6 +46,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   const [accounts, setAccounts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
 
   const [form, setForm] = useState({
@@ -49,6 +70,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     paid_amount: invoice?.paid_amount || 0,
     remaining_amount: invoice?.remaining_amount || 0,
     notes: invoice?.notes || "",
+    cost_center_id: invoice?.cost_center_id || pattern?.cost_center_id || "",
+    cost_center_name: invoice?.cost_center_name || "",
     status: invoice?.status || "مسودة",
   });
 
@@ -57,29 +80,33 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   }, []);
 
   async function loadData() {
-    const [prods, accs, whs, currs, invs] = await Promise.all([
+    const [prods, accs, whs, currs, invs, ccs] = await Promise.all([
       base44.entities.Product.list(),
       base44.entities.Account.list(),
       base44.entities.Warehouse.list(),
       base44.entities.Currency.list(),
       base44.entities.Invoice.filter({ pattern_type: invoiceType }),
+      base44.entities.CostCenter.list(),
     ]);
     setProducts(prods);
     setAccounts(accs);
     setWarehouses(whs);
     setCurrencies(currs);
     setAllInvoices(invs);
+    setCostCenters(ccs);
 
     if (!invoice) {
       const nextNum = invs.length + 1;
-      // apply pattern defaults if warehouse not yet set
       const wh = pattern?.default_warehouse_id ? whs.find(w => w.id === pattern.default_warehouse_id) : null;
+      const cc = pattern?.cost_center_id ? ccs.find(c => c.id === pattern.cost_center_id) : null;
       setForm((prev) => ({
         ...prev,
         invoice_number: String(nextNum).padStart(4, "0"),
         warehouse_id: prev.warehouse_id || (wh?.id ?? ""),
         warehouse_name: prev.warehouse_name || (wh?.name ?? ""),
         currency: prev.currency || pattern?.default_currency || (currs.find(c => c.is_local)?.name ?? ""),
+        cost_center_id: prev.cost_center_id || (cc?.id ?? ""),
+        cost_center_name: prev.cost_center_name || (cc?.name ?? ""),
       }));
     }
   }
@@ -223,6 +250,23 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>مركز التكلفة</Label>
+              <Select
+                value={form.cost_center_id}
+                onValueChange={(v) => {
+                  const cc = costCenters.find(c => c.id === v);
+                  setForm({ ...form, cost_center_id: v, cost_center_name: cc?.name || "" });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="اختر مركز التكلفة" /></SelectTrigger>
+                <SelectContent>
+                  {costCenters.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Items */}
@@ -353,7 +397,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
               await onSave(saved);
               if (saved.client_account_id) await refreshAccountBalances([saved.client_account_id]);
-              toast.success("تم ترحيل الفاتورة وتحديث الأرصدة");
+              if (saved.cost_center_id) await createCostEntryFromInvoice(saved, costCenters);
+              toast.success("تم ترحيل الفاتورة وتحديث الأرصدة" + (saved.cost_center_id ? " وقيد مركز التكلفة" : ""));
             }}
             disabled={!form.invoice_number}
             className="gap-1.5"
