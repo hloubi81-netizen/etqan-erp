@@ -60,6 +60,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     date: invoice?.date || new Date().toISOString().split("T")[0],
     client_account_id: invoice?.client_account_id || "",
     client_name: invoice?.client_name || "",
+    client_phone: invoice?.client_phone || "",
     warehouse_id: invoice?.warehouse_id || pattern?.default_warehouse_id || "",
     warehouse_name: invoice?.warehouse_name || "",
     payment_method: invoice?.payment_method || "نقداً",
@@ -215,17 +216,25 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               <Label>التاريخ</Label>
               <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             </div>
-            <div>
+            <div className="col-span-2">
               <Label>{invoiceType.includes("مبيعات") ? "العميل" : "المورد"}</Label>
-              <AccountSearchInput
-                accounts={accounts}
-                value={form.client_account_id}
-                onChange={(id, name) => {
-                  const acc = accounts.find(a => a.id === id);
-                  setForm({ ...form, client_account_id: id, client_name: name, client_phone: acc?.phone || "" });
-                }}
-                placeholder={`ابحث عن ${invoiceType.includes("مبيعات") ? "العميل" : "المورد"}...`}
-              />
+              <div className="flex gap-2">
+                <AccountSearchInput
+                  accounts={accounts}
+                  value={form.client_account_id}
+                  onChange={(id, name) => {
+                    const acc = accounts.find(a => a.id === id);
+                    setForm({ ...form, client_account_id: id, client_name: name, client_phone: acc?.phone || "" });
+                  }}
+                  placeholder={`ابحث عن ${invoiceType.includes("مبيعات") ? "العميل" : "المورد"}...`}
+                />
+                {form.client_phone && (
+                  <div className="flex items-center gap-1 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 whitespace-nowrap">
+                    <span className="text-xl">📱</span>
+                    <span>{form.client_phone}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <Label>المستودع</Label>

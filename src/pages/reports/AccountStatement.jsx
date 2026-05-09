@@ -143,16 +143,28 @@ export default function AccountStatement() {
 
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div>
-              <Label className="text-xs">{isClient ? "العميل" : "المورد"}</Label>
-              <Select value={filters.account_id} onValueChange={(v) => setFilters({ ...filters, account_id: v })}>
-                <SelectTrigger className="h-9"><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
-                <SelectContent>
-                  {accounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="col-span-2">
+                <Label className="text-xs">{isClient ? "العميل" : "المورد"}</Label>
+                <div className="flex gap-2">
+                  <Select value={filters.account_id} onValueChange={(v) => setFilters({ ...filters, account_id: v })}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="اختر الحساب" /></SelectTrigger>
+                    <SelectContent>
+                      {accounts.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.name} {a.phone ? `📱 ${a.phone}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {filters.account_id && accounts.find(a => a.id === filters.account_id)?.phone && (
+                    <div className="flex items-center gap-1 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 whitespace-nowrap">
+                      <span className="text-lg">📱</span>
+                      <span>{accounts.find(a => a.id === filters.account_id)?.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             <div>
               <Label className="text-xs">الحركات</Label>
               <Select value={filters.movement_type} onValueChange={(v) => setFilters({ ...filters, movement_type: v })}>
