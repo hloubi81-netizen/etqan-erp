@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
+import WhatsAppSendButton from "@/components/invoices/WhatsAppSendButton";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { refreshAccountBalances } from "@/utils/journalEngine";
 import { deductSalesInventory, addPurchaseInventory } from "@/utils/inventoryEngine";
@@ -428,6 +429,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
         </div>
 
         <DialogFooter className="gap-2 mt-4">
+          <WhatsAppSendButton invoice={form} phone={form.client_phone} />
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
           <Button onClick={() => onSave({ ...form, items: form.items.filter(i => i.product_id), status: "مسودة" })} disabled={!form.invoice_number} variant="outline">حفظ مسودة</Button>
           <Button

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
+import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -104,6 +105,9 @@ export default function Invoices() {
     { key: "total", label: "الإجمالي", render: (val) => val ? val.toLocaleString() : "0" },
     { key: "status", label: "الحالة", render: (val) => (
       <Badge variant={val === "مرحّلة" ? "default" : "secondary"}>{val || "مسودة"}</Badge>
+    )},
+    { key: "_whatsapp", label: "", render: (_, row) => (
+      <WhatsAppSendButton invoice={row} phone={row.client_phone} size="sm" />
     )},
   ];
 
