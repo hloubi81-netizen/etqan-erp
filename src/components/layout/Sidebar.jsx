@@ -130,6 +130,7 @@ function getMenuItems(lang) {
         { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
         { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
         { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
+        { label: "لوحة تحكم المبيعات", path: "/reports/sales-dashboard", icon: TrendingUp },
         { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 },
         { label: "التقارير المخصصة", path: "/reports/custom", icon: TrendingUp },
         { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList },
