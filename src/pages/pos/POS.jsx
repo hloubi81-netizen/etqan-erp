@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X } from "lucide-react";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { toast } from "sonner";
 
@@ -21,6 +21,7 @@ export default function POS() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [lastReceipt, setLastReceipt] = useState(null);
+  const [scanMode, setScanMode] = useState(false);
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
@@ -162,13 +163,28 @@ export default function POS() {
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               ref={searchRef}
-              placeholder="ابحث بالاسم أو الكود أو الباركود — أو امسح الباركود…"
+              placeholder={scanMode ? "وجّه الماسح ومسح الباركود…" : "ابحث بالاسم أو الكود أو الباركود…"}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={handleSearchKeyDown}
-              className="pr-9"
+              className={`pr-9 pl-10 transition-all ${scanMode ? "border-primary ring-1 ring-primary bg-primary/5" : ""}`}
             />
+            <button
+              onClick={() => { setScanMode(v => !v); setTimeout(() => searchRef.current?.focus(), 50); }}
+              title={scanMode ? "إيقاف وضع المسح" : "تفعيل وضع ماسح الباركود"}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-md flex items-center justify-center transition-all ${
+                scanMode ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+              }`}
+            >
+              {scanMode ? <X className="h-4 w-4" /> : <ScanBarcode className="h-4 w-4" />}
+            </button>
           </div>
+          {scanMode && (
+            <p className="text-xs text-primary mt-1 flex items-center gap-1">
+              <ScanBarcode className="h-3 w-3" />
+              وضع المسح مفعّل — امسح الباركود الآن
+            </p>
+          )}
         </div>
         {loading ? (
           <div className="flex-1 flex items-center justify-center">
