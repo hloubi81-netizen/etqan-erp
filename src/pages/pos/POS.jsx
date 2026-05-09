@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X } from "lucide-react";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
+import { printPOSOrder } from "@/utils/posPrinter";
 import { toast } from "sonner";
 
 export default function POS() {
@@ -22,9 +23,11 @@ export default function POS() {
   const [saving, setSaving] = useState(false);
   const [lastReceipt, setLastReceipt] = useState(null);
   const [scanMode, setScanMode] = useState(false);
+  const [printers, setPrinters] = useState([]);
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
+    base44.entities.Printer.list().then(setPrinters);
     // تركيز تلقائي على خانة البحث عند فتح الشاشة
     setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
@@ -137,6 +140,26 @@ export default function POS() {
       status: "مكتملة",
     });
     setLastReceipt(rec);
+
+    // الطباعة على الطابعات المناسبة
+    const settings = (() => { try { return JSON.parse(localStorage.getItem("itqan_app_settings") || "{}"); } catch { return {}; } })();
+    await printPOSOrder({
+      cart,
+      products,
+      printers,
+      orderNumber: num,
+      date: new Date().toISOString(),
+      subtotal,
+      discount: discountAmt,
+      total,
+      paid: paidAmt,
+      change,
+      paymentMethod,
+      clientName,
+      companyName: settings?.company?.name || "نقطة البيع",
+      receiptNote: settings?.pos?.receiptNote || "شكراً لزيارتكم",
+    });
+
     setCart([]);
     setDiscount(0);
     setPaid("");

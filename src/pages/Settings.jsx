@@ -14,6 +14,7 @@ import {
   UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle
 } from "lucide-react";
 import BackupPanel from "@/components/settings/BackupPanel";
+import PrintersManager from "@/components/pos/PrintersManager";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -270,6 +271,9 @@ export default function Settings() {
               <ToggleRow label="تفعيل الخصم" desc="السماح بإدخال خصم في نقطة البيع" value={s.pos.enableDiscount} onChange={v => update("pos","enableDiscount",v)} />
               <ToggleRow label="تفعيل الضريبة" desc="احتساب ضريبة القيمة المضافة" value={s.pos.enableTax} onChange={v => update("pos","enableTax",v)} />
               <ToggleRow label="طباعة الإيصال تلقائياً" desc="طباعة الإيصال فور إتمام البيع" value={s.pos.printReceipt} onChange={v => update("pos","printReceipt",v)} />
+            </div>
+            <div className="border-t border-border pt-4 mt-4">
+              <PrintersManager />
             </div>
           </div>
         );
