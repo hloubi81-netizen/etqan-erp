@@ -57,7 +57,7 @@ const TYPE_COLORS = {
 };
 
 export default function Dashboard() {
-  const { lang } = useLang();
+  const { lang, fNum, fCur } = useLang();
   const l = (key) => tr(key, lang);
 
   const [stats, setStats] = useState(null);
@@ -99,14 +99,14 @@ export default function Dashboard() {
 
   useEffect(() => { loadData(); }, []);
 
-  const fmt = (n) => (n || 0).toLocaleString("ar-SA", { maximumFractionDigits: 0 });
+  const fmt = (n) => fNum(n || 0, { maximumFractionDigits: 0 });
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">ETQAN ERP</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-1.5">
           <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
@@ -118,19 +118,19 @@ export default function Dashboard() {
 
       {/* Financial KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard loading={loading} icon={TrendingUp}   label="إجمالي المبيعات"    value={fmt(stats?.totalSales)}     sub={`${stats?.invoices || 0} فاتورة`}    color="bg-blue-600" />
-        <StatCard loading={loading} icon={ArrowDownLeft} label="إجمالي المشتريات"  value={fmt(stats?.totalPurchases)} sub="الكميات المستلمة"                       color="bg-green-600" />
-        <StatCard loading={loading} icon={DollarSign}   label="إجمالي السندات"     value={fmt(stats?.totalVouchersAmount)} sub="قبض ودفع"                          color="bg-purple-600" />
-        <StatCard loading={loading} icon={Package}      label="المنتجات"           value={stats?.products || 0}       sub={`${stats?.warehouses || 0} مستودع`}    color="bg-orange-500" />
+        <StatCard loading={loading} icon={TrendingUp}   label={lang==='ar'?"إجمالي المبيعات":"Total Sales"}    value={fmt(stats?.totalSales)}     sub={`${fNum(stats?.invoices||0)} ${lang==='ar'?'فاتورة':'invoices'}`}    color="bg-blue-600" />
+        <StatCard loading={loading} icon={ArrowDownLeft} label={lang==='ar'?"إجمالي المشتريات":"Total Purchases"}  value={fmt(stats?.totalPurchases)} sub={lang==='ar'?"الكميات المستلمة":"Received quantities"}  color="bg-green-600" />
+        <StatCard loading={loading} icon={DollarSign}   label={lang==='ar'?"إجمالي السندات":"Total Vouchers"}     value={fmt(stats?.totalVouchersAmount)} sub={lang==='ar'?"قبض ودفع":"Receipts & Payments"} color="bg-purple-600" />
+        <StatCard loading={loading} icon={Package}      label={lang==='ar'?"المنتجات":"Products"}           value={fNum(stats?.products||0)}       sub={`${fNum(stats?.warehouses||0)} ${lang==='ar'?'مستودع':'warehouse'}`}    color="bg-orange-500" />
       </div>
 
       {/* Secondary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "الفواتير الكلية",   val: stats?.invoices || 0,   icon: Receipt,    color: "text-blue-600",   bg: "bg-blue-50" },
-          { label: "المستودعات",         val: stats?.warehouses || 0, icon: Warehouse,  color: "text-green-600",  bg: "bg-green-50" },
-          { label: "الموظفون",           val: stats?.employees || 0,  icon: Users,      color: "text-purple-600", bg: "bg-purple-50" },
-          { label: "الأصناف",            val: stats?.products || 0,   icon: Package,    color: "text-orange-600", bg: "bg-orange-50" },
+          { label: lang==='ar'?"الفواتير الكلية":"Total Invoices",   val: fNum(stats?.invoices||0),   icon: Receipt,    color: "text-blue-600",   bg: "bg-blue-50" },
+          { label: lang==='ar'?"المستودعات":"Warehouses",         val: fNum(stats?.warehouses||0), icon: Warehouse,  color: "text-green-600",  bg: "bg-green-50" },
+          { label: lang==='ar'?"الموظفون":"Employees",           val: fNum(stats?.employees||0),  icon: Users,      color: "text-purple-600", bg: "bg-purple-50" },
+          { label: lang==='ar'?"الأصناف":"Products",            val: fNum(stats?.products||0),   icon: Package,    color: "text-orange-600", bg: "bg-orange-50" },
         ].map((s, i) => (
           <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${s.bg} border border-transparent`}>
             <s.icon className={`h-5 w-5 ${s.color} shrink-0`} />
@@ -193,7 +193,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-semibold">{fmt(inv.total)}</p>
-                      <p className="text-xs text-muted-foreground">{inv.date}</p>
+                      <p className="text-xs text-muted-foreground">{inv.date ? new Date(inv.date).toLocaleDateString(lang==='ar'?'ar-SA':'en-US') : '—'}</p>
                     </div>
                   </div>
                 );
