@@ -30,6 +30,7 @@ function getMenuItems(lang) {
         { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
         { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
         { label: "تنبيهات المخزون", path: "/inventory/stock-alerts", icon: Bell },
+        { label: "تتبع انتهاء الصلاحية", path: "/inventory/expiry", icon: CalendarCheck },
       ]
     },
 
