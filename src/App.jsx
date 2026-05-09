@@ -59,6 +59,7 @@ import SalesDashboard from './pages/reports/SalesDashboard';
 import LoyaltyProgram from './pages/loyalty/LoyaltyProgram';
 import TaxReport from './pages/reports/TaxReport';
 import About from './pages/About';
+import UserGuide from './pages/UserGuide';
 import Contact from './pages/Contact';
 import Messages from './pages/Messages';
 
@@ -136,6 +137,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/sales-dashboard" element={<SalesDashboard />} />
         <Route path="/loyalty" element={<LoyaltyProgram />} />
         <Route path="/reports/tax" element={<TaxReport />} />
+        <Route path="/user-guide" element={<UserGuide />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/messages" element={<Messages />} />

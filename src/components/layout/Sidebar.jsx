@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -150,6 +150,7 @@ function getMenuItems(lang) {
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
     { label: "الإعدادات", icon: Settings, path: "/settings" },
+    { label: "دليل الاستخدام", icon: HelpCircle, path: "/user-guide" },
   ];
 }
 
