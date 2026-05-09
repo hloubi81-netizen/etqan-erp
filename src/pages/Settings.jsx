@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import {
   Settings as SettingsIcon, Palette, Globe, Building2, Bell, Shield,
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
-  UserCog, Landmark, Save, Check
+  UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle
 } from "lucide-react";
 import BackupPanel from "@/components/settings/BackupPanel";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,7 @@ const TABS = [
   { id: "assets",        label: "الأصول الثابتة",    icon: Landmark },
   { id: "notifications", label: "الإشعارات",         icon: Bell },
   { id: "security",      label: "الأمان",            icon: Shield },
+  { id: "einvoice",      label: "الفاتورة الإلكترونية", icon: FileCode2 },
   { id: "backup",        label: "النسخ الاحتياطي",   icon: Database },
 ];
 
@@ -47,6 +48,14 @@ const SETTINGS_KEY = "itqan_app_settings";
 
 const DEFAULT_SETTINGS = {
   company: { name: "شركة اتقان للتجارة", phone: "", email: "", address: "", taxNumber: "", commercialRegister: "", logo: "" },
+  einvoice: {
+    enabled: false,
+    system: "zatca",
+    // ZATCA
+    zatca_vat_number: "", zatca_cr_number: "", zatca_otp: "", zatca_environment: "sandbox", zatca_cert: "", zatca_private_key: "",
+    // ETA Egypt
+    eta_client_id: "", eta_client_secret: "", eta_tax_id: "", eta_branch_code: "", eta_environment: "preproduction",
+  },
   invoices: { defaultPayment: "نقداً", taxRate: 15, showTax: true, autoNumber: true, numberPrefix: "INV-", showLogo: true, printCopies: 1, footerNote: "" },
   accounting: { fiscalYearStart: "01-01", defaultCurrency: "SAR", decimalPlaces: 2, autoPostJournals: true, requireCostCenter: false },
   warehouse: { defaultWarehouse: "", enableSerialNumbers: false, lowStockAlert: true, lowStockThreshold: 10, allowNegativeStock: false },
@@ -337,6 +346,126 @@ export default function Settings() {
                 </div>
               ))}
             </div>
+          </div>
+        );
+
+      case "einvoice":
+        return (
+          <div className="space-y-4">
+            <SectionHeader title="الفاتورة الإلكترونية" desc="ربط النظام بهيئة الزكاة والضريبة (ZATCA) أو الهيئة المصرية للضرائب (ETA)" />
+
+            {/* تفعيل */}
+            <ToggleRow
+              label="تفعيل الفاتورة الإلكترونية"
+              desc="إرسال الفواتير إلكترونياً لهيئة الضرائب"
+              value={s.einvoice.enabled}
+              onChange={v => update("einvoice","enabled",v)}
+            />
+
+            {s.einvoice.enabled && (
+              <>
+                {/* اختيار النظام */}
+                <div>
+                  <Label className="mb-2 block">النظام الضريبي</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: "zatca", flag: "🇸🇦", title: "ZATCA", sub: "هيئة الزكاة والضريبة - السعودية" },
+                      { key: "eta",   flag: "🇪🇬", title: "ETA",   sub: "الهيئة المصرية للضرائب - مصر" },
+                    ].map(sys => (
+                      <button key={sys.key} onClick={() => update("einvoice","system",sys.key)}
+                        className={cn("flex items-center gap-3 p-4 rounded-xl border-2 text-right transition-all",
+                          s.einvoice.system === sys.key ? "border-primary bg-primary/5 shadow" : "border-border hover:border-primary/40"
+                        )}>
+                        <span className="text-3xl">{sys.flag}</span>
+                        <div>
+                          <p className="font-bold text-sm">{sys.title}</p>
+                          <p className="text-xs text-muted-foreground">{sys.sub}</p>
+                        </div>
+                        {s.einvoice.system === sys.key && <CheckCircle2 className="h-5 w-5 text-primary mr-auto" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* إعدادات ZATCA */}
+                {s.einvoice.system === "zatca" && (
+                  <div className="space-y-4 p-4 rounded-xl border bg-muted/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🇸🇦</span>
+                      <h4 className="font-semibold text-sm">إعدادات ZATCA - المملكة العربية السعودية</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FieldRow label="الرقم الضريبي (VAT Number)">
+                        <Input value={s.einvoice.zatca_vat_number} onChange={e => update("einvoice","zatca_vat_number",e.target.value)} placeholder="300000000000003" />
+                      </FieldRow>
+                      <FieldRow label="رقم السجل التجاري (CR)">
+                        <Input value={s.einvoice.zatca_cr_number} onChange={e => update("einvoice","zatca_cr_number",e.target.value)} placeholder="1010000000" />
+                      </FieldRow>
+                      <FieldRow label="كود OTP (من بوابة فاتورة)">
+                        <Input value={s.einvoice.zatca_otp} onChange={e => update("einvoice","zatca_otp",e.target.value)} placeholder="أدخل كود OTP" />
+                      </FieldRow>
+                      <FieldRow label="البيئة">
+                        <select className="w-full h-9 px-3 rounded-md border border-input bg-transparent text-sm" value={s.einvoice.zatca_environment} onChange={e => update("einvoice","zatca_environment",e.target.value)}>
+                          <option value="sandbox">Sandbox - تجريبي</option>
+                          <option value="simulation">Simulation - محاكاة</option>
+                          <option value="production">Production - إنتاج</option>
+                        </select>
+                      </FieldRow>
+                      <div className="col-span-2">
+                        <FieldRow label="الشهادة الرقمية (Certificate)">
+                          <textarea rows={3} className="w-full px-3 py-2 rounded-md border border-input bg-transparent text-xs font-mono" value={s.einvoice.zatca_cert} onChange={e => update("einvoice","zatca_cert",e.target.value)} placeholder="-----BEGIN CERTIFICATE-----" />
+                        </FieldRow>
+                      </div>
+                      <div className="col-span-2">
+                        <FieldRow label="المفتاح الخاص (Private Key)">
+                          <textarea rows={3} className="w-full px-3 py-2 rounded-md border border-input bg-transparent text-xs font-mono" value={s.einvoice.zatca_private_key} onChange={e => update("einvoice","zatca_private_key",e.target.value)} placeholder="-----BEGIN EC PRIVATE KEY-----" />
+                        </FieldRow>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      يجب أولاً تسجيل الجهاز في بوابة <strong className="mx-1">فاتورة ZATCA</strong> والحصول على كود OTP لاستكمال الربط.
+                    </div>
+                  </div>
+                )}
+
+                {/* إعدادات ETA */}
+                {s.einvoice.system === "eta" && (
+                  <div className="space-y-4 p-4 rounded-xl border bg-muted/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🇪🇬</span>
+                      <h4 className="font-semibold text-sm">إعدادات ETA - جمهورية مصر العربية</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FieldRow label="Client ID">
+                        <Input value={s.einvoice.eta_client_id} onChange={e => update("einvoice","eta_client_id",e.target.value)} placeholder="أدخل Client ID" />
+                      </FieldRow>
+                      <FieldRow label="Client Secret">
+                        <Input type="password" value={s.einvoice.eta_client_secret} onChange={e => update("einvoice","eta_client_secret",e.target.value)} placeholder="أدخل Client Secret" />
+                      </FieldRow>
+                      <FieldRow label="الرقم الضريبي (Tax ID)">
+                        <Input value={s.einvoice.eta_tax_id} onChange={e => update("einvoice","eta_tax_id",e.target.value)} placeholder="123456789" />
+                      </FieldRow>
+                      <FieldRow label="كود الفرع (Branch Code)">
+                        <Input value={s.einvoice.eta_branch_code} onChange={e => update("einvoice","eta_branch_code",e.target.value)} placeholder="0" />
+                      </FieldRow>
+                      <div className="col-span-2">
+                        <FieldRow label="البيئة">
+                          <select className="w-full h-9 px-3 rounded-md border border-input bg-transparent text-sm" value={s.einvoice.eta_environment} onChange={e => update("einvoice","eta_environment",e.target.value)}>
+                            <option value="preproduction">Pre-production - تجريبي</option>
+                            <option value="production">Production - إنتاج</option>
+                          </select>
+                        </FieldRow>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      يلزم إنشاء تطبيق في <strong className="mx-1">بوابة مصلحة الضرائب ETA</strong> والحصول على بيانات الاعتماد لاستكمال الربط.
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         );
 
