@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
 import WhatsAppSendButton from "@/components/invoices/WhatsAppSendButton";
+import BarcodeScanner from "@/components/barcode/BarcodeScanner";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
 import { refreshAccountBalances } from "@/utils/journalEngine";
 import { deductSalesInventory, addPurchaseInventory } from "@/utils/inventoryEngine";
@@ -52,6 +53,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   const [costCenters, setCostCenters] = useState([]);
   const [branches, setBranches] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
+
+  const [showScanner, setShowScanner] = useState(false);
 
   const [form, setForm] = useState({
     invoice_number: invoice?.invoice_number || "",
@@ -349,9 +352,14 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-base font-semibold">بنود الفاتورة</Label>
-              <Button variant="outline" size="sm" onClick={addItem}>
-                <Plus className="h-3.5 w-3.5 ml-1" /> إضافة بند
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setShowScanner(true)} className="gap-2">
+                  📱 ماسح الباركود
+                </Button>
+                <Button variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="h-3.5 w-3.5 ml-1" /> إضافة بند
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               {form.items.map((item, idx) => (
@@ -532,6 +540,26 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(barcode) => {
+            const prod = products.find((p) => p.barcode === barcode || p.item_code === barcode);
+            if (prod) {
+              const emptyIdx = form.items.findIndex((item) => !item.product_id);
+              if (emptyIdx !== -1) {
+                updateItem(emptyIdx, "product_id", prod.id);
+              } else {
+                setForm((prev) => ({ ...prev, items: [...prev.items, { ...EMPTY_ITEM(), product_id: prod.id }] }));
+              }
+              toast.success(`تمت إضافة: ${prod.name}`);
+            } else {
+              toast.error("لم يتم العثور على منتج بهذا الباركود");
+            }
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </Dialog>
   );
 }

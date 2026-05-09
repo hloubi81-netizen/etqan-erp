@@ -50,6 +50,7 @@ import LeaveRequests from './pages/hr/LeaveRequests';
 import BankReconciliation from './pages/accounting/BankReconciliation';
 import StockAlerts from './pages/inventory/StockAlerts';
 import ExpiryTracking from './pages/inventory/ExpiryTracking';
+import BarcodeManagement from './pages/inventory/BarcodeManagement';
 import ActivityLogPage from './pages/reports/ActivityLog';
 import PurchaseOrders from './pages/orders/PurchaseOrders';
 import BudgetManagement from './pages/budget/BudgetManagement';
@@ -129,6 +130,7 @@ const AuthenticatedApp = () => {
         <Route path="/accounting/bank-reconciliation" element={<BankReconciliation />} />
         <Route path="/inventory/stock-alerts" element={<StockAlerts />} />
         <Route path="/inventory/expiry" element={<ExpiryTracking />} />
+        <Route path="/inventory/barcode" element={<BarcodeManagement />} />
         <Route path="/reports/activity-log" element={<ActivityLogPage />} />
         <Route path="/orders" element={<PurchaseOrders />} />
         <Route path="/budget" element={<BudgetManagement />} />
