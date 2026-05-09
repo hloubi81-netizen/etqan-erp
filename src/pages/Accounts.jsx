@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle } from "lucide-react";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,11 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
           <span className="text-muted-foreground ml-2">{account.account_number}</span>
           {account.name}
         </span>
+        {account.phone && (
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Phone className="h-3 w-3" />{account.phone}
+          </span>
+        )}
         {account.account_nature && (
           <Badge variant="outline" className="text-[10px]">{account.account_nature}</Badge>
         )}
@@ -49,6 +54,15 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
           <Badge variant="secondary" className="text-[10px]">{account.final_account}</Badge>
         )}
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+          {account.phone && (
+            <Button
+              variant="ghost" size="icon" className="h-6 w-6 text-green-600"
+              title="إرسال عبر واتساب"
+              onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/${account.phone.replace(/\D/g,"")}`, "_blank"); }}
+            >
+              <MessageCircle className="h-3 w-3" />
+            </Button>
+          )}
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onEdit(account)}>
             <Pencil className="h-3 w-3" />
           </Button>
@@ -94,7 +108,7 @@ export default function Accounts() {
     setForm({
       account_number: "", name: "", parent_account_id: "", parent_account_name: "",
       final_account: "", account_nature: "", financial_statement: "", currency: "",
-      is_parent: false, level: 0,
+      phone: "", is_parent: false, level: 0,
     });
     setDialogOpen(true);
   }
@@ -109,6 +123,7 @@ export default function Accounts() {
       account_nature: acc.account_nature || "",
       financial_statement: acc.financial_statement || "",
       currency: acc.currency || "",
+      phone: acc.phone || "",
       is_parent: acc.is_parent || false,
       level: acc.level || 0,
     });
@@ -307,6 +322,15 @@ export default function Accounts() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />رقم الهاتف / واتساب</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="مثال: 966501234567"
+                dir="ltr"
+              />
             </div>
           </div>
           <DialogFooter className="gap-2">

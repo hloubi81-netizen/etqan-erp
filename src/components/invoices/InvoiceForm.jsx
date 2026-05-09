@@ -220,7 +220,10 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               <AccountSearchInput
                 accounts={accounts}
                 value={form.client_account_id}
-                onChange={(id, name) => setForm({ ...form, client_account_id: id, client_name: name })}
+                onChange={(id, name) => {
+                  const acc = accounts.find(a => a.id === id);
+                  setForm({ ...form, client_account_id: id, client_name: name, client_phone: acc?.phone || "" });
+                }}
                 placeholder={`ابحث عن ${invoiceType.includes("مبيعات") ? "العميل" : "المورد"}...`}
               />
             </div>
