@@ -61,6 +61,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     client_account_id: invoice?.client_account_id || "",
     client_name: invoice?.client_name || "",
     client_phone: invoice?.client_phone || "",
+    client_balance: invoice?.client_balance || 0,
     warehouse_id: invoice?.warehouse_id || pattern?.default_warehouse_id || "",
     warehouse_name: invoice?.warehouse_name || "",
     payment_method: invoice?.payment_method || "نقداً",
@@ -224,16 +225,24 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
                   value={form.client_account_id}
                   onChange={(id, name) => {
                     const acc = accounts.find(a => a.id === id);
-                    setForm({ ...form, client_account_id: id, client_name: name, client_phone: acc?.phone || "" });
+                    setForm({ ...form, client_account_id: id, client_name: name, client_phone: acc?.phone || "", client_balance: acc?.balance || 0 });
                   }}
                   placeholder={`ابحث عن ${invoiceType.includes("مبيعات") ? "العميل" : "المورد"}...`}
                 />
-                {form.client_phone && (
-                  <div className="flex items-center gap-1 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 whitespace-nowrap">
-                    <span className="text-xl">📱</span>
-                    <span>{form.client_phone}</span>
-                  </div>
-                )}
+                <div className="flex gap-2 items-center">
+                  {form.client_phone && (
+                    <div className="flex items-center gap-1 px-3 py-2 bg-green-50 border border-green-200 rounded-md text-sm text-green-700 whitespace-nowrap">
+                      <span className="text-xl">📱</span>
+                      <span>{form.client_phone}</span>
+                    </div>
+                  )}
+                  {form.client_balance !== undefined && (
+                    <div className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm whitespace-nowrap font-semibold ${form.client_balance >= 0 ? "bg-green-50 border border-green-200 text-green-700" : "bg-red-50 border border-red-200 text-red-700"}`}>
+                      <span>💰</span>
+                      <span>{form.client_balance.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div>
