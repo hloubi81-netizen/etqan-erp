@@ -252,7 +252,7 @@ export default function POS() {
                   <Select value={item.unit_name} onValueChange={(v) => prod && changeUnit(item.key, v, prod)}>
                     <SelectTrigger className="h-6 text-[10px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {item.available_units.map((u) => (
+                      {item.available_units.filter((u) => u.name).map((u) => (
                         <SelectItem key={u.name} value={u.name} className="text-xs">{u.name} ({u.conversion_factor} وحدة أساسية)</SelectItem>
                       ))}
                     </SelectContent>
