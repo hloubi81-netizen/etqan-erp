@@ -50,6 +50,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   const [warehouses, setWarehouses] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [allInvoices, setAllInvoices] = useState([]);
 
   const [form, setForm] = useState({
@@ -58,6 +59,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     pattern_name: invoice?.pattern_name || pattern?.name || "",
     pattern_type: invoiceType,
     date: invoice?.date || new Date().toISOString().split("T")[0],
+    branch_id: invoice?.branch_id || "",
+    branch_name: invoice?.branch_name || "",
     client_account_id: invoice?.client_account_id || "",
     client_name: invoice?.client_name || "",
     client_phone: invoice?.client_phone || "",
@@ -87,13 +90,14 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   }, []);
 
   async function loadData() {
-    const [prods, accs, whs, currs, invs, ccs] = await Promise.all([
+    const [prods, accs, whs, currs, invs, ccs, branches] = await Promise.all([
       base44.entities.Product.list(),
       base44.entities.Account.list(),
       base44.entities.Warehouse.list(),
       base44.entities.Currency.list(),
       base44.entities.Invoice.filter({ pattern_type: invoiceType }),
       base44.entities.CostCenter.list(),
+      base44.entities.Branch.list(),
     ]);
     setProducts(prods);
     setAccounts(accs);
@@ -101,6 +105,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     setCurrencies(currs);
     setAllInvoices(invs);
     setCostCenters(ccs);
+    setBranches(branches);
 
     if (!invoice) {
       const nextNum = invs.length + 1;
@@ -216,6 +221,23 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             <div>
               <Label>التاريخ</Label>
               <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+            <div>
+              <Label>الفرع</Label>
+              <Select
+                value={form.branch_id}
+                onValueChange={(v) => {
+                  const br = branches.find((b) => b.id === v);
+                  setForm({ ...form, branch_id: v, branch_name: br?.name || "" });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+                <SelectContent>
+                  {branches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2">
               <Label>{invoiceType.includes("مبيعات") ? "العميل" : "المورد"}</Label>
@@ -458,8 +480,12 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
               await onSave(saved);
 
-              // تحديث أرصدة الحسابات
-              if (saved.client_account_id) await refreshAccountBalances([saved.client_account_id]);
+              // تحديث أرصدة الحسابات للفرع المحدد
+              if (saved.client_account_id && saved.branch_id) {
+                await refreshAccountBalances([saved.client_account_id], saved.branch_id);
+              } else if (saved.client_account_id) {
+                await refreshAccountBalances([saved.client_account_id]);
+              }
 
               // ترحيل المخزون تلقائياً
               let inventoryMsg = "";
