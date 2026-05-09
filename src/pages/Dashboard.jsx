@@ -105,7 +105,7 @@ export default function Dashboard() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold">{l('dashboardTitle')}</h1>
+          <h1 className="text-xl font-bold">ETQAN ERP</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{new Date().toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-1.5">

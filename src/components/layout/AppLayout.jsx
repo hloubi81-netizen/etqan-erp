@@ -37,7 +37,7 @@ export default function AppLayout() {
 
             {/* App name pill */}
             <div className="hidden lg:flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold">
-              <span>اتقان</span>
+              <span>ETQAN</span>
             </div>
 
             {/* Global Search */}

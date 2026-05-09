@@ -287,7 +287,7 @@ export default function Sidebar({ isOpen, onToggle }) {
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-bold text-sm leading-tight">اتقان ERP</p>
+            <p className="font-bold text-sm leading-tight">ETQAN ERP</p>
             <p className="text-blue-200 text-[10px]">نظام الإدارة المالية</p>
           </div>
           <button onClick={onToggle} className="lg:hidden text-white/80 hover:text-white p-1">
@@ -313,7 +313,7 @@ export default function Sidebar({ isOpen, onToggle }) {
             <span>•</span>
             <Link to="/contact" className="hover:text-primary transition-colors">تواصل معنا</Link>
           </div>
-          <p className="text-gray-400 text-[10px] text-center">v2.0 • اتقان ERP</p>
+          <p className="text-gray-400 text-[10px] text-center">v2.0 • ETQAN ERP</p>
         </div>
       </aside>
     </>
