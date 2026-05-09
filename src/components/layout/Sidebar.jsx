@@ -20,52 +20,53 @@ function getMenuItems(lang) {
     // ── الرئيسية ──
     { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
 
+
     // ── المخزون والمنتجات ──
     {
-      label: "المخزون والمنتجات", icon: Package,
+      label: lang === 'ar' ? "المخزون والمنتجات" : "Inventory & Products", icon: Package,
       children: [
         { label: l('groups'), path: "/groups", icon: FolderTree },
         { label: l('products'), path: "/products", icon: Package },
         { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
         { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
         { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
-        { label: "تنبيهات المخزون", path: "/inventory/stock-alerts", icon: Bell },
-        { label: "تتبع انتهاء الصلاحية", path: "/inventory/expiry", icon: CalendarCheck },
+        { label: lang === 'ar' ? "تنبيهات المخزون" : "Stock Alerts", path: "/inventory/stock-alerts", icon: Bell },
+        { label: lang === 'ar' ? "تتبع انتهاء الصلاحية" : "Expiry Tracking", path: "/inventory/expiry", icon: CalendarCheck },
       ]
     },
 
     // ── المبيعات ──
     {
-      label: "المبيعات", icon: TrendingUp,
+      label: lang === 'ar' ? "المبيعات" : "Sales", icon: TrendingUp,
       children: [
         { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
         { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
-        { label: "شاشة البيع", path: "/pos", icon: ShoppingCart },
-        { label: "سجل مبيعات نقطة البيع", path: "/pos/history", icon: Receipt },
-        { label: "عروض أسعار المبيعات", path: "/orders", icon: ShoppingBag },
+        { label: lang === 'ar' ? "شاشة البيع" : "POS Screen", path: "/pos", icon: ShoppingCart },
+        { label: lang === 'ar' ? "سجل مبيعات نقطة البيع" : "POS History", path: "/pos/history", icon: Receipt },
+        { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag },
       ]
     },
 
     // ── المشتريات ──
     {
-      label: "المشتريات", icon: ShoppingBag,
+      label: lang === 'ar' ? "المشتريات" : "Purchases", icon: ShoppingBag,
       children: [
         { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
         { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
-        { label: "أوامر الشراء", path: "/orders", icon: ShoppingBag },
+        { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag },
       ]
     },
 
     // ── المحاسبة والمالية ──
     {
-      label: "المحاسبة", icon: CircleDollarSign,
+      label: lang === 'ar' ? "المحاسبة" : "Accounting", icon: CircleDollarSign,
       children: [
         { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
         { label: l('currencies'), path: "/currencies", icon: Coins },
         { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
         { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
-        { label: "قواعد اليومية التلقائية", path: "/accounting/journal-rules", icon: Zap },
-        { label: "التسويات البنكية", path: "/accounting/bank-reconciliation", icon: Landmark },
+        { label: lang === 'ar' ? "قواعد اليومية التلقائية" : "Auto Journal Rules", path: "/accounting/journal-rules", icon: Zap },
+        { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark },
       ]
     },
 
@@ -89,13 +90,13 @@ function getMenuItems(lang) {
         { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
         { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
         { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
-        { label: "الميزانية والتخطيط", path: "/budget", icon: PieChart },
+        { label: lang === 'ar' ? "الميزانية والتخطيط" : "Budget & Planning", path: "/budget", icon: PieChart },
       ]
     },
 
     // ── التكاليف والفروع ──
     {
-      label: "التكاليف والفروع", icon: Calculator,
+      label: lang === 'ar' ? "التكاليف والفروع" : "Costs & Branches", icon: Calculator,
       children: [
         { label: l('costCenters'), path: "/cost-centers", icon: Building2 },
         { label: l('costManagement'), path: "/costs/management", icon: Calculator },
@@ -107,17 +108,17 @@ function getMenuItems(lang) {
 
     // ── الموارد البشرية ──
     {
-      label: "الموارد البشرية", icon: UserCog,
+      label: lang === 'ar' ? "الموارد البشرية" : "Human Resources", icon: UserCog,
       children: [
-        { label: "الموظفون", path: "/hr/employees", icon: Users },
-        { label: "الحضور والغياب", path: "/hr/attendance", icon: CalendarCheck },
-        { label: "الرواتب", path: "/hr/payroll", icon: Banknote },
-        { label: "طلبات الإجازات", path: "/hr/leaves", icon: CalendarCheck },
+        { label: lang === 'ar' ? "الموظفون" : "Employees", path: "/hr/employees", icon: Users },
+        { label: lang === 'ar' ? "الحضور والغياب" : "Attendance", path: "/hr/attendance", icon: CalendarCheck },
+        { label: lang === 'ar' ? "الرواتب" : "Payroll", path: "/hr/payroll", icon: Banknote },
+        { label: lang === 'ar' ? "طلبات الإجازات" : "Leave Requests", path: "/hr/leaves", icon: CalendarCheck },
       ]
     },
 
     // ── الأصول الثابتة ──
-    { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
+    { label: lang === 'ar' ? "الأصول الثابتة" : "Fixed Assets", icon: Landmark, path: "/assets" },
 
     // ── التقارير ──
     {
@@ -130,27 +131,27 @@ function getMenuItems(lang) {
         { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
         { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
         { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
-        { label: "لوحة تحكم المبيعات", path: "/reports/sales-dashboard", icon: TrendingUp },
-        { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 },
-        { label: "التقرير الضريبي (VAT)", path: "/reports/tax", icon: Calculator },
-        { label: "التقارير المخصصة", path: "/reports/custom", icon: TrendingUp },
-        { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList },
+        { label: lang === 'ar' ? "لوحة تحكم المبيعات" : "Sales Dashboard", path: "/reports/sales-dashboard", icon: TrendingUp },
+        { label: lang === 'ar' ? "التقارير المتقدمة" : "Advanced Reports", path: "/reports/advanced", icon: BarChart3 },
+        { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
+        { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
+        { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
       ]
     },
 
     // ── نظام النقاط والعروض ──
-    { label: "النقاط والعروض الخاصة", icon: Sparkles, path: "/loyalty" },
+    { label: lang === 'ar' ? "النقاط والعروض الخاصة" : "Loyalty & Promotions", icon: Sparkles, path: "/loyalty" },
 
     // ── إدارة العملاء والتواصل ──
-    { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
-    { label: "الرسائل الداخلية", icon: Mail, path: "/messages" },
-    { label: "الإشعارات والتنبيهات", icon: Bell, path: "/notifications" },
+    { label: lang === 'ar' ? "إدارة علاقات العملاء" : "CRM", icon: MessageSquare, path: "/crm" },
+    { label: lang === 'ar' ? "الرسائل الداخلية" : "Internal Messages", icon: Mail, path: "/messages" },
+    { label: lang === 'ar' ? "الإشعارات والتنبيهات" : "Notifications", icon: Bell, path: "/notifications" },
 
     // ── الإدارة والإعدادات ──
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
-    { label: "الإعدادات", icon: Settings, path: "/settings" },
-    { label: "دليل الاستخدام", icon: HelpCircle, path: "/user-guide" },
+    { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
+    { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" },
   ];
 }
 
@@ -269,6 +270,7 @@ function SidebarItem({ item, onNavigate }) {
 export default function Sidebar({ isOpen, onToggle }) {
   const { lang } = useLang();
   const menuItems = getMenuItems(lang);
+  const isRTL = lang === 'ar';
 
   return (
     <>
@@ -279,12 +281,15 @@ export default function Sidebar({ isOpen, onToggle }) {
 
       <aside
         className={cn(
-          "fixed top-0 right-0 h-full z-50 flex flex-col transition-all duration-300",
-          "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:translate-x-0",
-          "w-64 bg-white border-l border-gray-200",
-          isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0",
+          "fixed top-0 h-full z-50 flex flex-col transition-all duration-300",
+          "lg:sticky lg:top-0 lg:z-auto lg:h-screen",
+          "w-64 bg-white",
+          isRTL ? "right-0 border-l border-gray-200" : "left-0 border-r border-gray-200",
+          isRTL
+            ? (isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0")
+            : (isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"),
         )}
-        style={{ boxShadow: "-2px 0 8px rgba(0,0,0,0.06)" }}
+        style={{ boxShadow: isRTL ? "-2px 0 8px rgba(0,0,0,0.06)" : "2px 0 8px rgba(0,0,0,0.06)" }}
       >
         {/* Header - Office style brand bar */}
         <div className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white shrink-0">

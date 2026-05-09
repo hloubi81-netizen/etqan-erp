@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { Menu, Bell, ChevronDown } from "lucide-react";
@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useLang } from "@/hooks/useLang.jsx";
 import ThemePicker from "./ThemePicker";
 import { base44 } from "@/api/base44Client";
-import { useEffect } from "react";
 import GlobalSearch from "./GlobalSearch";
+import { cn } from "@/lib/utils";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-gray-50" dir="rtl">
+    <div className="flex min-h-screen bg-gray-50" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
