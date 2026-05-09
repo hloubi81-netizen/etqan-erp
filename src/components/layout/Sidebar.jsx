@@ -17,36 +17,58 @@ import { cn } from "@/lib/utils";
 function getMenuItems(lang) {
   const l = (key) => tr(key, lang);
   return [
+    // ── الرئيسية ──
     { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
+
+    // ── المخزون والمنتجات ──
     {
-      label: l('cards'), icon: FolderTree,
+      label: "المخزون والمنتجات", icon: Package,
       children: [
         { label: l('groups'), path: "/groups", icon: FolderTree },
         { label: l('products'), path: "/products", icon: Package },
         { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
-        { label: l('costCenters'), path: "/cost-centers", icon: Building2 }
+        { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
+        { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
+        { label: "تنبيهات المخزون", path: "/inventory/stock-alerts", icon: Bell },
       ]
     },
+
+    // ── المبيعات ──
     {
-      label: l('accounting'), icon: CircleDollarSign,
+      label: "المبيعات", icon: TrendingUp,
+      children: [
+        { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
+        { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
+        { label: "شاشة البيع", path: "/pos", icon: ShoppingCart },
+        { label: "سجل مبيعات نقطة البيع", path: "/pos/history", icon: Receipt },
+        { label: "عروض أسعار المبيعات", path: "/orders", icon: ShoppingBag },
+      ]
+    },
+
+    // ── المشتريات ──
+    {
+      label: "المشتريات", icon: ShoppingBag,
+      children: [
+        { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
+        { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
+        { label: "أوامر الشراء", path: "/orders", icon: ShoppingBag },
+      ]
+    },
+
+    // ── المحاسبة والمالية ──
+    {
+      label: "المحاسبة", icon: CircleDollarSign,
       children: [
         { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
         { label: l('currencies'), path: "/currencies", icon: Coins },
         { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
+        { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
         { label: "قواعد اليومية التلقائية", path: "/accounting/journal-rules", icon: Zap },
-        { label: "التسويات البنكية", path: "/accounting/bank-reconciliation", icon: Landmark }
+        { label: "التسويات البنكية", path: "/accounting/bank-reconciliation", icon: Landmark },
       ]
     },
-    {
-      label: l('invoices'), icon: Receipt,
-      children: [
-        { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
-        { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
-        { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
-        { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
-        { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt }
-      ]
-    },
+
+    // ── السندات ──
     {
       label: l('vouchers'), icon: FileText,
       children: [
@@ -54,72 +76,49 @@ function getMenuItems(lang) {
         { label: l('paymentVoucher'), path: "/vouchers/payment", icon: FileText },
         { label: l('dailyVoucher'), path: "/vouchers/daily", icon: FileText },
         { label: l('journalVoucher'), path: "/vouchers/journal", icon: FileText },
-        { label: l('openingJournal'), path: "/vouchers/opening", icon: FileText }
+        { label: l('openingJournal'), path: "/vouchers/opening", icon: FileText },
       ]
     },
-    {
-      label: l('stockSection'), icon: WarehouseIcon,
-      children: [
-        { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
-        { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
-        { label: "تنبيهات المخزون", path: "/inventory/stock-alerts", icon: ClipboardList }
-      ]
-    },
+
+    // ── القوائم المالية ──
     {
       label: l('financialStatements'), icon: BarChart3,
       children: [
         { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
         { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
         { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
-        { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins }
+        { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
+        { label: "الميزانية والتخطيط", path: "/budget", icon: PieChart },
       ]
     },
+
+    // ── التكاليف والفروع ──
     {
-      label: l('costSystem'), icon: Calculator,
+      label: "التكاليف والفروع", icon: Calculator,
       children: [
+        { label: l('costCenters'), path: "/cost-centers", icon: Building2 },
         { label: l('costManagement'), path: "/costs/management", icon: Calculator },
-        { label: l('costReport'), path: "/costs/report", icon: BarChart3 }
-      ]
-    },
-    {
-      label: l('branches'), icon: GitBranch,
-      children: [
+        { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
         { label: l('manageBranches'), path: "/branches", icon: GitBranch },
-        { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }
+        { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 },
       ]
     },
-    {
-      label: "نقطة البيع", icon: ShoppingCart,
-      children: [
-        { label: "شاشة البيع", path: "/pos", icon: ShoppingCart },
-        { label: "سجل المبيعات", path: "/pos/history", icon: Receipt }
-      ]
-    },
+
+    // ── الموارد البشرية ──
     {
       label: "الموارد البشرية", icon: UserCog,
       children: [
         { label: "الموظفون", path: "/hr/employees", icon: Users },
         { label: "الحضور والغياب", path: "/hr/attendance", icon: CalendarCheck },
         { label: "الرواتب", path: "/hr/payroll", icon: Banknote },
-        { label: "طلبات الإجازات", path: "/hr/leaves", icon: CalendarCheck }
+        { label: "طلبات الإجازات", path: "/hr/leaves", icon: CalendarCheck },
       ]
     },
+
+    // ── الأصول الثابتة ──
     { label: "الأصول الثابتة", icon: Landmark, path: "/assets" },
-    {
-      label: "أوامر الشراء والبيع", icon: ShoppingBag,
-      children: [
-        { label: "أوامر الشراء وعروض الأسعار", path: "/orders", icon: ShoppingBag },
-      ]
-    },
-    {
-      label: "الميزانية والتخطيط", icon: PieChart,
-      children: [
-        { label: "إدارة الميزانيات", path: "/budget", icon: PieChart },
-      ]
-    },
-    { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
-    { label: "الإشعارات والتنبيهات", icon: Bell, path: "/notifications" },
-    { label: "الرسائل الداخلية", icon: Mail, path: "/messages" },
+
+    // ── التقارير ──
     {
       label: l('reports'), icon: BarChart3,
       children: [
@@ -131,10 +130,17 @@ function getMenuItems(lang) {
         { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
         { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
         { label: "التقارير المتقدمة", path: "/reports/advanced", icon: BarChart3 },
-        { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList },
         { label: "التقارير المخصصة", path: "/reports/custom", icon: TrendingUp },
+        { label: "سجل النشاط", path: "/reports/activity-log", icon: ClipboardList },
       ]
     },
+
+    // ── إدارة العملاء والتواصل ──
+    { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
+    { label: "الرسائل الداخلية", icon: Mail, path: "/messages" },
+    { label: "الإشعارات والتنبيهات", icon: Bell, path: "/notifications" },
+
+    // ── الإدارة والإعدادات ──
     { label: l('users'), icon: Users, path: "/users" },
     { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
     { label: "الإعدادات", icon: Settings, path: "/settings" },
