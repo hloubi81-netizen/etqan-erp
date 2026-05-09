@@ -16,34 +16,51 @@ export default function ProductMovement() {
   const [warehouses, setWarehouses] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [transfers, setTransfers] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [filters, setFilters] = useState({ product_id: "", group_id: "", warehouse_id: "", date_from: "", date_to: "" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
   async function loadData() {
-    const [p, g, w, inv, tr] = await Promise.all([
+    const [p, g, w, inv, tr, curs] = await Promise.all([
       base44.entities.Product.list(),
       base44.entities.ProductGroup.list(),
       base44.entities.Warehouse.list(),
       base44.entities.Invoice.list(),
       base44.entities.StockTransfer.list(),
+      base44.entities.Currency.list(),
     ]);
-    setProducts(p); setGroups(g); setWarehouses(w); setInvoices(inv); setTransfers(tr);
+    setProducts(p); setGroups(g); setWarehouses(w); setInvoices(inv); setTransfers(tr); setCurrencies(curs);
     setLoading(false);
+  }
+
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && currencyName === localCur.name) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
   }
 
   function generateReport() {
     const movements = [];
+    const localCur = currencies.find(c => c.is_local);
+    let foundForeign = false;
 
-    // Process invoices
     invoices.forEach((inv) => {
       if (filters.date_from && inv.date < filters.date_from) return;
       if (filters.date_to && inv.date > filters.date_to) return;
       if (filters.warehouse_id && inv.warehouse_id !== filters.warehouse_id) return;
+
+      const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
+      if (isForeign) foundForeign = true;
+      const rate = isForeign ? getExchangeRate(inv.currency) : 1;
 
       (inv.items || []).forEach((item) => {
         if (filters.product_id && item.product_id !== filters.product_id) return;
@@ -58,6 +75,8 @@ export default function ProductMovement() {
           product_name: item.product_name,
           quantity: item.quantity,
           price: item.price,
+          priceLocal: typeof item.price === "number" ? item.price * rate : item.price,
+          currency: inv.currency,
           warehouse: inv.warehouse_name || "-",
         });
       });
@@ -82,6 +101,7 @@ export default function ProductMovement() {
       });
     });
 
+    setHasForeignCurrency(foundForeign);
     movements.sort((a, b) => (a.date > b.date ? -1 : 1));
     setResults(movements);
   }
@@ -142,7 +162,16 @@ export default function ProductMovement() {
 
       {results.length > 0 ? (
         <>
-        <div className="flex justify-end mb-3">
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+          {hasForeignCurrency && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+              <button onClick={() => setShowInLocal(!showInLocal)} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+              </button>
+            </div>
+          )}
+          <div className="mr-auto">
           <ExportButtons
             columns={[
               {key:"date",label:"التاريخ"},{key:"number",label:"الرقم"},{key:"type",label:"نوع العملية"},
@@ -150,6 +179,7 @@ export default function ProductMovement() {
             ]}
             data={results} title="حركة المواد" filename="product-movement" printId="product-movement-table"
           />
+          </div>
         </div>
         <div id="product-movement-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
@@ -160,7 +190,8 @@ export default function ProductMovement() {
                 <TableHead className="text-right text-xs">نوع العملية</TableHead>
                 <TableHead className="text-right text-xs">الصنف</TableHead>
                 <TableHead className="text-right text-xs">الكمية</TableHead>
-                <TableHead className="text-right text-xs">السعر</TableHead>
+                {!showInLocal && hasForeignCurrency && <TableHead className="text-right text-xs">العملة</TableHead>}
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "السعر (محلي)" : "السعر"}</TableHead>
                 <TableHead className="text-right text-xs">المستودع</TableHead>
               </TableRow>
             </TableHeader>
@@ -172,7 +203,10 @@ export default function ProductMovement() {
                   <TableCell className="text-sm">{r.type}</TableCell>
                   <TableCell className="text-sm font-medium">{r.product_name}</TableCell>
                   <TableCell className="text-sm">{r.quantity}</TableCell>
-                  <TableCell className="text-sm">{typeof r.price === "number" ? r.price.toLocaleString() : r.price}</TableCell>
+                  {!showInLocal && hasForeignCurrency && <TableCell className="text-sm text-muted-foreground">{r.currency || "-"}</TableCell>}
+                  <TableCell className="text-sm">
+                    {(() => { const p = showInLocal && hasForeignCurrency ? r.priceLocal : r.price; return typeof p === "number" ? p.toLocaleString() : p; })()}
+                  </TableCell>
                   <TableCell className="text-sm">{r.warehouse}</TableCell>
                 </TableRow>
               ))}

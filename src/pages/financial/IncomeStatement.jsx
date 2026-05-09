@@ -11,56 +11,57 @@ export default function IncomeStatement() {
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [vouchers, setVouchers] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [filters, setFilters] = useState({ date_from: "", date_to: "" });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [a, inv, v] = await Promise.all([
+    const [a, inv, v, curs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Invoice.list(),
       base44.entities.Voucher.list(),
+      base44.entities.Currency.list(),
     ]);
-    setAccounts(a); setInvoices(inv); setVouchers(v);
+    setAccounts(a); setInvoices(inv); setVouchers(v); setCurrencies(curs);
     setLoading(false);
   }
 
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && currencyName === localCur.name) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
+  }
+
+  function getInvoiceTotal(inv) {
+    const localCur = currencies.find(c => c.is_local);
+    const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
+    if (showInLocal && isForeign) return (inv.total || 0) * getExchangeRate(inv.currency);
+    return inv.total || 0;
+  }
+
   function generateReport() {
-    // Calculate sales
-    const salesInvoices = invoices.filter((i) => {
-      if (i.pattern_type !== "مبيعات") return false;
+    const localCur = currencies.find(c => c.is_local);
+    const filtered = invoices.filter(i => {
       if (filters.date_from && i.date < filters.date_from) return false;
       if (filters.date_to && i.date > filters.date_to) return false;
       return true;
     });
-    const totalSales = salesInvoices.reduce((s, i) => s + (i.total || 0), 0);
+    const hasForeign = filtered.some(i => i.currency && localCur && i.currency !== localCur.name);
+    setHasForeignCurrency(hasForeign);
 
-    const salesReturns = invoices.filter((i) => {
-      if (i.pattern_type !== "مرتجع مبيعات") return false;
-      if (filters.date_from && i.date < filters.date_from) return false;
-      if (filters.date_to && i.date > filters.date_to) return false;
-      return true;
-    });
-    const totalSalesReturns = salesReturns.reduce((s, i) => s + (i.total || 0), 0);
+    const sumByType = (type) => filtered.filter(i => i.pattern_type === type).reduce((s, i) => s + getInvoiceTotal(i), 0);
 
-    // Cost of goods sold
-    const purchaseInvoices = invoices.filter((i) => {
-      if (i.pattern_type !== "مشتريات") return false;
-      if (filters.date_from && i.date < filters.date_from) return false;
-      if (filters.date_to && i.date > filters.date_to) return false;
-      return true;
-    });
-    const totalPurchases = purchaseInvoices.reduce((s, i) => s + (i.total || 0), 0);
-
-    const purchaseReturns = invoices.filter((i) => {
-      if (i.pattern_type !== "مرتجع مشتريات") return false;
-      if (filters.date_from && i.date < filters.date_from) return false;
-      if (filters.date_to && i.date > filters.date_to) return false;
-      return true;
-    });
-    const totalPurchaseReturns = purchaseReturns.reduce((s, i) => s + (i.total || 0), 0);
+    const totalSales = sumByType("مبيعات");
+    const totalSalesReturns = sumByType("مرتجع مبيعات");
+    const totalPurchases = sumByType("مشتريات");
+    const totalPurchaseReturns = sumByType("مرتجع مشتريات");
 
     const netSales = totalSales - totalSalesReturns;
     const netPurchases = totalPurchases - totalPurchaseReturns;
@@ -104,10 +105,18 @@ export default function IncomeStatement() {
 
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex items-end gap-4">
+          <div className="flex items-end gap-4 flex-wrap">
             <div><Label className="text-xs">من تاريخ</Label><Input className="h-9" type="date" value={filters.date_from} onChange={(e) => setFilters({ ...filters, date_from: e.target.value })} /></div>
             <div><Label className="text-xs">إلى تاريخ</Label><Input className="h-9" type="date" value={filters.date_to} onChange={(e) => setFilters({ ...filters, date_to: e.target.value })} /></div>
             <Button size="sm" onClick={generateReport}><Search className="h-4 w-4 ml-1" /> إعداد القائمة</Button>
+            {report && hasForeignCurrency && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+                <button onClick={() => { setShowInLocal(!showInLocal); generateReport(); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+                </button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

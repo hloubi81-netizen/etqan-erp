@@ -12,28 +12,41 @@ import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function TrialBalance() {
   const [accounts, setAccounts] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [vouchers, setVouchers] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", type: "بالمجاميع" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [a, v, inv] = await Promise.all([
+    const [a, v, inv, curs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Voucher.list(),
       base44.entities.Invoice.list(),
+      base44.entities.Currency.list(),
     ]);
-    setAccounts(a); setVouchers(v); setInvoices(inv);
+    setAccounts(a); setVouchers(v); setInvoices(inv); setCurrencies(curs);
     setLoading(false);
+  }
+
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && currencyName === localCur.name) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
   }
 
   function generateReport() {
     const balances = {};
+    const localCur = currencies.find(c => c.is_local);
+    let foundForeign = false;
 
-    // Initialize all accounts
     accounts.forEach((acc) => {
       if (filters.account_id && acc.id !== filters.account_id) return;
       balances[acc.id] = {
@@ -43,10 +56,11 @@ export default function TrialBalance() {
         opening_credit: acc.credit_balance || 0,
         movement_debit: 0,
         movement_credit: 0,
+        movement_debit_local: 0,
+        movement_credit_local: 0,
       };
     });
 
-    // Process voucher entries
     vouchers.forEach((v) => {
       if (filters.date_from && v.date < filters.date_from) return;
       if (filters.date_to && v.date > filters.date_to) return;
@@ -55,16 +69,28 @@ export default function TrialBalance() {
         if (!balances[entry.account_id]) return;
         balances[entry.account_id].movement_debit += entry.debit || 0;
         balances[entry.account_id].movement_credit += entry.credit || 0;
+        balances[entry.account_id].movement_debit_local += entry.debit || 0;
+        balances[entry.account_id].movement_credit_local += entry.credit || 0;
       });
 
-      // Simple vouchers
       if (v.account_id && balances[v.account_id]) {
         balances[v.account_id].movement_debit += v.amount || 0;
+        balances[v.account_id].movement_debit_local += v.amount || 0;
       }
       if (v.counter_account_id && balances[v.counter_account_id]) {
         balances[v.counter_account_id].movement_credit += v.amount || 0;
+        balances[v.counter_account_id].movement_credit_local += v.amount || 0;
       }
     });
+
+    // Process invoices for foreign currency tracking
+    invoices.forEach((inv) => {
+      if (filters.date_from && inv.date < filters.date_from) return;
+      if (filters.date_to && inv.date > filters.date_to) return;
+      if (inv.currency && localCur && inv.currency !== localCur.name) foundForeign = true;
+    });
+
+    setHasForeignCurrency(foundForeign);
 
     const resultList = Object.values(balances).map((b) => ({
       ...b,
@@ -126,7 +152,16 @@ export default function TrialBalance() {
 
       {results.length > 0 ? (
         <>
-        <div className="flex justify-end mb-3">
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+          {hasForeignCurrency && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+              <button onClick={() => setShowInLocal(!showInLocal)} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+              </button>
+            </div>
+          )}
+          <div className="mr-auto">
           <ExportButtons
             columns={[
               {key:"account_number",label:"رقم الحساب"},{key:"name",label:"اسم الحساب"},
@@ -136,6 +171,7 @@ export default function TrialBalance() {
             ]}
             data={results} title="ميزان المراجعة" filename="trial-balance" printId="trial-balance-table"
           />
+          </div>
         </div>
         <div id="trial-balance-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>

@@ -18,6 +18,8 @@ export default function Ledger() {
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", movement_type: "الكل", currency: "" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -32,26 +34,36 @@ export default function Ledger() {
     setLoading(false);
   }
 
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && currencyName === localCur.name) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
+  }
+
   function generateReport() {
     if (!filters.account_id) return;
     const movements = [];
+    const localCur = currencies.find(c => c.is_local);
+    let foundForeign = false;
 
     vouchers.forEach((v) => {
       if (filters.date_from && v.date < filters.date_from) return;
       if (filters.date_to && v.date > filters.date_to) return;
       if (filters.movement_type === "فواتير") return;
 
-      // Simple vouchers
       if (v.account_id === filters.account_id) {
-        movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: v.amount || 0, credit: 0, notes: v.notes || "" });
+        const amt = v.amount || 0;
+        movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: amt, credit: 0, debitLocal: amt, creditLocal: 0, currency: null, notes: v.notes || "" });
       }
       if (v.counter_account_id === filters.account_id) {
-        movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: 0, credit: v.amount || 0, notes: v.notes || "" });
+        const amt = v.amount || 0;
+        movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: 0, credit: amt, debitLocal: 0, creditLocal: amt, currency: null, notes: v.notes || "" });
       }
-      // Entries
       (v.entries || []).forEach((e) => {
         if (e.account_id === filters.account_id) {
-          movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: e.debit || 0, credit: e.credit || 0, notes: e.notes || v.notes || "" });
+          movements.push({ date: v.date, type: v.type, number: v.voucher_number, debit: e.debit || 0, credit: e.credit || 0, debitLocal: e.debit || 0, creditLocal: e.credit || 0, currency: null, notes: e.notes || v.notes || "" });
         }
       });
     });
@@ -62,18 +74,27 @@ export default function Ledger() {
       if (filters.movement_type === "سندات") return;
       if (inv.client_account_id !== filters.account_id) return;
 
+      const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
+      if (isForeign) foundForeign = true;
+      const rate = isForeign ? getExchangeRate(inv.currency) : 1;
       const isSale = inv.pattern_type === "مبيعات" || inv.pattern_type === "مرتجع مشتريات";
+      const total = inv.total || 0;
       movements.push({
         date: inv.date, type: inv.pattern_type, number: inv.invoice_number,
-        debit: isSale ? (inv.total || 0) : 0,
-        credit: isSale ? 0 : (inv.total || 0),
-        notes: inv.notes || "",
+        debit: isSale ? total : 0, credit: isSale ? 0 : total,
+        debitLocal: isSale ? total * rate : 0, creditLocal: isSale ? 0 : total * rate,
+        currency: inv.currency, notes: inv.notes || "",
       });
     });
 
+    setHasForeignCurrency(foundForeign);
     movements.sort((a, b) => (a.date > b.date ? 1 : -1));
-    let balance = 0;
-    setResults(movements.map((m) => { balance += m.debit - m.credit; return { ...m, balance }; }));
+    let balance = 0, balanceLocal = 0;
+    setResults(movements.map((m) => {
+      balance += m.debit - m.credit;
+      balanceLocal += m.debitLocal - m.creditLocal;
+      return { ...m, balance, balanceLocal };
+    }));
   }
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
@@ -111,14 +132,24 @@ export default function Ledger() {
 
       {results.length > 0 ? (
         <>
-        <div className="flex justify-end mb-3">
-          <ExportButtons
-            columns={[
-              {key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},
-              {key:"notes",label:"البيان"},{key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}
-            ]}
-            data={results} title="دفتر الأستاذ" filename="ledger" printId="ledger-table"
-          />
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+          {hasForeignCurrency && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+              <button onClick={() => setShowInLocal(!showInLocal)} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+              </button>
+            </div>
+          )}
+          <div className="mr-auto">
+            <ExportButtons
+              columns={showInLocal && hasForeignCurrency
+                ? [{key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},{key:"notes",label:"البيان"},{key:"debitLocal",label:"مدين (محلي)"},{key:"creditLocal",label:"دائن (محلي)"},{key:"balanceLocal",label:"الرصيد (محلي)"}]
+                : [{key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},{key:"notes",label:"البيان"},{key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}]
+              }
+              data={results} title="دفتر الأستاذ" filename="ledger" printId="ledger-table"
+            />
+          </div>
         </div>
         <div id="ledger-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
@@ -128,23 +159,30 @@ export default function Ledger() {
                 <TableHead className="text-right text-xs">نوع العملية</TableHead>
                 <TableHead className="text-right text-xs">الرقم</TableHead>
                 <TableHead className="text-right text-xs">البيان</TableHead>
-                <TableHead className="text-right text-xs">مدين</TableHead>
-                <TableHead className="text-right text-xs">دائن</TableHead>
-                <TableHead className="text-right text-xs">الرصيد</TableHead>
+                {!showInLocal && hasForeignCurrency && <TableHead className="text-right text-xs">العملة</TableHead>}
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "مدين (محلي)" : "مدين"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "دائن (محلي)" : "دائن"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "الرصيد (محلي)" : "الرصيد"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-sm">{r.date}</TableCell>
-                  <TableCell className="text-sm">{r.type}</TableCell>
-                  <TableCell className="text-sm">{r.number}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.notes}</TableCell>
-                  <TableCell className="text-sm text-green-600 font-medium">{r.debit > 0 ? r.debit.toLocaleString() : ""}</TableCell>
-                  <TableCell className="text-sm text-red-500 font-medium">{r.credit > 0 ? r.credit.toLocaleString() : ""}</TableCell>
-                  <TableCell className={`text-sm font-bold ${r.balance >= 0 ? "text-green-600" : "text-red-500"}`}>{r.balance.toLocaleString()}</TableCell>
-                </TableRow>
-              ))}
+              {results.map((r, i) => {
+                const debit = showInLocal && hasForeignCurrency ? r.debitLocal : r.debit;
+                const credit = showInLocal && hasForeignCurrency ? r.creditLocal : r.credit;
+                const balance = showInLocal && hasForeignCurrency ? r.balanceLocal : r.balance;
+                return (
+                  <TableRow key={i}>
+                    <TableCell className="text-sm">{r.date}</TableCell>
+                    <TableCell className="text-sm">{r.type}</TableCell>
+                    <TableCell className="text-sm">{r.number}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{r.notes}</TableCell>
+                    {!showInLocal && hasForeignCurrency && <TableCell className="text-sm text-muted-foreground">{r.currency || "-"}</TableCell>}
+                    <TableCell className="text-sm text-green-600 font-medium">{debit > 0 ? debit.toLocaleString() : ""}</TableCell>
+                    <TableCell className="text-sm text-red-500 font-medium">{credit > 0 ? credit.toLocaleString() : ""}</TableCell>
+                    <TableCell className={`text-sm font-bold ${balance >= 0 ? "text-green-600" : "text-red-500"}`}>{balance.toLocaleString()}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

@@ -9,37 +9,57 @@ import { Search, Scale } from "lucide-react";
 
 export default function BalanceSheet() {
   const [accounts, setAccounts] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [filters, setFilters] = useState({ date: new Date().toISOString().split("T")[0] });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const a = await base44.entities.Account.list();
-    setAccounts(a);
+    const [a, curs] = await Promise.all([
+      base44.entities.Account.list(),
+      base44.entities.Currency.list(),
+    ]);
+    setAccounts(a); setCurrencies(curs);
     setLoading(false);
   }
 
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && currencyName === localCur.name) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
+  }
+
+  function getAccountBalance(acc, field) {
+    const val = acc[field] || 0;
+    if (!showInLocal || !acc.currency) return val;
+    const localCur = currencies.find(c => c.is_local);
+    if (localCur && acc.currency === localCur.name) return val;
+    return val * getExchangeRate(acc.currency);
+  }
+
   function generateReport() {
-    // Group accounts by financial statement type
     const balanceAccounts = accounts.filter((a) => a.financial_statement === "المركز المالي" || a.final_account === "الميزانية");
-    
+    const localCur = currencies.find(c => c.is_local);
+    const hasForeign = balanceAccounts.some(a => a.currency && localCur && a.currency !== localCur.name);
+    setHasForeignCurrency(hasForeign);
+
     const assets = balanceAccounts.filter((a) => a.account_nature === "مدين");
     const liabilities = balanceAccounts.filter((a) => a.account_nature === "دائن");
     const equity = balanceAccounts.filter((a) => a.account_nature === "كلاهما");
 
-    const totalAssets = assets.reduce((s, a) => s + (a.balance || a.debit_balance || 0), 0);
-    const totalLiabilities = liabilities.reduce((s, a) => s + (a.balance || a.credit_balance || 0), 0);
-    const totalEquity = equity.reduce((s, a) => s + (a.balance || 0), 0);
+    const totalAssets = assets.reduce((s, a) => s + getAccountBalance(a, "balance") || getAccountBalance(a, "debit_balance"), 0);
+    const totalLiabilities = liabilities.reduce((s, a) => s + (getAccountBalance(a, "balance") || getAccountBalance(a, "credit_balance")), 0);
+    const totalEquity = equity.reduce((s, a) => s + getAccountBalance(a, "balance"), 0);
 
     setReport({
-      assets,
-      liabilities,
-      equity,
-      totalAssets,
-      totalLiabilities,
-      totalEquity,
+      assets, liabilities, equity,
+      totalAssets, totalLiabilities, totalEquity,
       totalLiabilitiesAndEquity: totalLiabilities + totalEquity,
       isBalanced: Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01,
     });
@@ -53,9 +73,17 @@ export default function BalanceSheet() {
 
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex items-end gap-4">
+          <div className="flex items-end gap-4 flex-wrap">
             <div><Label className="text-xs">بتاريخ</Label><Input className="h-9" type="date" value={filters.date} onChange={(e) => setFilters({ date: e.target.value })} /></div>
             <Button size="sm" onClick={generateReport}><Search className="h-4 w-4 ml-1" /> إعداد القائمة</Button>
+            {report && hasForeignCurrency && (
+              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+                <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+                <button onClick={() => { setShowInLocal(!showInLocal); generateReport(); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+                </button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
