@@ -10,25 +10,87 @@
       "type": "string",
       "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0648\u0638\u0641"
     },
+    "employee_number": {
+      "type": "string",
+      "title": "\u0631\u0642\u0645 \u0627\u0644\u0645\u0648\u0638\u0641"
+    },
+    "department": {
+      "type": "string",
+      "title": "\u0627\u0644\u0642\u0633\u0645"
+    },
+    "cost_center_id": {
+      "type": "string",
+      "title": "\u0645\u0631\u0643\u0632 \u0627\u0644\u062a\u0643\u0644\u0641\u0629"
+    },
+    "cost_center_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0645\u0631\u0643\u0632 \u0627\u0644\u062a\u0643\u0644\u0641\u0629"
+    },
     "period": {
       "type": "string",
       "title": "\u0627\u0644\u0641\u062a\u0631\u0629 (\u0634\u0647\u0631/\u0633\u0646\u0629)"
+    },
+    "work_days": {
+      "type": "number",
+      "title": "\u0623\u064a\u0627\u0645 \u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0641\u0639\u0644\u064a\u0629"
+    },
+    "absence_days": {
+      "type": "number",
+      "title": "\u0623\u064a\u0627\u0645 \u0627\u0644\u063a\u064a\u0627\u0628"
+    },
+    "overtime_hours": {
+      "type": "number",
+      "title": "\u0633\u0627\u0639\u0627\u062a \u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0625\u0636\u0627\u0641\u064a"
     },
     "basic_salary": {
       "type": "number",
       "title": "\u0627\u0644\u0631\u0627\u062a\u0628 \u0627\u0644\u0623\u0633\u0627\u0633\u064a"
     },
+    "allowances_detail": {
+      "type": "array",
+      "title": "\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0628\u062f\u0644\u0627\u062a",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
     "allowances": {
       "type": "number",
-      "title": "\u0627\u0644\u0628\u062f\u0644\u0627\u062a"
-    },
-    "deductions": {
-      "type": "number",
-      "title": "\u0627\u0644\u0627\u0633\u062a\u0642\u0637\u0627\u0639\u0627\u062a"
+      "title": "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0628\u062f\u0644\u0627\u062a"
     },
     "overtime": {
       "type": "number",
-      "title": "\u0627\u0644\u0639\u0645\u0644 \u0627\u0644\u0625\u0636\u0627\u0641\u064a"
+      "title": "\u0642\u064a\u0645\u0629 \u0627\u0644\u0648\u0642\u062a \u0627\u0644\u0625\u0636\u0627\u0641\u064a"
+    },
+    "deductions_detail": {
+      "type": "array",
+      "title": "\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0627\u0633\u062a\u0642\u0637\u0627\u0639\u0627\u062a",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "deductions": {
+      "type": "number",
+      "title": "\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0627\u0633\u062a\u0642\u0637\u0627\u0639\u0627\u062a"
+    },
+    "absence_deduction": {
+      "type": "number",
+      "title": "\u0627\u0633\u062a\u0642\u0637\u0627\u0639 \u0627\u0644\u063a\u064a\u0627\u0628"
     },
     "net_salary": {
       "type": "number",
@@ -39,12 +101,24 @@
       "format": "date",
       "title": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0635\u0631\u0641"
     },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "\u062a\u062d\u0648\u064a\u0644 \u0628\u0646\u0643\u064a",
+        "\u0646\u0642\u062f\u0627\u064b",
+        "\u0634\u064a\u0643"
+      ],
+      "default": "\u062a\u062d\u0648\u064a\u0644 \u0628\u0646\u0643\u064a",
+      "title": "\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u0635\u0631\u0641"
+    },
     "status": {
       "type": "string",
       "enum": [
         "\u0645\u0633\u0648\u062f\u0629",
+        "\u0645\u0639\u062a\u0645\u062f",
         "\u0645\u062f\u0641\u0648\u0639"
       ],
+      "default": "\u0645\u0633\u0648\u062f\u0629",
       "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
     },
     "notes": {
