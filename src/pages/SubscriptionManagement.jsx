@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus } from "lucide-react";
+import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List } from "lucide-react";
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
+import SubscriptionDashboard from "@/components/subscriptions/SubscriptionDashboard";
 
 const PLAN_ICONS = { basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_COLORS = { basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
@@ -94,11 +95,23 @@ export default function SubscriptionManagement() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">إدارة الاشتراكات</h1>
-            <p className="text-muted-foreground text-sm mt-1">التحكم في الميزات المفعّلة لكل عميل بناءً على نوع اشتراكه</p>
+            <p className="text-muted-foreground text-sm mt-1">متابعة حالة الاشتراكات والتنبيهات التلقائية قبل انتهاء الصلاحية</p>
           </div>
           <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" />اشتراك جديد</Button>
         </div>
 
+        <Tabs defaultValue="dashboard">
+          <TabsList className="mb-4">
+            <TabsTrigger value="dashboard" className="gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" />لوحة المتابعة</TabsTrigger>
+            <TabsTrigger value="manage" className="gap-1.5"><List className="h-3.5 w-3.5" />الإدارة والخطط</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="dashboard">
+            <SubscriptionDashboard subscriptions={subscriptions} onRefresh={load} />
+          </TabsContent>
+
+          <TabsContent value="manage">
+            <div className="space-y-6">
         {/* Plan comparison cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
@@ -194,6 +207,9 @@ export default function SubscriptionManagement() {
             )}
           </CardContent>
         </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
