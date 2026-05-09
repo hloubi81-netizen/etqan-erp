@@ -137,6 +137,9 @@ function getMenuItems(lang) {
       ]
     },
 
+    // ── نظام النقاط والعروض ──
+    { label: "النقاط والعروض الخاصة", icon: Sparkles, path: "/loyalty" },
+
     // ── إدارة العملاء والتواصل ──
     { label: "إدارة علاقات العملاء", icon: MessageSquare, path: "/crm" },
     { label: "الرسائل الداخلية", icon: Mail, path: "/messages" },

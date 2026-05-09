@@ -56,6 +56,7 @@ import CRM from './pages/crm/CRM';
 import NotificationsCenter from './pages/notifications/NotificationsCenter';
 import CustomReports from './pages/reports/CustomReports';
 import SalesDashboard from './pages/reports/SalesDashboard';
+import LoyaltyProgram from './pages/loyalty/LoyaltyProgram';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Messages from './pages/Messages';
@@ -132,6 +133,7 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<NotificationsCenter />} />
         <Route path="/reports/custom" element={<CustomReports />} />
         <Route path="/reports/sales-dashboard" element={<SalesDashboard />} />
+        <Route path="/loyalty" element={<LoyaltyProgram />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/messages" element={<Messages />} />
