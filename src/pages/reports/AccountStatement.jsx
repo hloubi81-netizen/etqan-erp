@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useCurrency } from "@/hooks/useCurrency";
 import { useParams } from "react-router-dom";
 import PageHeader from "../../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export default function AccountStatement() {
   const params = useParams();
   const isClient = params.type === "client-statement";
   const title = isClient ? "كشف حساب عميل" : "كشف حساب مورد";
+  const { selectedCurrency, localCurrency, isLocalCurrency, getDisplayRate } = useCurrency();
+  const showInLocal = !isLocalCurrency();
 
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
@@ -23,7 +26,6 @@ export default function AccountStatement() {
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", movement_type: "الكل" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showInLocal, setShowInLocal] = useState(false);
   const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
@@ -39,12 +41,8 @@ export default function AccountStatement() {
     setLoading(false);
   }
 
-  function getExchangeRate(currencyName) {
-    if (!currencyName) return 1;
-    const localCur = currencies.find(c => c.is_local);
-    if (!currencyName || (localCur && currencyName === localCur.name)) return 1;
-    const cur = currencies.find(c => c.name === currencyName);
-    return cur?.exchange_rate || 1;
+  function getRate(currencyName) {
+    return getDisplayRate ? getDisplayRate(currencyName || localCurrency?.name) : 1;
   }
 
   function generateReport() {
@@ -67,7 +65,7 @@ export default function AccountStatement() {
 
       const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
       if (isForeign) foundForeign = true;
-      const rate = isForeign ? getExchangeRate(inv.currency) : 1;
+      const rate = getRate(inv.currency);
       const isDebit = inv.pattern_type === "مبيعات" || inv.pattern_type === "مرتجع مشتريات";
       const total = inv.total || 0;
       movements.push({
@@ -185,15 +183,9 @@ export default function AccountStatement() {
       {results.length > 0 ? (
         <>
         <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
-          {hasForeignCurrency && (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
-              <button
-                onClick={() => setShowInLocal(!showInLocal)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}
-              >
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
-              </button>
+          {showInLocal && selectedCurrency && (
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-primary font-medium">يُعرض بـ: {selectedCurrency.symbol} {selectedCurrency.name}</span>
             </div>
           )}
           <div className="mr-auto">
@@ -214,9 +206,9 @@ export default function AccountStatement() {
                 <TableHead className="text-right text-xs">نوع العملية</TableHead>
                 <TableHead className="text-right text-xs">الرقم</TableHead>
                 {!showInLocal && hasForeignCurrency && <TableHead className="text-right text-xs">العملة</TableHead>}
-                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "مدين (محلي)" : "مدين"}</TableHead>
-                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "دائن (محلي)" : "دائن"}</TableHead>
-                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "الرصيد (محلي)" : "الرصيد"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal ? `مدين (${selectedCurrency?.symbol || ""})` : "مدين"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal ? `دائن (${selectedCurrency?.symbol || ""})` : "دائن"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal ? `الرصيد (${selectedCurrency?.symbol || ""})` : "الرصيد"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

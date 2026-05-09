@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useCurrency } from "@/hooks/useCurrency";
 import PageHeader from "../../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
 
 export default function IncomeStatement() {
+  const { selectedCurrency, isLocalCurrency, getDisplayRate } = useCurrency();
+  const showInLocal = !isLocalCurrency();
+
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [vouchers, setVouchers] = useState([]);
@@ -15,8 +19,6 @@ export default function IncomeStatement() {
   const [filters, setFilters] = useState({ date_from: "", date_to: "" });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showInLocal, setShowInLocal] = useState(false);
-  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -31,30 +33,18 @@ export default function IncomeStatement() {
     setLoading(false);
   }
 
-  function getExchangeRate(currencyName) {
-    if (!currencyName) return 1;
-    const localCur = currencies.find(c => c.is_local);
-    if (localCur && currencyName === localCur.name) return 1;
-    const cur = currencies.find(c => c.name === currencyName);
-    return cur?.exchange_rate || 1;
-  }
-
   function getInvoiceTotal(inv) {
-    const localCur = currencies.find(c => c.is_local);
-    const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
-    if (showInLocal && isForeign) return (inv.total || 0) * getExchangeRate(inv.currency);
-    return inv.total || 0;
+    if (!showInLocal || !inv.currency) return inv.total || 0;
+    const rate = getDisplayRate ? getDisplayRate(inv.currency) : 1;
+    return (inv.total || 0) * rate;
   }
 
   function generateReport() {
-    const localCur = currencies.find(c => c.is_local);
     const filtered = invoices.filter(i => {
       if (filters.date_from && i.date < filters.date_from) return false;
       if (filters.date_to && i.date > filters.date_to) return false;
       return true;
     });
-    const hasForeign = filtered.some(i => i.currency && localCur && i.currency !== localCur.name);
-    setHasForeignCurrency(hasForeign);
 
     const sumByType = (type) => filtered.filter(i => i.pattern_type === type).reduce((s, i) => s + getInvoiceTotal(i), 0);
 
@@ -109,12 +99,9 @@ export default function IncomeStatement() {
             <div><Label className="text-xs">من تاريخ</Label><Input className="h-9" type="date" value={filters.date_from} onChange={(e) => setFilters({ ...filters, date_from: e.target.value })} /></div>
             <div><Label className="text-xs">إلى تاريخ</Label><Input className="h-9" type="date" value={filters.date_to} onChange={(e) => setFilters({ ...filters, date_to: e.target.value })} /></div>
             <Button size="sm" onClick={generateReport}><Search className="h-4 w-4 ml-1" /> إعداد القائمة</Button>
-            {report && hasForeignCurrency && (
-              <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
-                <button onClick={() => { setShowInLocal(!showInLocal); generateReport(); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
-                </button>
+            {showInLocal && selectedCurrency && (
+              <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
+                <span className="text-xs text-primary font-medium">يُعرض بـ: {selectedCurrency.symbol} {selectedCurrency.name}</span>
               </div>
             )}
           </div>

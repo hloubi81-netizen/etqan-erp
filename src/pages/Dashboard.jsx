@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import { SkeletonCard } from "@/components/shared/SkeletonLoader";
+import CurrencySelector from "@/components/dashboard/CurrencySelector";
 
 function StatCard({ icon: Icon, label, value, sub, color, loading }) {
   if (loading) return <SkeletonCard />;
@@ -114,6 +115,7 @@ export default function Dashboard() {
         </Button>
       </div>
 
+      <CurrencySelector />
       <AlertsPanel lang={lang} />
 
       {/* Financial KPIs */}

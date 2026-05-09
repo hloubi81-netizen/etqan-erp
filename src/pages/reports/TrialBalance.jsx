@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useCurrency } from "@/hooks/useCurrency";
 import PageHeader from "../../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,9 @@ import { Search } from "lucide-react";
 import ExportButtons from "../../components/shared/ExportButtons";
 
 export default function TrialBalance() {
+  const { selectedCurrency, isLocalCurrency } = useCurrency();
+  const showInLocal = !isLocalCurrency();
+
   const [accounts, setAccounts] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [vouchers, setVouchers] = useState([]);
@@ -18,7 +22,6 @@ export default function TrialBalance() {
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", type: "بالمجاميع" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showInLocal, setShowInLocal] = useState(false);
   const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
@@ -153,12 +156,9 @@ export default function TrialBalance() {
       {results.length > 0 ? (
         <>
         <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
-          {hasForeignCurrency && (
-            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
-              <button onClick={() => setShowInLocal(!showInLocal)} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}>
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
-              </button>
+          {showInLocal && selectedCurrency && (
+            <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-primary font-medium">يُعرض بـ: {selectedCurrency.symbol} {selectedCurrency.name}</span>
             </div>
           )}
           <div className="mr-auto">

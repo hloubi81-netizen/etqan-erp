@@ -33,6 +33,7 @@ import SubscriptionManagement from './pages/SubscriptionManagement';
 import { SubscriptionProvider } from './hooks/useSubscription.jsx';
 import { LangProvider } from './hooks/useLang.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
+import { CurrencyProvider } from './hooks/useCurrency.jsx';
 import IncomeStatement from './pages/financial/IncomeStatement';
 import POS from './pages/pos/POS';
 import POSHistory from './pages/pos/POSHistory';
@@ -152,6 +153,7 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
       <LangProvider>
+      <CurrencyProvider>
       <SubscriptionProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
@@ -160,6 +162,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
       </SubscriptionProvider>
+      </CurrencyProvider>
       </LangProvider>
       </ThemeProvider>
     </AuthProvider>
