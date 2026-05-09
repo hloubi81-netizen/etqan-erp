@@ -19,25 +19,39 @@ export default function AccountStatement() {
   const [accounts, setAccounts] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [vouchers, setVouchers] = useState([]);
+  const [currencies, setCurrencies] = useState([]);
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", movement_type: "الكل" });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInLocal, setShowInLocal] = useState(false);
+  const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [accs, invs, vchs] = await Promise.all([
+    const [accs, invs, vchs, curs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Invoice.list(),
       base44.entities.Voucher.list(),
+      base44.entities.Currency.list(),
     ]);
-    setAccounts(accs); setInvoices(invs); setVouchers(vchs);
+    setAccounts(accs); setInvoices(invs); setVouchers(vchs); setCurrencies(curs);
     setLoading(false);
+  }
+
+  function getExchangeRate(currencyName) {
+    if (!currencyName) return 1;
+    const localCur = currencies.find(c => c.is_local);
+    if (!currencyName || (localCur && currencyName === localCur.name)) return 1;
+    const cur = currencies.find(c => c.name === currencyName);
+    return cur?.exchange_rate || 1;
   }
 
   function generateReport() {
     if (!filters.account_id) return;
     const movements = [];
+    const localCur = currencies.find(c => c.is_local);
+    let foundForeign = false;
 
     // Invoices
     invoices.forEach((inv) => {
@@ -51,13 +65,21 @@ export default function AccountStatement() {
         if (!isInvoice) return;
       }
 
+      const isForeign = inv.currency && localCur && inv.currency !== localCur.name;
+      if (isForeign) foundForeign = true;
+      const rate = isForeign ? getExchangeRate(inv.currency) : 1;
       const isDebit = inv.pattern_type === "مبيعات" || inv.pattern_type === "مرتجع مشتريات";
+      const total = inv.total || 0;
       movements.push({
         date: inv.date,
         type: inv.pattern_type,
         number: inv.invoice_number,
-        debit: isDebit ? (inv.total || 0) : 0,
-        credit: isDebit ? 0 : (inv.total || 0),
+        currency: inv.currency,
+        exchangeRate: rate,
+        debit: isDebit ? total : 0,
+        credit: isDebit ? 0 : total,
+        debitLocal: isDebit ? total * rate : 0,
+        creditLocal: isDebit ? 0 : total * rate,
       });
     });
 
@@ -70,12 +92,17 @@ export default function AccountStatement() {
       if (filters.movement_type !== "الكل" && !filters.movement_type.includes("سندات")) return;
 
       const isMainAccount = v.account_id === filters.account_id;
+      const amount = v.amount || 0;
       movements.push({
         date: v.date,
         type: v.type,
         number: v.voucher_number,
-        debit: isMainAccount ? (v.amount || 0) : 0,
-        credit: isMainAccount ? 0 : (v.amount || 0),
+        currency: null,
+        exchangeRate: 1,
+        debit: isMainAccount ? amount : 0,
+        credit: isMainAccount ? 0 : amount,
+        debitLocal: isMainAccount ? amount : 0,
+        creditLocal: isMainAccount ? 0 : amount,
       });
 
       // Journal entries
@@ -85,19 +112,26 @@ export default function AccountStatement() {
           date: v.date,
           type: v.type,
           number: v.voucher_number,
+          currency: null,
+          exchangeRate: 1,
           debit: entry.debit || 0,
           credit: entry.credit || 0,
+          debitLocal: entry.debit || 0,
+          creditLocal: entry.credit || 0,
         });
       });
     });
 
+    setHasForeignCurrency(foundForeign);
     movements.sort((a, b) => (a.date > b.date ? 1 : -1));
 
     // Calculate running balance
     let balance = 0;
+    let balanceLocal = 0;
     const withBalance = movements.map((m) => {
       balance += m.debit - m.credit;
-      return { ...m, balance };
+      balanceLocal += m.debitLocal - m.creditLocal;
+      return { ...m, balance, balanceLocal };
     });
 
     setResults(withBalance);
@@ -150,14 +184,27 @@ export default function AccountStatement() {
 
       {results.length > 0 ? (
         <>
-        <div className="flex justify-end mb-3">
-          <ExportButtons
-            columns={[
-              {key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},
-              {key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}
-            ]}
-            data={results} title={title} filename="account-statement" printId="account-statement-table"
-          />
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+          {hasForeignCurrency && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-amber-700">عرض بالعملة المحلية</span>
+              <button
+                onClick={() => setShowInLocal(!showInLocal)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${showInLocal ? "bg-primary" : "bg-muted-foreground/30"}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${showInLocal ? "translate-x-4" : "translate-x-1"}`} />
+              </button>
+            </div>
+          )}
+          <div className="mr-auto">
+            <ExportButtons
+              columns={showInLocal && hasForeignCurrency
+                ? [{key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},{key:"debitLocal",label:"مدين (محلي)"},{key:"creditLocal",label:"دائن (محلي)"},{key:"balanceLocal",label:"الرصيد (محلي)"}]
+                : [{key:"date",label:"التاريخ"},{key:"type",label:"نوع العملية"},{key:"number",label:"الرقم"},{key:"debit",label:"مدين"},{key:"credit",label:"دائن"},{key:"balance",label:"الرصيد"}]
+              }
+              data={results} title={title} filename="account-statement" printId="account-statement-table"
+            />
+          </div>
         </div>
         <div id="account-statement-table" className="bg-card rounded-xl border overflow-hidden">
           <Table>
@@ -166,24 +213,33 @@ export default function AccountStatement() {
                 <TableHead className="text-right text-xs">التاريخ</TableHead>
                 <TableHead className="text-right text-xs">نوع العملية</TableHead>
                 <TableHead className="text-right text-xs">الرقم</TableHead>
-                <TableHead className="text-right text-xs">مدين</TableHead>
-                <TableHead className="text-right text-xs">دائن</TableHead>
-                <TableHead className="text-right text-xs">الرصيد</TableHead>
+                {!showInLocal && hasForeignCurrency && <TableHead className="text-right text-xs">العملة</TableHead>}
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "مدين (محلي)" : "مدين"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "دائن (محلي)" : "دائن"}</TableHead>
+                <TableHead className="text-right text-xs">{showInLocal && hasForeignCurrency ? "الرصيد (محلي)" : "الرصيد"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell className="text-sm">{r.date}</TableCell>
-                  <TableCell className="text-sm">{r.type}</TableCell>
-                  <TableCell className="text-sm">{r.number}</TableCell>
-                  <TableCell className="text-sm text-green-600 font-medium">{r.debit > 0 ? r.debit.toLocaleString() : ""}</TableCell>
-                  <TableCell className="text-sm text-red-500 font-medium">{r.credit > 0 ? r.credit.toLocaleString() : ""}</TableCell>
-                  <TableCell className={`text-sm font-bold ${r.balance >= 0 ? "text-green-600" : "text-red-500"}`}>
-                    {r.balance.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {results.map((r, i) => {
+                const debit = showInLocal && hasForeignCurrency ? r.debitLocal : r.debit;
+                const credit = showInLocal && hasForeignCurrency ? r.creditLocal : r.credit;
+                const balance = showInLocal && hasForeignCurrency ? r.balanceLocal : r.balance;
+                return (
+                  <TableRow key={i}>
+                    <TableCell className="text-sm">{r.date}</TableCell>
+                    <TableCell className="text-sm">{r.type}</TableCell>
+                    <TableCell className="text-sm">{r.number}</TableCell>
+                    {!showInLocal && hasForeignCurrency && (
+                      <TableCell className="text-sm text-muted-foreground">{r.currency || "-"}</TableCell>
+                    )}
+                    <TableCell className="text-sm text-green-600 font-medium">{debit > 0 ? debit.toLocaleString() : ""}</TableCell>
+                    <TableCell className="text-sm text-red-500 font-medium">{credit > 0 ? credit.toLocaleString() : ""}</TableCell>
+                    <TableCell className={`text-sm font-bold ${balance >= 0 ? "text-green-600" : "text-red-500"}`}>
+                      {balance.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
