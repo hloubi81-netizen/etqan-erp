@@ -233,7 +233,7 @@ function SidebarItem({ item, onNavigate }) {
             to={child.path}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors hidden",
+              "flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors",
               location.pathname === child.path ?
               "text-blue-700 font-semibold bg-blue-50 border-r-2 border-blue-600 -mr-[2px]" :
               "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
