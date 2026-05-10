@@ -9,7 +9,7 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell,
+  CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
   ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle } from
 "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,7 +65,6 @@ function getMenuItems(lang) {
     { label: l('currencies'), path: "/currencies", icon: Coins },
     { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
     { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
-    { label: lang === 'ar' ? "قواعد اليومية التلقائية" : "Auto Journal Rules", path: "/accounting/journal-rules", icon: Zap },
     { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark }]
 
   },
