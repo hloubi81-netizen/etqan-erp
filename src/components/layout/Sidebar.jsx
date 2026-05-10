@@ -10,149 +10,149 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Zap, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle
-} from "lucide-react";
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle } from
+"lucide-react";
 import { cn } from "@/lib/utils";
 
 function getMenuItems(lang) {
   const l = (key) => tr(key, lang);
   return [
-    // ── الرئيسية ──
-    { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
+  // ── الرئيسية ──
+  { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
 
 
-    // ── المخزون والمنتجات ──
-    {
-      label: lang === 'ar' ? "المخزون والمنتجات" : "Inventory & Products", icon: Package,
-      children: [
-        { label: l('groups'), path: "/groups", icon: FolderTree },
-        { label: l('products'), path: "/products", icon: Package },
-        { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
-        { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
-        { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
-        { label: lang === 'ar' ? "تنبيهات المخزون" : "Stock Alerts", path: "/inventory/stock-alerts", icon: Bell },
-        { label: lang === 'ar' ? "تتبع انتهاء الصلاحية" : "Expiry Tracking", path: "/inventory/expiry", icon: CalendarCheck },
-      ]
-    },
+  // ── المخزون والمنتجات ──
+  {
+    label: lang === 'ar' ? "المخزون والمنتجات" : "Inventory & Products", icon: Package,
+    children: [
+    { label: l('groups'), path: "/groups", icon: FolderTree },
+    { label: l('products'), path: "/products", icon: Package },
+    { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
+    { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
+    { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
+    { label: lang === 'ar' ? "تنبيهات المخزون" : "Stock Alerts", path: "/inventory/stock-alerts", icon: Bell },
+    { label: lang === 'ar' ? "تتبع انتهاء الصلاحية" : "Expiry Tracking", path: "/inventory/expiry", icon: CalendarCheck }]
 
-    // ── المبيعات ──
-    {
-      label: lang === 'ar' ? "المبيعات" : "Sales", icon: TrendingUp,
-      children: [
-        { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
-        { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
-        { label: lang === 'ar' ? "شاشة البيع" : "POS Screen", path: "/pos", icon: ShoppingCart },
-        { label: lang === 'ar' ? "سجل مبيعات نقطة البيع" : "POS History", path: "/pos/history", icon: Receipt },
-        { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag },
-      ]
-    },
+  },
 
-    // ── المشتريات ──
-    {
-      label: lang === 'ar' ? "المشتريات" : "Purchases", icon: ShoppingBag,
-      children: [
-        { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
-        { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
-        { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag },
-      ]
-    },
+  // ── المبيعات ──
+  {
+    label: lang === 'ar' ? "المبيعات" : "Sales", icon: TrendingUp,
+    children: [
+    { label: l('salesInvoice'), path: "/invoices/sales", icon: Receipt },
+    { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
+    { label: lang === 'ar' ? "شاشة البيع" : "POS Screen", path: "/pos", icon: ShoppingCart },
+    { label: lang === 'ar' ? "سجل مبيعات نقطة البيع" : "POS History", path: "/pos/history", icon: Receipt },
+    { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag }]
 
-    // ── المحاسبة والمالية ──
-    {
-      label: lang === 'ar' ? "المحاسبة" : "Accounting", icon: CircleDollarSign,
-      children: [
-        { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
-        { label: l('currencies'), path: "/currencies", icon: Coins },
-        { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
-        { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
-        { label: lang === 'ar' ? "قواعد اليومية التلقائية" : "Auto Journal Rules", path: "/accounting/journal-rules", icon: Zap },
-        { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark },
-      ]
-    },
+  },
 
-    // ── السندات ──
-    {
-      label: l('vouchers'), icon: FileText,
-      children: [
-        { label: l('receiptVoucher'), path: "/vouchers/receipt", icon: FileText },
-        { label: l('paymentVoucher'), path: "/vouchers/payment", icon: FileText },
-        { label: l('dailyVoucher'), path: "/vouchers/daily", icon: FileText },
-        { label: l('journalVoucher'), path: "/vouchers/journal", icon: FileText },
-        { label: l('openingJournal'), path: "/vouchers/opening", icon: FileText },
-      ]
-    },
+  // ── المشتريات ──
+  {
+    label: lang === 'ar' ? "المشتريات" : "Purchases", icon: ShoppingBag,
+    children: [
+    { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
+    { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
+    { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag }]
 
-    // ── القوائم المالية ──
-    {
-      label: l('financialStatements'), icon: BarChart3,
-      children: [
-        { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
-        { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
-        { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
-        { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
-        { label: lang === 'ar' ? "الميزانية والتخطيط" : "Budget & Planning", path: "/budget", icon: PieChart },
-      ]
-    },
+  },
 
-    // ── التكاليف والفروع ──
-    {
-      label: lang === 'ar' ? "التكاليف والفروع" : "Costs & Branches", icon: Calculator,
-      children: [
-        { label: l('costCenters'), path: "/cost-centers", icon: Building2 },
-        { label: l('costManagement'), path: "/costs/management", icon: Calculator },
-        { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
-        { label: l('manageBranches'), path: "/branches", icon: GitBranch },
-        { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 },
-      ]
-    },
+  // ── المحاسبة والمالية ──
+  {
+    label: lang === 'ar' ? "المحاسبة" : "Accounting", icon: CircleDollarSign,
+    children: [
+    { label: l('chartOfAccounts'), path: "/accounts", icon: FolderTree },
+    { label: l('currencies'), path: "/currencies", icon: Coins },
+    { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
+    { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
+    { label: lang === 'ar' ? "قواعد اليومية التلقائية" : "Auto Journal Rules", path: "/accounting/journal-rules", icon: Zap },
+    { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark }]
 
-    // ── الموارد البشرية ──
-    {
-      label: lang === 'ar' ? "الموارد البشرية" : "Human Resources", icon: UserCog,
-      children: [
-        { label: lang === 'ar' ? "الموظفون" : "Employees", path: "/hr/employees", icon: Users },
-        { label: lang === 'ar' ? "الحضور والغياب" : "Attendance", path: "/hr/attendance", icon: CalendarCheck },
-        { label: lang === 'ar' ? "الرواتب" : "Payroll", path: "/hr/payroll", icon: Banknote },
-        { label: lang === 'ar' ? "طلبات الإجازات" : "Leave Requests", path: "/hr/leaves", icon: CalendarCheck },
-      ]
-    },
+  },
 
-    // ── الأصول الثابتة ──
-    { label: lang === 'ar' ? "الأصول الثابتة" : "Fixed Assets", icon: Landmark, path: "/assets" },
+  // ── السندات ──
+  {
+    label: l('vouchers'), icon: FileText,
+    children: [
+    { label: l('receiptVoucher'), path: "/vouchers/receipt", icon: FileText },
+    { label: l('paymentVoucher'), path: "/vouchers/payment", icon: FileText },
+    { label: l('dailyVoucher'), path: "/vouchers/daily", icon: FileText },
+    { label: l('journalVoucher'), path: "/vouchers/journal", icon: FileText },
+    { label: l('openingJournal'), path: "/vouchers/opening", icon: FileText }]
 
-    // ── التقارير ──
-    {
-      label: l('reports'), icon: BarChart3,
-      children: [
-        { label: l('productMovement'), path: "/reports/product-movement", icon: Package },
-        { label: l('clientMovement'), path: "/reports/client-movement", icon: Users },
-        { label: l('supplierMovement'), path: "/reports/supplier-movement", icon: Truck },
-        { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
-        { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
-        { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
-        { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
-        { label: lang === 'ar' ? "لوحة تحكم المبيعات" : "Sales Dashboard", path: "/reports/sales-dashboard", icon: TrendingUp },
-        { label: lang === 'ar' ? "التقارير المتقدمة" : "Advanced Reports", path: "/reports/advanced", icon: BarChart3 },
-        { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
-        { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
-        { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
-      ]
-    },
+  },
 
-    // ── نظام النقاط والعروض ──
-    { label: lang === 'ar' ? "النقاط والعروض الخاصة" : "Loyalty & Promotions", icon: Sparkles, path: "/loyalty" },
+  // ── القوائم المالية ──
+  {
+    label: l('financialStatements'), icon: BarChart3,
+    children: [
+    { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
+    { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
+    { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
+    { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
+    { label: lang === 'ar' ? "الميزانية والتخطيط" : "Budget & Planning", path: "/budget", icon: PieChart }]
 
-    // ── إدارة العملاء والتواصل ──
-    { label: lang === 'ar' ? "إدارة علاقات العملاء" : "CRM", icon: MessageSquare, path: "/crm" },
-    { label: lang === 'ar' ? "الرسائل الداخلية" : "Internal Messages", icon: Mail, path: "/messages" },
-    { label: lang === 'ar' ? "الإشعارات والتنبيهات" : "Notifications", icon: Bell, path: "/notifications" },
+  },
 
-    // ── الإدارة والإعدادات ──
-    { label: l('users'), icon: Users, path: "/users" },
-    { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
-    { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
-    { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" },
-  ];
+  // ── التكاليف والفروع ──
+  {
+    label: lang === 'ar' ? "التكاليف والفروع" : "Costs & Branches", icon: Calculator,
+    children: [
+    { label: l('costCenters'), path: "/cost-centers", icon: Building2 },
+    { label: l('costManagement'), path: "/costs/management", icon: Calculator },
+    { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
+    { label: l('manageBranches'), path: "/branches", icon: GitBranch },
+    { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }]
+
+  },
+
+  // ── الموارد البشرية ──
+  {
+    label: lang === 'ar' ? "الموارد البشرية" : "Human Resources", icon: UserCog,
+    children: [
+    { label: lang === 'ar' ? "الموظفون" : "Employees", path: "/hr/employees", icon: Users },
+    { label: lang === 'ar' ? "الحضور والغياب" : "Attendance", path: "/hr/attendance", icon: CalendarCheck },
+    { label: lang === 'ar' ? "الرواتب" : "Payroll", path: "/hr/payroll", icon: Banknote },
+    { label: lang === 'ar' ? "طلبات الإجازات" : "Leave Requests", path: "/hr/leaves", icon: CalendarCheck }]
+
+  },
+
+  // ── الأصول الثابتة ──
+  { label: lang === 'ar' ? "الأصول الثابتة" : "Fixed Assets", icon: Landmark, path: "/assets" },
+
+  // ── التقارير ──
+  {
+    label: l('reports'), icon: BarChart3,
+    children: [
+    { label: l('productMovement'), path: "/reports/product-movement", icon: Package },
+    { label: l('clientMovement'), path: "/reports/client-movement", icon: Users },
+    { label: l('supplierMovement'), path: "/reports/supplier-movement", icon: Truck },
+    { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
+    { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
+    { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
+    { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
+    { label: lang === 'ar' ? "لوحة تحكم المبيعات" : "Sales Dashboard", path: "/reports/sales-dashboard", icon: TrendingUp },
+    { label: lang === 'ar' ? "التقارير المتقدمة" : "Advanced Reports", path: "/reports/advanced", icon: BarChart3 },
+    { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
+    { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
+    { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList }]
+
+  },
+
+  // ── نظام النقاط والعروض ──
+  { label: lang === 'ar' ? "النقاط والعروض الخاصة" : "Loyalty & Promotions", icon: Sparkles, path: "/loyalty" },
+
+  // ── إدارة العملاء والتواصل ──
+  { label: lang === 'ar' ? "إدارة علاقات العملاء" : "CRM", icon: MessageSquare, path: "/crm" },
+  { label: lang === 'ar' ? "الرسائل الداخلية" : "Internal Messages", icon: Mail, path: "/messages" },
+  { label: lang === 'ar' ? "الإشعارات والتنبيهات" : "Notifications", icon: Bell, path: "/notifications" },
+
+  // ── الإدارة والإعدادات ──
+  { label: l('users'), icon: Users, path: "/users" },
+  { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+  { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
+  { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" }];
+
 }
 
 const ITEM_FEATURES = {
@@ -171,7 +171,7 @@ const ITEM_FEATURES = {
   "/reports/trial-balance": "reports", "/reports/advanced": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
-  "/users": "users", "/subscriptions": "users",
+  "/users": "users", "/subscriptions": "users"
 };
 
 const ITEM_PERMISSIONS = {
@@ -191,7 +191,7 @@ const ITEM_PERMISSIONS = {
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/costs/management": "costs", "/costs/report": "costs",
-  "/branches": "branches", "/reports/branches": "branches", "/users": "users",
+  "/branches": "branches", "/reports/branches": "branches", "/users": "users"
 };
 
 function SidebarItem({ item, onNavigate }) {
@@ -216,37 +216,37 @@ function SidebarItem({ item, onNavigate }) {
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-sm transition-colors group",
-            isActive
-              ? "bg-blue-50 text-blue-700 font-medium"
-              : "text-gray-700 hover:bg-gray-100"
-          )}
-        >
+            isActive ?
+            "bg-blue-50 text-blue-700 font-medium" :
+            "text-gray-700 hover:bg-gray-100"
+          )}>
+          
           <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-blue-600" : "text-gray-500")} />
           <span className="flex-1 text-right text-[13px]">{item.label}</span>
           <ChevronDown className={cn("h-3.5 w-3.5 text-gray-400 transition-transform duration-200", isOpen && "rotate-180")} />
         </button>
-        {isOpen && (
-          <div className="mr-6 mt-0.5 mb-1 border-r-2 border-blue-100 pr-0">
-            {visibleChildren.map((child) => (
-              <Link
-                key={child.path}
-                to={child.path}
-                onClick={onNavigate}
-                className={cn(
-                  "flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors",
-                  location.pathname === child.path
-                    ? "text-blue-700 font-semibold bg-blue-50 border-r-2 border-blue-600 -mr-[2px]"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                )}
-              >
+        {isOpen &&
+        <div className="mr-6 mt-0.5 mb-1 border-r-2 border-blue-100 pr-0">
+            {visibleChildren.map((child) =>
+          <Link
+            key={child.path}
+            to={child.path}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-1.5 text-[12.5px] transition-colors hidden",
+              location.pathname === child.path ?
+              "text-blue-700 font-semibold bg-blue-50 border-r-2 border-blue-600 -mr-[2px]" :
+              "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+            )}>
+            
                 <child.icon className="h-3.5 w-3.5 shrink-0 opacity-70" />
                 <span>{child.label}</span>
               </Link>
-            ))}
+          )}
           </div>
-        )}
-      </div>
-    );
+        }
+      </div>);
+
   }
 
   const isActive = location.pathname === item.path;
@@ -256,15 +256,15 @@ function SidebarItem({ item, onNavigate }) {
       onClick={onNavigate}
       className={cn(
         "flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] transition-colors",
-        isActive
-          ? "bg-blue-50 text-blue-700 font-semibold border-r-2 border-blue-600"
-          : "text-gray-700 hover:bg-gray-100"
-      )}
-    >
+        isActive ?
+        "bg-blue-50 text-blue-700 font-semibold border-r-2 border-blue-600" :
+        "text-gray-700 hover:bg-gray-100"
+      )}>
+      
       <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-blue-600" : "text-gray-500")} />
       <span>{item.label}</span>
-    </Link>
-  );
+    </Link>);
+
 }
 
 export default function Sidebar({ isOpen, onToggle }) {
@@ -275,9 +275,9 @@ export default function Sidebar({ isOpen, onToggle }) {
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onToggle} />
-      )}
+      {isOpen &&
+      <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onToggle} />
+      }
 
       <aside
         className={cn(
@@ -285,12 +285,12 @@ export default function Sidebar({ isOpen, onToggle }) {
           "lg:sticky lg:top-0 lg:z-auto lg:h-screen",
           "w-64 bg-white",
           isRTL ? "right-0 border-l border-gray-200" : "left-0 border-r border-gray-200",
-          isRTL
-            ? (isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0")
-            : (isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"),
+          isRTL ?
+          isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0" :
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
-        style={{ boxShadow: isRTL ? "-2px 0 8px rgba(0,0,0,0.06)" : "2px 0 8px rgba(0,0,0,0.06)" }}
-      >
+        style={{ boxShadow: isRTL ? "-2px 0 8px rgba(0,0,0,0.06)" : "2px 0 8px rgba(0,0,0,0.06)" }}>
+        
         {/* Header - Office style brand bar */}
         <div className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white shrink-0">
           <div className="h-8 w-8 rounded bg-white/20 flex items-center justify-center shrink-0">
@@ -307,13 +307,13 @@ export default function Sidebar({ isOpen, onToggle }) {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-2 px-1 space-y-0.5">
-          {menuItems.map((item, i) => (
-            <SidebarItem
-              key={i}
-              item={item}
-              onNavigate={() => { if (isOpen) onToggle(); }}
-            />
-          ))}
+          {menuItems.map((item, i) =>
+          <SidebarItem
+            key={i}
+            item={item}
+            onNavigate={() => {if (isOpen) onToggle();}} />
+
+          )}
         </nav>
 
         {/* Footer */}
@@ -326,6 +326,6 @@ export default function Sidebar({ isOpen, onToggle }) {
           <p className="text-gray-400 text-[10px] text-center">v2.0 • ETQAN ERP</p>
         </div>
       </aside>
-    </>
-  );
+    </>);
+
 }
