@@ -62,9 +62,9 @@ export default function BalanceSheet() {
 
       <Card className="mb-6">
         <CardContent className="p-4">
-          <div className="flex items-end gap-4 flex-wrap">
-            <div><Label className="text-xs">بتاريخ</Label><Input className="h-9" type="date" value={filters.date} onChange={(e) => setFilters({ date: e.target.value })} /></div>
-            <Button size="sm" onClick={generateReport}><Search className="h-4 w-4 ml-1" /> إعداد القائمة</Button>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div><Label className="text-xs">بتاريخ</Label><Input className="h-7 text-xs w-36" type="date" value={filters.date} onChange={(e) => setFilters({ date: e.target.value })} /></div>
+            <Button size="sm" className="h-7 text-xs px-3" onClick={generateReport}><Search className="h-3.5 w-3.5 ml-1" /> إعداد القائمة</Button>
             {showInLocal && selectedCurrency && (
               <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5">
                 <span className="text-xs text-primary font-medium">يُعرض بـ: {selectedCurrency.symbol} {selectedCurrency.name}</span>
