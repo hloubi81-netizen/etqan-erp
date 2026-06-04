@@ -43,5 +43,19 @@
       "title": "\u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0639\u0631\u0648\u0636"
     }
   },
-  "required": []
+  "required": [],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
 }
