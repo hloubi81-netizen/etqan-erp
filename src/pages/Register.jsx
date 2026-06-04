@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, CheckCircle } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -23,7 +23,11 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("كلمتا المرور غير متطابقتين");
+      return;
+    }
+    if (password.length < 6) {
+      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
       return;
     }
     setLoading(true);
@@ -31,7 +35,7 @@ export default function Register() {
       await base44.auth.register({ email, password });
       setShowOtp(true);
     } catch (err) {
-      setError(err.message || "Registration failed");
+      setError(err.message || "فشل إنشاء الحساب");
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,7 @@ export default function Register() {
       }
       window.location.href = "/";
     } catch (err) {
-      setError(err.message || "Invalid verification code");
+      setError(err.message || "رمز التحقق غير صحيح");
     } finally {
       setLoading(false);
     }
@@ -57,12 +61,9 @@ export default function Register() {
     setError("");
     try {
       await base44.auth.resendOtp(email);
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
+      toast({ title: "تم إرسال الرمز", description: "تحقق من بريدك الإلكتروني." });
     } catch (err) {
-      setError(err.message || "Failed to resend code");
+      setError(err.message || "فشل إعادة إرسال الرمز");
     }
   };
 
@@ -74,15 +75,23 @@ export default function Register() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
+        title="تحقق من بريدك"
+        subtitle={`أرسلنا رمز التحقق إلى ${email}`}
       >
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-right">
             {error}
           </div>
         )}
-        <div className="flex justify-center mb-6">
+
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 border-2 border-blue-100 mb-3">
+            <Mail className="w-6 h-6 text-blue-500" />
+          </div>
+          <p className="text-sm text-muted-foreground">أدخل الرمز المكوّن من 6 أرقام</p>
+        </div>
+
+        <div className="flex justify-center mb-6" dir="ltr">
           <InputOTP
             maxLength={6}
             value={otpCode}
@@ -100,24 +109,28 @@ export default function Register() {
             </InputOTPGroup>
           </InputOTP>
         </div>
+
         <Button
-          className="w-full h-12 font-medium"
+          className="w-full h-12 font-medium gap-2"
           onClick={handleVerify}
           disabled={loading || otpCode.length < 6}
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
+              <Loader2 className="w-4 h-4 animate-spin" />
+              جارٍ التحقق...
             </>
           ) : (
-            "Verify"
+            <>
+              <CheckCircle className="w-4 h-4" />
+              تأكيد الحساب
+            </>
           )}
         </Button>
         <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
+          لم تستلم الرمز؟{" "}
           <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
+            إعادة الإرسال
           </button>
         </p>
       </AuthLayout>
@@ -127,24 +140,24 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Create your account"
-      subtitle="Sign up to get started"
+      title="إنشاء حساب جديد"
+      subtitle="أكمل بياناتك للبدء باستخدام نظام إتقان"
       footer={
         <>
-          Already have an account?{" "}
+          لديك حساب بالفعل؟{" "}
           <Link to="/login" className="text-primary font-medium hover:underline">
-            Log in
+            تسجيل الدخول
           </Link>
         </>
       }
     >
       <Button
         variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6"
+        className="w-full h-12 text-sm font-medium mb-6 gap-2"
         onClick={handleGoogle}
       >
-        <GoogleIcon className="w-5 h-5 mr-2" />
-        Continue with Google
+        <GoogleIcon className="w-5 h-5" />
+        التسجيل بـ Google
       </Button>
 
       <div className="relative mb-6">
@@ -152,54 +165,54 @@ export default function Register() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="bg-card px-3 text-muted-foreground">أو</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-right">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">البريد الإلكتروني</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="you@example.com"
+              placeholder="example@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              className="pr-10 h-12 text-right"
               required
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">كلمة المرور</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder="••••••••"
+              placeholder="6 أحرف على الأقل"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pr-10 h-12"
               required
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm Password</Label>
+          <Label htmlFor="confirm">تأكيد كلمة المرور</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="confirm"
               type="password"
@@ -207,19 +220,22 @@ export default function Register() {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pr-10 h-12"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-medium gap-2" disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
+              <Loader2 className="w-4 h-4 animate-spin" />
+              جارٍ إنشاء الحساب...
             </>
           ) : (
-            "Create account"
+            <>
+              <UserPlus className="w-4 h-4" />
+              إنشاء الحساب
+            </>
           )}
         </Button>
       </form>
