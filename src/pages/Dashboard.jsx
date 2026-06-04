@@ -63,8 +63,6 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
-  const [branchSales, setBranchSales] = useState([]);
-  const [activeUsers, setActiveUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -72,14 +70,12 @@ export default function Dashboard() {
     if (silent) setRefreshing(true);
     else setLoading(true);
 
-    const [products, allInvoices, vouchers, warehouses, employees, users, branches] = await Promise.all([
+    const [products, allInvoices, vouchers, warehouses, employees] = await Promise.all([
       base44.entities.Product.list().catch(() => []),
-      base44.entities.Invoice.list("-date", 200).catch(() => []),
+      base44.entities.Invoice.list("-date", 50).catch(() => []),
       base44.entities.Voucher.list("-date", 100).catch(() => []),
       base44.entities.Warehouse.list().catch(() => []),
       base44.entities.Employee.list().catch(() => []),
-      base44.entities.User.list().catch(() => []),
-      base44.entities.Branch.list().catch(() => []),
     ]);
 
     const salesInvoices = allInvoices.filter(i => i.pattern_type === "مبيعات");
@@ -87,22 +83,6 @@ export default function Dashboard() {
     const totalSales = salesInvoices.reduce((s, i) => s + (i.total || 0), 0);
     const totalPurchases = purchaseInvoices.reduce((s, i) => s + (i.total || 0), 0);
     const totalVouchersAmount = vouchers.reduce((s, v) => s + (v.amount || 0), 0);
-
-    // فواتير مبيعات لكل فرع
-    const branchMap = {};
-    salesInvoices.forEach(inv => {
-      const name = inv.branch_name || "غير محدد";
-      if (!branchMap[name]) branchMap[name] = { name, total: 0, count: 0 };
-      branchMap[name].total += inv.total || 0;
-      branchMap[name].count++;
-    });
-    const branchData = Object.values(branchMap).sort((a, b) => b.total - a.total);
-    const maxTotal = branchData[0]?.total || 1;
-    setBranchSales(branchData.map(b => ({ ...b, pct: Math.round((b.total / maxTotal) * 100) })));
-
-    // المستخدمون النشطون
-    const active = users.filter(u => !u.disabled);
-    setActiveUsers(active);
 
     setStats({
       products: products.length,
@@ -112,8 +92,6 @@ export default function Dashboard() {
       totalSales,
       totalPurchases,
       totalVouchersAmount,
-      activeUsers: active.length,
-      totalUsers: users.length,
     });
     setRecentInvoices(allInvoices.slice(0, 6));
     setLoading(false);
@@ -183,110 +161,6 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Users & Branch Sales */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Active Users */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              المستخدمون النشطون
-              {!loading && (
-                <Badge className="bg-green-100 text-green-700 border-0 text-xs">
-                  {stats?.activeUsers || 0} نشط
-                </Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-10 rounded-lg bg-muted animate-pulse"/>)}</div>
-            ) : activeUsers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">لا يوجد مستخدمون</p>
-            ) : (
-              <div className="space-y-2">
-                {activeUsers.slice(0, 5).map((u) => (
-                   <div key={u.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30">
-                     <div className="flex items-center gap-2.5">
-                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                         {(u.full_name || u.email || "?")[0].toUpperCase()}
-                       </div>
-                       <div>
-                         <p className="text-sm font-medium">{u.full_name || u.email?.split("@")[0] || "—"}</p>
-                         <p className="text-xs text-muted-foreground">{u.email}</p>
-                         {u.department && <p className="text-xs text-muted-foreground">{u.department}</p>}
-                       </div>
-                     </div>
-                     <div className="flex flex-col items-end gap-1">
-                       <Badge className={`text-xs border-0 ${
-                         u.role === "admin" ? "bg-purple-100 text-purple-700" :
-                         u.role === "accountant" ? "bg-blue-100 text-blue-700" :
-                         u.role === "inventory" ? "bg-green-100 text-green-700" :
-                         u.role === "costs_manager" ? "bg-orange-100 text-orange-700" :
-                         u.role === "branch_manager" ? "bg-teal-100 text-teal-700" :
-                         u.role === "viewer" ? "bg-gray-100 text-gray-700" :
-                         "bg-blue-100 text-blue-700"
-                       }`}>
-                         {u.role === "admin" ? "مدير" :
-                          u.role === "accountant" ? "محاسب" :
-                          u.role === "inventory" ? "مخازن" :
-                          u.role === "costs_manager" ? "مدير تكاليف" :
-                          u.role === "branch_manager" ? "مدير فرع" :
-                          u.role === "viewer" ? "مشاهد" : "مستخدم"}
-                       </Badge>
-                       {u.is_verified === false && (
-                         <span className="text-[10px] text-orange-500">غير موثق</span>
-                       )}
-                     </div>
-                   </div>
-                 ))}
-                {activeUsers.length > 5 && (
-                  <p className="text-xs text-center text-muted-foreground pt-1">+{activeUsers.length - 5} مستخدم آخر</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Branch Sales */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Landmark className="h-4 w-4 text-primary" />
-              إجمالي الفواتير الصادرة لكل فرع
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="h-10 rounded-lg bg-muted animate-pulse"/>)}</div>
-            ) : branchSales.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">لا توجد بيانات مبيعات بعد</p>
-            ) : (
-              <div className="space-y-3">
-                {branchSales.map((b, i) => {
-                  const colors = ["bg-blue-500","bg-green-500","bg-purple-500","bg-orange-500","bg-teal-500"];
-                  const c = colors[i % colors.length];
-                  return (
-                    <div key={b.name}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{b.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{b.count} فاتورة</span>
-                          <span className="text-sm font-bold">{fmt(b.total)}</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div className={`h-2 rounded-full ${c} transition-all duration-700`} style={{ width: `${b.pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Recent Invoices */}
       <Card>
