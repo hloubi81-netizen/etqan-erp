@@ -89,6 +89,7 @@ const ROLE_DEFAULTS = {
     "reports.view": true,
     "financial.view": true,
   },
+  user: ALL_PERMS(),
 };
 
 // ─── Hook ────────────────────────────────────────────────────
