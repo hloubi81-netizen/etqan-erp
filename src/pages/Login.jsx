@@ -22,7 +22,7 @@ export default function Login() {
       await base44.auth.loginViaEmailPassword(email, password);
       window.location.href = "/";
     } catch (err) {
-      setError(err.message || "بريد إلكتروني أو كلمة مرور غير صحيحة");
+      setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -35,24 +35,24 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="مرحباً بعودتك"
-      subtitle="سجّل دخولك للوصول إلى نظام إتقان"
+      title="Welcome back"
+      subtitle="Log in to your account"
       footer={
         <>
-          ليس لديك حساب؟{" "}
+          Don't have an account?{" "}
           <Link to="/register" className="text-primary font-medium hover:underline">
-            إنشاء حساب جديد
+            Create one
           </Link>
         </>
       }
     >
       <Button
         variant="outline"
-        className="w-full h-12 text-sm font-medium mb-6 gap-2"
+        className="w-full h-12 text-sm font-medium mb-6"
         onClick={handleGoogle}
       >
-        <GoogleIcon className="w-5 h-5" />
-        تسجيل الدخول بـ Google
+        <GoogleIcon className="w-5 h-5 mr-2" />
+        Continue with Google
       </Button>
 
       <div className="relative mb-6">
@@ -60,43 +60,43 @@ export default function Login() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">أو</span>
+          <span className="bg-card px-3 text-muted-foreground">or</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-right">
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4" dir="rtl">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">البريد الإلكتروني</Label>
+          <Label htmlFor="email">Email</Label>
           <div className="relative">
-            <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
               autoFocus
-              placeholder="example@company.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pr-10 h-12 text-right"
+              className="pl-10 h-12"
               required
             />
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
+            <Label htmlFor="password">Password</Label>
             <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-              نسيت كلمة المرور؟
+              Forgot password?
             </Link>
-            <Label htmlFor="password">كلمة المرور</Label>
           </div>
           <div className="relative">
-            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="password"
               type="password"
@@ -104,7 +104,7 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pr-10 h-12"
+              className="pl-10 h-12"
               required
             />
           </div>
@@ -112,14 +112,11 @@ export default function Login() {
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              جارٍ تسجيل الدخول...
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Logging in...
             </>
           ) : (
-            <>
-              <LogIn className="w-4 h-4" />
-              تسجيل الدخول
-            </>
+            "Log in"
           )}
         </Button>
       </form>
