@@ -14,6 +14,23 @@ export const FEATURE_LABELS = {
 };
 
 export const PLAN_PRESETS = {
+  free_trial: {
+    label: "تجريبي مجاني",
+    max_users: 999,
+    duration_months: 3,
+    color: "bg-amber-100 text-amber-700",
+    features: {
+      accounting: true,
+      invoices: true,
+      vouchers: true,
+      warehouses: true,
+      costs: true,
+      branches: true,
+      reports: true,
+      financial: true,
+      users: true,
+    },
+  },
   basic: {
     label: "أساسي",
     max_users: 2,

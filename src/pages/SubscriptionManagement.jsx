@@ -10,14 +10,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List } from "lucide-react";
+import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles } from "lucide-react";
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
 import SubscriptionDashboard from "@/components/subscriptions/SubscriptionDashboard";
 
-const PLAN_ICONS = { basic: Zap, advanced: Crown, enterprise: Building2 };
-const PLAN_COLORS = { basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
+const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
+const PLAN_COLORS = { free_trial: "bg-amber-50 border-amber-300", basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
 
 const emptyForm = {
   client_name: "",
@@ -36,6 +36,8 @@ export default function SubscriptionManagement() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
+  const [showFreeTrialModal, setShowFreeTrialModal] = useState(false);
+  const [freeTrialName, setFreeTrialName] = useState("");
 
   useEffect(() => { load(); }, []);
 
@@ -47,6 +49,24 @@ export default function SubscriptionManagement() {
 
   function openNew() {
     setForm({ ...emptyForm, features: { ...PLAN_PRESETS.basic.features } });
+    setEditId(null);
+    setOpen(true);
+  }
+
+  function openNewFreeTrial() {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 3);
+    setForm({
+      client_name: "",
+      plan: "free_trial",
+      features: { ...PLAN_PRESETS.free_trial.features },
+      max_users: PLAN_PRESETS.free_trial.max_users,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      is_active: true,
+      notes: "نسخة تجريبية مجانية كاملة لمدة 3 أشهر",
+    });
     setEditId(null);
     setOpen(true);
   }
@@ -85,6 +105,27 @@ export default function SubscriptionManagement() {
     load();
   }
 
+  async function activateFreeTrial(clientName) {
+    if (!clientName) return toast.error("يرجى إدخال اسم العميل");
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(endDate.getMonth() + 3);
+    await base44.entities.Subscription.create({
+      client_name: clientName,
+      plan: "free_trial",
+      features: { ...PLAN_PRESETS.free_trial.features },
+      max_users: PLAN_PRESETS.free_trial.max_users,
+      start_date: startDate.toISOString().split("T")[0],
+      end_date: endDate.toISOString().split("T")[0],
+      is_active: true,
+      notes: "نسخة تجريبية مجانية كاملة لمدة 3 أشهر",
+    });
+    toast.success("🎉 تم تفعيل التجربة المجانية لمدة 3 أشهر!");
+    setFreeTrialName("");
+    setShowFreeTrialModal(false);
+    load();
+  }
+
   const activeCount = subscriptions.filter(s => s.is_active).length;
 
   if (loading) return <div className="flex justify-center p-12"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
@@ -112,8 +153,47 @@ export default function SubscriptionManagement() {
 
           <TabsContent value="manage">
             <div className="space-y-6">
+
+        {/* Free Trial Banner */}
+        <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-md">
+          <div className="absolute -top-4 -right-4 w-28 h-28 rounded-full bg-amber-200/30 blur-2xl" />
+          <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-full bg-orange-200/30 blur-2xl" />
+          <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-amber-100 border border-amber-200 shrink-0">
+                <Gift className="h-7 w-7 text-amber-600" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-lg font-bold text-amber-800">تجربة مجانية — نسخة كاملة</h2>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 text-xs font-bold">
+                    <Sparkles className="h-3 w-3" /> 3 أشهر
+                  </span>
+                </div>
+                <p className="text-sm text-amber-700/80 max-w-md">
+                  احصل على وصول كامل لجميع الميزات بدون قيود لمدة ثلاثة أشهر، بدون رسوم ولا التزامات.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {Object.values(FEATURE_LABELS).map(label => (
+                    <span key={label} className="inline-flex items-center gap-1 text-xs bg-white/70 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full">
+                      <CheckCircle2 className="h-3 w-3 text-amber-500" />{label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowFreeTrialModal(true)}
+              className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white gap-2 shadow-md shadow-amber-200"
+            >
+              <Gift className="h-4 w-4" />
+              تفعيل التجربة المجانية
+            </Button>
+          </div>
+        </div>
+
         {/* Plan comparison cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
             const Icon = PLAN_ICONS[key];
             const count = subscriptions.filter(s => s.plan === key && s.is_active).length;
@@ -210,6 +290,48 @@ export default function SubscriptionManagement() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Free Trial Dialog */}
+        <Dialog open={showFreeTrialModal} onOpenChange={setShowFreeTrialModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-700">
+                <Gift className="h-5 w-5" />
+                تفعيل التجربة المجانية
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 space-y-1">
+                <p className="font-semibold flex items-center gap-1"><Sparkles className="h-4 w-4" />ماذا يشمل العرض؟</p>
+                <ul className="list-disc list-inside space-y-0.5 text-amber-700/80 text-xs">
+                  <li>جميع الميزات مفعّلة بالكامل</li>
+                  <li>عدد مستخدمين غير محدود</li>
+                  <li>مدة 3 أشهر كاملة</li>
+                  <li>بدون رسوم أو التزامات</li>
+                </ul>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">اسم العميل / الشركة *</Label>
+                <Input
+                  value={freeTrialName}
+                  onChange={e => setFreeTrialName(e.target.value)}
+                  placeholder="أدخل اسم العميل أو الشركة"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowFreeTrialModal(false)}>إلغاء</Button>
+              <Button
+                onClick={() => activateFreeTrial(freeTrialName)}
+                className="bg-amber-500 hover:bg-amber-600 text-white gap-2"
+              >
+                <Gift className="h-4 w-4" />
+                تفعيل الآن
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
