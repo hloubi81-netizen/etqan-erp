@@ -79,7 +79,14 @@ export default function SubscriptionManagement() {
 
   function applyPreset(plan) {
     const preset = PLAN_PRESETS[plan];
-    setForm(f => ({ ...f, plan, features: { ...preset.features }, max_users: preset.max_users }));
+    const updates = { plan, features: { ...preset.features }, max_users: preset.max_users };
+    if (plan === "free_trial" && preset.duration_months) {
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + preset.duration_months);
+      updates.end_date = endDate.toISOString().split("T")[0];
+      updates.start_date = new Date().toISOString().split("T")[0];
+    }
+    setForm(f => ({ ...f, ...updates }));
   }
 
   function toggleFeature(key) {
