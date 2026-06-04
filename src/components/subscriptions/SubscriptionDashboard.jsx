@@ -2,12 +2,12 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Zap, Building2, AlertTriangle, CheckCircle2, XCircle, Clock, Users, Bell, TrendingUp, RefreshCw } from "lucide-react";
+import { Crown, Zap, Building2, AlertTriangle, CheckCircle2, XCircle, Clock, Users, Bell, TrendingUp, RefreshCw, Gift } from "lucide-react";
 import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 
-const PLAN_ICONS = { basic: Zap, advanced: Crown, enterprise: Building2 };
+const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 
 function getDaysLeft(endDate) {
   if (!endDate) return null;
@@ -136,14 +136,14 @@ export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
       </div>
 
       {/* Plan Distribution */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
           const Icon = PLAN_ICONS[key];
           const count = stats.byPlan[key] || 0;
           const pct = stats.active > 0 ? Math.round((count / stats.active) * 100) : 0;
-          const colors = { basic: "bg-blue-500", advanced: "bg-purple-500", enterprise: "bg-emerald-500" };
-          const lightColors = { basic: "bg-blue-50", advanced: "bg-purple-50", enterprise: "bg-emerald-50" };
-          const textColors = { basic: "text-blue-600", advanced: "text-purple-600", enterprise: "text-emerald-600" };
+          const colors = { free_trial: "bg-amber-500", basic: "bg-blue-500", advanced: "bg-purple-500", enterprise: "bg-emerald-500" };
+          const lightColors = { free_trial: "bg-amber-50", basic: "bg-blue-50", advanced: "bg-purple-50", enterprise: "bg-emerald-50" };
+          const textColors = { free_trial: "text-amber-600", basic: "text-blue-600", advanced: "text-purple-600", enterprise: "text-emerald-600" };
           return (
             <Card key={key} className={lightColors[key]}>
               <CardContent className="p-4">
