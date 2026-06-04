@@ -203,8 +203,7 @@ function SidebarItem({ item, onNavigate }) {
     const visibleChildren = item.children.filter((c) => {
       const feat = ITEM_FEATURES[c.path];
       if (feat && !hasFeature(feat)) return false;
-      const sec = ITEM_PERMISSIONS[c.path];
-      return !sec || isAdmin() || canView(sec);
+      return true;
     });
     if (visibleChildren.length === 0) return null;
     const isActive = visibleChildren.some((c) => location.pathname === c.path);
