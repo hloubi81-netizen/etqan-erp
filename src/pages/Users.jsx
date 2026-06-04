@@ -55,18 +55,58 @@ export default function Users() {
   async function handleInvite() {
     if (!inviteEmail) return;
     await base44.users.inviteUser(inviteEmail, inviteRole === "admin" ? "admin" : "user");
+
+    await base44.entities.Notification.create({
+      title: `تم إرسال دعوة إلى ${inviteEmail}`,
+      message: `تم إرسال بريد إلكتروني بالدعوة إلى ${inviteEmail}. سيظهر المستخدم في القائمة بعد قبوله للدعوة وإكمال تسجيله.`,
+      type: "معلومة",
+      related_module: "المستخدمون",
+      is_read: false,
+      trigger_date: new Date().toISOString().split("T")[0],
+    });
+
     toast.success("تم إرسال الدعوة بنجاح");
     setShowInvite(false);
     setInviteEmail("");
   }
 
   async function handleSavePermissions() {
+    const originalUser = users.find(u => u.id === editUser.id);
     await base44.entities.User.update(editUser.id, {
       role: editUser.role,
       permissions: editUser.permissions || {},
       is_active: editUser.is_active,
       department: editUser.department,
     });
+
+    // تنبيه عند تغيير القسم
+    if (editUser.department && editUser.department !== originalUser?.department) {
+      await base44.entities.Notification.create({
+        title: `تم تعيينك في قسم جديد`,
+        message: `تم تعيينك في قسم "${editUser.department}". إذا كان لديك أي استفسار تواصل مع المسؤول.`,
+        type: "تنبيه",
+        related_module: "المستخدمون",
+        related_id: editUser.id,
+        is_read: false,
+        trigger_date: new Date().toISOString().split("T")[0],
+        target_user_id: editUser.id,
+      });
+    }
+
+    // تنبيه عند تفعيل الحساب
+    if (editUser.is_active === true && originalUser?.is_active === false) {
+      await base44.entities.Notification.create({
+        title: `تم تفعيل حسابك`,
+        message: `تم تفعيل حسابك في النظام. يمكنك الآن تسجيل الدخول والبدء باستخدام التطبيق.`,
+        type: "ترحيب",
+        related_module: "المستخدمون",
+        related_id: editUser.id,
+        is_read: false,
+        trigger_date: new Date().toISOString().split("T")[0],
+        target_user_id: editUser.id,
+      });
+    }
+
     toast.success("تم حفظ الصلاحيات");
     setShowDialog(false);
     loadUsers();
