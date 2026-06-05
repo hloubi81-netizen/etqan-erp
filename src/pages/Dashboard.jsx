@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import { SkeletonCard } from "@/components/shared/SkeletonLoader";
 import CurrencySelector from "@/components/dashboard/CurrencySelector";
+import BranchMonthlyReport from "@/components/dashboard/BranchMonthlyReport";
 
 function StatCard({ icon: Icon, label, value, sub, color, loading }) {
   if (loading) return <SkeletonCard />;
@@ -161,6 +162,9 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Branch Monthly Report */}
+      <BranchMonthlyReport />
 
       {/* Recent Invoices */}
       <Card>
