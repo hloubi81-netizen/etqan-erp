@@ -16,6 +16,7 @@ import {
 import BackupPanel from "@/components/settings/BackupPanel";
 import PrintersManager from "@/components/pos/PrintersManager";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
+import AccessControlSettings from "@/components/settings/AccessControlSettings";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -30,6 +31,7 @@ const TABS = [
   { id: "hr",            label: "الموارد البشرية",   icon: UserCog },
   { id: "assets",        label: "الأصول الثابتة",    icon: Landmark },
   { id: "notifications", label: "الإشعارات",         icon: Bell },
+  { id: "access",        label: "صلاحيات الوصول",   icon: Shield },
   { id: "security",      label: "الأمان",            icon: Shield },
   { id: "einvoice",      label: "الفاتورة الإلكترونية", icon: FileCode2 },
   { id: "backup",        label: "النسخ الاحتياطي",   icon: Database },
@@ -314,6 +316,9 @@ export default function Settings() {
       case "notifications":
         return <NotificationsSettings settings={s.notifications} update={update} />;
 
+      case "access":
+        return <AccessControlSettings />;
+
       case "security":
         return (
           <div className="space-y-4">
@@ -478,7 +483,7 @@ export default function Settings() {
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
-        {!["general","appearance","language","security","backup"].includes(activeTab) && (
+        {!["general","appearance","language","security","access","backup"].includes(activeTab) && (
           <Button onClick={saveSettings} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
