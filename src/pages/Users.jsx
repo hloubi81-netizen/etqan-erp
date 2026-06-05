@@ -47,8 +47,8 @@ export default function Users() {
   useEffect(() => { loadUsers(); }, []);
 
   async function loadUsers() {
-    const list = await base44.entities.User.list();
-    setUsers(list);
+    const res = await base44.functions.invoke('getAllUsers', {});
+    setUsers(res.data?.users || []);
     setLoading(false);
   }
 
