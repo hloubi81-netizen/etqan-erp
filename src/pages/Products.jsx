@@ -5,12 +5,15 @@ import ProductForm from "../components/products/ProductForm";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus, GitBranch } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [groups, setGroups] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [branchFilter, setBranchFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -20,14 +23,16 @@ export default function Products() {
   }, []);
 
   async function loadData() {
-    const [prods, grps, whs] = await Promise.all([
+    const [prods, grps, whs, brs] = await Promise.all([
       base44.entities.Product.list(),
       base44.entities.ProductGroup.list(),
       base44.entities.Warehouse.list(),
+      base44.entities.Branch.list(),
     ]);
     setProducts(prods);
     setGroups(grps);
     setWarehouses(whs);
+    setBranches(brs);
     setLoading(false);
   }
 
@@ -66,10 +71,15 @@ export default function Products() {
     }
   }
 
+  const filteredProducts = branchFilter === "all"
+    ? products
+    : products.filter((p) => p.branch_id === branchFilter);
+
   const columns = [
     { key: "item_code", label: "رمز الصنف" },
     { key: "name", label: "اسم الصنف" },
     { key: "group_id", label: "المجموعة", render: (val) => getGroupName(val) },
+    { key: "branch_name", label: "الفرع", render: (val) => val ? <Badge variant="outline" className="text-xs">{val}</Badge> : <span className="text-muted-foreground text-xs">كل الفروع</span> },
     { key: "origin", label: "المنشأ", render: (val) => val ? <Badge variant="secondary">{val}</Badge> : "-" },
     { key: "retail_price", label: "سعر المستهلك", render: (val) => val ? val.toLocaleString() : "-" },
     { key: "wholesale_price", label: "سعر الجملة", render: (val) => val ? val.toLocaleString() : "-" },
@@ -90,7 +100,21 @@ export default function Products() {
           <h1 className="text-2xl font-bold">المواد والأصناف</h1>
           <p className="text-sm text-muted-foreground mt-0.5">إدارة المنتجات والمواد مع التسعير والوحدات</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {branches.length > 0 && (
+            <Select value={branchFilter} onValueChange={setBranchFilter}>
+              <SelectTrigger className="h-9 w-40 text-sm gap-1">
+                <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue placeholder="كل الفروع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الفروع</SelectItem>
+                {branches.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <ExcelImport
             entityName="Product"
             templateName="نموذج_استيراد_المنتجات.xlsx"
@@ -119,7 +143,7 @@ export default function Products() {
 
       <DataTable
         columns={columns}
-        data={products}
+        data={filteredProducts}
         onEdit={openEdit}
         onDelete={handleDelete}
         emptyMessage="لا توجد مواد بعد"
@@ -134,6 +158,7 @@ export default function Products() {
           groups={groups}
           warehouses={warehouses}
           products={products}
+          branches={branches}
         />
       )}
     </div>

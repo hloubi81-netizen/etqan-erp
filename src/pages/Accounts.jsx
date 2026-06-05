@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle, GitBranch } from "lucide-react";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,9 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
             <Phone className="h-3 w-3" />{account.phone}
           </span>
         )}
+        {account.branch_name && (
+          <Badge variant="secondary" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">{account.branch_name}</Badge>
+        )}
         {account.account_nature && (
           <Badge variant="outline" className="text-[10px]">{account.account_nature}</Badge>
         )}
@@ -81,6 +84,8 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
 export default function Accounts() {
   const [accounts, setAccounts] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [branchFilter, setBranchFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -94,12 +99,14 @@ export default function Accounts() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [accs, currs] = await Promise.all([
+    const [accs, currs, brs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Currency.list(),
+      base44.entities.Branch.list(),
     ]);
     setAccounts(accs);
     setCurrencies(currs);
+    setBranches(brs);
     setLoading(false);
   }
 
@@ -108,7 +115,7 @@ export default function Accounts() {
     setForm({
       account_number: "", name: "", parent_account_id: "", parent_account_name: "",
       final_account: "", account_nature: "", financial_statement: "", currency: "",
-      phone: "", is_parent: false, level: 0,
+      phone: "", is_parent: false, level: 0, branch_id: "", branch_name: "",
     });
     setDialogOpen(true);
   }
@@ -126,6 +133,8 @@ export default function Accounts() {
       phone: acc.phone || "",
       is_parent: acc.is_parent || false,
       level: acc.level || 0,
+      branch_id: acc.branch_id || "",
+      branch_name: acc.branch_name || "",
     });
     setDialogOpen(true);
   }
@@ -187,7 +196,11 @@ export default function Accounts() {
     setImporting(false);
   }
 
-  const rootAccounts = accounts.filter((a) => !a.parent_account_id);
+  const filteredAccounts = branchFilter === "all"
+    ? accounts
+    : accounts.filter((a) => a.branch_id === branchFilter || !a.branch_id);
+
+  const rootAccounts = filteredAccounts.filter((a) => !a.parent_account_id);
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
@@ -198,7 +211,21 @@ export default function Accounts() {
           <h1 className="text-2xl font-bold">شجرة الحسابات</h1>
           <p className="text-sm text-muted-foreground mt-0.5">الدليل المحاسبي وفق المعايير الدولية (IFRS)</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {branches.length > 0 && (
+            <Select value={branchFilter} onValueChange={setBranchFilter}>
+              <SelectTrigger className="h-9 w-40 text-sm">
+                <GitBranch className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+                <SelectValue placeholder="كل الفروع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">كل الفروع</SelectItem>
+                {branches.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {accounts.length === 0 && (
             <Button variant="outline" onClick={importDefaultAccounts} disabled={importing} className="gap-2">
               <Download className="h-4 w-4"/>
@@ -323,6 +350,26 @@ export default function Accounts() {
                 </Select>
               </div>
             </div>
+            {branches.length > 0 && (
+              <div>
+                <Label className="flex items-center gap-1"><GitBranch className="h-3.5 w-3.5" />الفرع (اختياري)</Label>
+                <Select
+                  value={form.branch_id || "all"}
+                  onValueChange={(v) => {
+                    const b = branches.find((br) => br.id === v);
+                    setForm({ ...form, branch_id: v === "all" ? "" : v, branch_name: b ? b.name : "" });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="كل الفروع" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل الفروع</SelectItem>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
               <Label className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />رقم الهاتف / واتساب</Label>
               <Input

@@ -8,11 +8,13 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
 
-export default function ProductForm({ open, onClose, onSave, product, groups, warehouses, products }) {
+export default function ProductForm({ open, onClose, onSave, product, groups, warehouses, products, branches = [] }) {
   const [form, setForm] = useState({
     item_code: product?.item_code || "",
     name: product?.name || "",
     group_id: product?.group_id || "",
+    branch_id: product?.branch_id || "",
+    branch_name: product?.branch_name || "",
     origin: product?.origin || "محلي",
     color: product?.color || "",
     size: product?.size || "",
@@ -109,6 +111,30 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
                   <SelectContent>
                     {groups.map((g) => (
                       <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>الفرع (اختياري)</Label>
+                <Select
+                  value={form.branch_id || "all"}
+                  onValueChange={(v) => {
+                    if (v === "all") {
+                      updateField("branch_id", "");
+                      updateField("branch_name", "");
+                    } else {
+                      const b = branches.find((br) => br.id === v);
+                      updateField("branch_id", v);
+                      updateField("branch_name", b ? b.name : "");
+                    }
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="كل الفروع" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل الفروع</SelectItem>
+                    {branches.map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
