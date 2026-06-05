@@ -59,6 +59,7 @@ import CustomReports from './pages/reports/CustomReports';
 import SalesDashboard from './pages/reports/SalesDashboard';
 import LoyaltyProgram from './pages/loyalty/LoyaltyProgram';
 import TaxReport from './pages/reports/TaxReport';
+import InventoryVarianceReport from './pages/reports/InventoryVarianceReport';
 import About from './pages/About';
 import UserGuide from './pages/UserGuide';
 import Contact from './pages/Contact';
@@ -138,6 +139,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/sales-dashboard" element={<SalesDashboard />} />
         <Route path="/loyalty" element={<LoyaltyProgram />} />
         <Route path="/reports/tax" element={<TaxReport />} />
+        <Route path="/reports/inventory-variance" element={<InventoryVarianceReport />} />
         <Route path="/user-guide" element={<UserGuide />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
