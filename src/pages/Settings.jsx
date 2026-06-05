@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import BackupPanel from "@/components/settings/BackupPanel";
 import PrintersManager from "@/components/pos/PrintersManager";
+import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -49,6 +50,7 @@ const SETTINGS_KEY = "itqan_app_settings";
 
 const DEFAULT_SETTINGS = {
   company: { name: "شركة اتقان للتجارة", phone: "", email: "", address: "", taxNumber: "", commercialRegister: "", logo: "" },
+  notifications: { overdueInvoices: false, lowStock: false, dailySummary: false },
   einvoice: {
     enabled: false,
     system: "zatca",
@@ -310,26 +312,7 @@ export default function Settings() {
         );
 
       case "notifications":
-        return (
-          <div className="space-y-4">
-            <SectionHeader title="الإشعارات والتنبيهات" desc="ضبط إعدادات الإشعارات" />
-            <div className="space-y-3">
-              {[
-                { label: "تنبيهات الفواتير المتأخرة", desc: "إشعار عند تجاوز فاتورة لتاريخ الاستحقاق" },
-                { label: "تنبيهات المخزون المنخفض", desc: "إشعار عند انخفاض كمية صنف عن الحد الأدنى" },
-                { label: "ملخص يومي", desc: "تقرير يومي بأبرز العمليات" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-muted/30">
-                  <div>
-                    <p className="font-medium text-sm">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
-                  </div>
-                  <Badge variant="outline">قريباً</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        return <NotificationsSettings settings={s.notifications} update={update} />;
 
       case "security":
         return (
@@ -495,7 +478,7 @@ export default function Settings() {
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
-        {!["general","appearance","language","notifications","security","backup"].includes(activeTab) && (
+        {!["general","appearance","language","security","backup"].includes(activeTab) && (
           <Button onClick={saveSettings} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
