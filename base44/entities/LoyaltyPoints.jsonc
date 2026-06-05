@@ -70,6 +70,16 @@
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "user_condition": {
+            "role": "pos_cashier"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "branch_manager"
+          }
         }
       ]
     },
@@ -81,6 +91,11 @@
         {
           "user_condition": {
             "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "pos_cashier"
           }
         }
       ]
