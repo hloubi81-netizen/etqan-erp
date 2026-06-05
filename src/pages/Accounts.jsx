@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 import { defaultChartOfAccounts } from "../utils/defaultAccounts";
 import PageHeader from "../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ export default function Accounts() {
   const [currencies, setCurrencies] = useState([]);
   const [branches, setBranches] = useState([]);
   const [branchFilter, setBranchFilter] = useState("all");
+  const { filterByBranch, isAdmin } = useBranchFilter();
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -196,9 +198,14 @@ export default function Accounts() {
     setImporting(false);
   }
 
-  const filteredAccounts = branchFilter === "all"
-    ? accounts
-    : accounts.filter((a) => a.branch_id === branchFilter || !a.branch_id);
+  // Non-admins see only their branch accounts (or unassigned accounts)
+  const branchSecureAccounts = filterByBranch(accounts);
+  // Admins can additionally filter using the dropdown
+  const filteredAccounts = !isAdmin
+    ? branchSecureAccounts
+    : branchFilter === "all"
+      ? branchSecureAccounts
+      : branchSecureAccounts.filter((a) => a.branch_id === branchFilter || !a.branch_id);
 
   const rootAccounts = filteredAccounts.filter((a) => !a.parent_account_id);
 
@@ -212,7 +219,7 @@ export default function Accounts() {
           <p className="text-sm text-muted-foreground mt-0.5">الدليل المحاسبي وفق المعايير الدولية (IFRS)</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          {branches.length > 0 && (
+          {isAdmin && branches.length > 0 && (
             <Select value={branchFilter} onValueChange={setBranchFilter}>
               <SelectTrigger className="h-9 w-40 text-sm">
                 <GitBranch className="h-3.5 w-3.5 text-muted-foreground ml-1" />

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Plus, GitBranch } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -17,6 +18,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const { filterByBranch, getDefaultBranchValues, isAdmin } = useBranchFilter();
 
   useEffect(() => {
     loadData();
@@ -71,9 +73,14 @@ export default function Products() {
     }
   }
 
-  const filteredProducts = branchFilter === "all"
-    ? products
-    : products.filter((p) => p.branch_id === branchFilter);
+  // First apply branch security filter (non-admins see only their branch)
+  const branchSecureProducts = filterByBranch(products);
+  // Then apply manual branch dropdown filter (admins can additionally filter by branch)
+  const filteredProducts = !isAdmin
+    ? branchSecureProducts
+    : branchFilter === "all"
+      ? branchSecureProducts
+      : branchSecureProducts.filter((p) => p.branch_id === branchFilter);
 
   const columns = [
     { key: "item_code", label: "رمز الصنف" },
@@ -101,7 +108,7 @@ export default function Products() {
           <p className="text-sm text-muted-foreground mt-0.5">إدارة المنتجات والمواد مع التسعير والوحدات</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          {branches.length > 0 && (
+          {isAdmin && branches.length > 0 && (
             <Select value={branchFilter} onValueChange={setBranchFilter}>
               <SelectTrigger className="h-9 w-40 text-sm gap-1">
                 <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />

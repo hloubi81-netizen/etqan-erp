@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useBranchFilter } from "@/hooks/useBranchFilter";
 import PageHeader from "../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Shield, User, Mail, CheckCircle, XCircle, Copy } from "lucide-react";
+import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { MODULES, SECTIONS, ACTIONS, SECTION_LABELS, ACTION_LABELS, ROLE_LABELS } from "@/hooks/usePermissions";
 
@@ -37,20 +38,28 @@ function buildPermissionsFromPackage(pkg) {
 
 export default function Users() {
   const [users, setUsers] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editUser, setEditUser] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [showInvite, setShowInvite] = useState(false);
+  const { isAdmin } = useBranchFilter();
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { loadData(); }, []);
 
-  async function loadUsers() {
-    const res = await base44.functions.invoke('getAllUsers', {});
-    setUsers(res.data?.users || []);
+  async function loadData() {
+    const [usersRes, brs] = await Promise.all([
+      base44.functions.invoke('getAllUsers', {}),
+      base44.entities.Branch.list(),
+    ]);
+    setUsers(usersRes.data?.users || []);
+    setBranches(brs);
     setLoading(false);
   }
+
+  function loadUsers() { loadData(); }
 
   async function handleInvite() {
     if (!inviteEmail) return;
@@ -77,6 +86,8 @@ export default function Users() {
       permissions: editUser.permissions || {},
       is_active: editUser.is_active,
       department: editUser.department,
+      branch_id: editUser.branch_id || "",
+      branch_name: editUser.branch_name || "",
     });
 
     // تنبيه عند تغيير القسم
@@ -168,7 +179,10 @@ export default function Users() {
                       ? <><CheckCircle className="h-3.5 w-3.5 text-green-500" />نشط</>
                       : <><XCircle className="h-3.5 w-3.5 text-red-500" />غير نشط</>}
                   </span>
-                  {u.department && <span>{u.department}</span>}
+                  <span className="flex gap-2">
+                    {u.branch_name && <Badge variant="outline" className="text-[10px] text-blue-700 border-blue-300">{u.branch_name}</Badge>}
+                    {u.department && <span>{u.department}</span>}
+                  </span>
                 </div>
 
                 {u.role === "admin" ? (
@@ -237,6 +251,27 @@ export default function Users() {
                     <Input className="h-9" value={editUser.department || ""} onChange={(e) => setEditUser({ ...editUser, department: e.target.value })} placeholder="مثال: المحاسبة" />
                   </div>
                 </div>
+
+                {/* Branch Assignment */}
+                {branches.length > 0 && (
+                  <div>
+                    <Label className="text-xs flex items-center gap-1"><GitBranch className="h-3 w-3"/>الفرع (يحدد البيانات التي يراها المستخدم)</Label>
+                    <Select
+                      value={editUser.branch_id || "all"}
+                      onValueChange={(v) => {
+                        const b = branches.find((br) => br.id === v);
+                        setEditUser({ ...editUser, branch_id: v === "all" ? "" : v, branch_name: b ? b.name : "" });
+                      }}
+                    >
+                      <SelectTrigger className="h-9"><SelectValue placeholder="كل الفروع (بدون قيد)" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">كل الفروع (بدون قيد)</SelectItem>
+                        {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground mt-1">المدير يرى كل الفروع بغض النظر عن هذا الإعداد</p>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2">
                   <Checkbox id="is_active" checked={editUser.is_active !== false}
