@@ -1,0 +1,110 @@
+{
+  "name": "CRMActivity",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0643\u0627\u0644\u0645\u0629",
+        "\u0627\u062c\u062a\u0645\u0627\u0639",
+        "\u0628\u0631\u064a\u062f \u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a",
+        "\u0631\u0633\u0627\u0644\u0629 \u0648\u0627\u062a\u0633\u0627\u0628",
+        "\u0632\u064a\u0627\u0631\u0629",
+        "\u0645\u0647\u0645\u0629",
+        "\u0645\u0644\u0627\u062d\u0638\u0629"
+      ],
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u0646\u0634\u0627\u0637"
+    },
+    "contact_id": {
+      "type": "string",
+      "title": "\u062c\u0647\u0629 \u0627\u0644\u0627\u062a\u0635\u0627\u0644"
+    },
+    "contact_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u062c\u0647\u0629 \u0627\u0644\u0627\u062a\u0635\u0627\u0644"
+    },
+    "opportunity_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0641\u0631\u0635\u0629 \u0627\u0644\u0645\u0631\u062a\u0628\u0637\u0629"
+    },
+    "opportunity_title": {
+      "type": "string",
+      "title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0641\u0631\u0635\u0629"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u0627\u0644\u062a\u0627\u0631\u064a\u062e"
+    },
+    "time": {
+      "type": "string",
+      "title": "\u0627\u0644\u0648\u0642\u062a"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "title": "\u0627\u0644\u0645\u062f\u0629 (\u062f\u0642\u0627\u0626\u0642)"
+    },
+    "subject": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0648\u0636\u0648\u0639"
+    },
+    "description": {
+      "type": "string",
+      "title": "\u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644",
+      "maxLength": 2000
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "\u0646\u0627\u062c\u062d",
+        "\u064a\u062d\u062a\u0627\u062c \u0645\u062a\u0627\u0628\u0639\u0629",
+        "\u0644\u0627 \u064a\u0648\u062c\u062f \u0631\u062f",
+        "\u0645\u0631\u0641\u0648\u0636"
+      ],
+      "title": "\u0627\u0644\u0646\u062a\u064a\u062c\u0629"
+    },
+    "next_action": {
+      "type": "string",
+      "title": "\u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u062a\u0627\u0644\u064a"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u062a\u0627\u0644\u064a"
+    },
+    "assigned_to": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0633\u0624\u0648\u0644"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0643\u062a\u0645\u0644",
+        "\u0642\u064a\u062f \u0627\u0644\u062a\u0646\u0641\u064a\u0630",
+        "\u0645\u062c\u062f\u0648\u0644",
+        "\u0645\u0644\u063a\u064a"
+      ],
+      "default": "\u0645\u0643\u062a\u0645\u0644",
+      "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
+    }
+  },
+  "required": [
+    "type",
+    "date",
+    "subject"
+  ],
+  "rls": {
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
