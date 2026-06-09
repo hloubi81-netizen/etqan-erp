@@ -77,6 +77,12 @@ export default function EcomOrders() {
 
       <div className="flex justify-end mb-4 gap-2">
         <Button asChild variant="outline" className="gap-2">
+          <Link to="/ecom-product-mappings">
+            <ShoppingCart className="w-4 h-4" />
+            ربط المنتجات بالمخزون
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="gap-2">
           <Link to="/store-connections">
             <Settings className="w-4 h-4" />
             إعدادات المتاجر

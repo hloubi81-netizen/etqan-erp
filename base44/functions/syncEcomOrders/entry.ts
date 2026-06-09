@@ -31,7 +31,13 @@ Deno.serve(async (req) => {
             if (wixRes.ok) {
                 const wixData = await wixRes.json();
                 for (const order of (wixData.orders || [])) {
-                    await saveOrderLocally(base44, "Wix", order.number || order.id, order.buyerInfo?.contactId || "عميل Wix", order.totals?.total, order.currency, mapWixStatus(order.status));
+                    const wixItems = (order.lineItems || []).map(li => ({
+                        sku: li.physicalProperties?.sku || li.catalogReference?.catalogItemId || "",
+                        name: li.productName?.original || li.itemName || "",
+                        quantity: li.quantity || 0,
+                        price: parseFloat(li.price?.amount) || 0
+                    }));
+                    await saveOrderLocally(base44, "Wix", order.number || order.id, order.buyerInfo?.contactId || "عميل Wix", order.totals?.total, order.currency, mapWixStatus(order.status), wixItems, user.id);
                     addedCount++;
                 }
             }
@@ -56,7 +62,13 @@ Deno.serve(async (req) => {
                     if (shopifyRes.ok) {
                         const shopifyData = await shopifyRes.json();
                         for (const order of (shopifyData.orders || [])) {
-                            await saveOrderLocally(base44, "Shopify", order.order_number?.toString() || order.id?.toString(), `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim() || "عميل Shopify", parseFloat(order.total_price), order.currency, mapShopifyStatus(order.financial_status, order.fulfillment_status));
+                            const shopifyItems = (order.line_items || []).map(li => ({
+                                sku: li.sku || "",
+                                name: li.title || "",
+                                quantity: li.quantity || 0,
+                                price: parseFloat(li.price) || 0
+                            }));
+                            await saveOrderLocally(base44, "Shopify", order.order_number?.toString() || order.id?.toString(), `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim() || "عميل Shopify", parseFloat(order.total_price), order.currency, mapShopifyStatus(order.financial_status, order.fulfillment_status), shopifyItems, user.id);
                             addedCount++;
                         }
                     }
@@ -75,7 +87,13 @@ Deno.serve(async (req) => {
                     if (wooRes.ok) {
                         const wooData = await wooRes.json();
                         for (const order of wooData) {
-                            await saveOrderLocally(base44, "WooCommerce", order.number || order.id?.toString(), `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() || "عميل WooCommerce", parseFloat(order.total), order.currency, mapWooStatus(order.status));
+                            const wooItems = (order.line_items || []).map(li => ({
+                                sku: li.sku || "",
+                                name: li.name || "",
+                                quantity: li.quantity || 0,
+                                price: parseFloat(li.price) || 0
+                            }));
+                            await saveOrderLocally(base44, "WooCommerce", order.number || order.id?.toString(), `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() || "عميل WooCommerce", parseFloat(order.total), order.currency, mapWooStatus(order.status), wooItems, user.id);
                             addedCount++;
                         }
                     }
@@ -91,16 +109,17 @@ Deno.serve(async (req) => {
     }
 });
 
-async function saveOrderLocally(base44, platform, orderNumber, customerName, total, currency, status) {
+async function saveOrderLocally(base44, platform, orderNumber, customerName, total, currency, status, items, createdBy) {
     // Check if order already exists
-    const existing = await base44.asServiceRole.entities.EcomOrder.filter({ order_number: orderNumber, platform });
+    const existing = await base44.asServiceRole.entities.EcomOrder.filter({ order_number: orderNumber, platform, created_by_id: createdBy });
     
     if (existing && existing.length > 0) {
         // Update status
         await base44.asServiceRole.entities.EcomOrder.update(existing[0].id, {
             status,
             total_amount: total,
-            customer_name: customerName
+            customer_name: customerName,
+            items: items || []
         });
     } else {
         // Create new
@@ -111,7 +130,10 @@ async function saveOrderLocally(base44, platform, orderNumber, customerName, tot
             total_amount: total,
             currency: currency || "ر.س",
             status: status,
-            order_date: new Date().toISOString().split('T')[0]
+            order_date: new Date().toISOString().split('T')[0],
+            items: items || [],
+            inventory_processed: false,
+            created_by_id: createdBy
         });
     }
 }
