@@ -106,6 +106,7 @@ export default function EcomOrders() {
                     <TableHead className="text-right">تاريخ الطلب</TableHead>
                     <TableHead className="text-right">العميل</TableHead>
                     <TableHead className="text-right">الإجمالي</TableHead>
+                    <TableHead className="text-right">بالعملة المحلية</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -122,6 +123,11 @@ export default function EcomOrders() {
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell className="font-bold">
                         {order.total_amount?.toLocaleString()} {order.currency || "ر.س"}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {order.local_amount
+                          ? `${order.local_amount.toLocaleString()} ${order.local_currency || ""}`
+                          : "—"}
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusColor(order.status)}>{order.status}</Badge>

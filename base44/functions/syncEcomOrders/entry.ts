@@ -14,6 +14,15 @@ Deno.serve(async (req) => {
         let addedCount = 0;
         let errors = [];
 
+        // Load currency rates for automatic conversion to the local currency
+        const allCurrencies = await base44.asServiceRole.entities.Currency.list();
+        const localCur = allCurrencies.find(c => c.is_local);
+        const rateMap = {};
+        for (const c of allCurrencies) {
+            if (c.symbol) rateMap[c.symbol.toUpperCase().trim()] = c.is_local ? 1 : (c.exchange_rate || 1);
+        }
+        const fx = { rateMap, localSymbol: localCur?.symbol || "" };
+
         // 1. Fetch from Wix
         try {
             const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(WIX_CONNECTOR_ID);
@@ -37,7 +46,7 @@ Deno.serve(async (req) => {
                         quantity: li.quantity || 0,
                         price: parseFloat(li.price?.amount) || 0
                     }));
-                    await saveOrderLocally(base44, "Wix", order.number || order.id, order.buyerInfo?.contactId || "عميل Wix", order.totals?.total, order.currency, mapWixStatus(order.status), wixItems, user.id);
+                    await saveOrderLocally(base44, "Wix", order.number || order.id, order.buyerInfo?.contactId || "عميل Wix", order.totals?.total, order.currency, mapWixStatus(order.status), wixItems, user.id, fx);
                     addedCount++;
                 }
             }
@@ -68,7 +77,7 @@ Deno.serve(async (req) => {
                                 quantity: li.quantity || 0,
                                 price: parseFloat(li.price) || 0
                             }));
-                            await saveOrderLocally(base44, "Shopify", order.order_number?.toString() || order.id?.toString(), `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim() || "عميل Shopify", parseFloat(order.total_price), order.currency, mapShopifyStatus(order.financial_status, order.fulfillment_status), shopifyItems, user.id);
+                            await saveOrderLocally(base44, "Shopify", order.order_number?.toString() || order.id?.toString(), `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim() || "عميل Shopify", parseFloat(order.total_price), order.currency, mapShopifyStatus(order.financial_status, order.fulfillment_status), shopifyItems, user.id, fx);
                             addedCount++;
                         }
                     }
@@ -93,7 +102,7 @@ Deno.serve(async (req) => {
                                 quantity: li.quantity || 0,
                                 price: parseFloat(li.price) || 0
                             }));
-                            await saveOrderLocally(base44, "WooCommerce", order.number || order.id?.toString(), `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() || "عميل WooCommerce", parseFloat(order.total), order.currency, mapWooStatus(order.status), wooItems, user.id);
+                            await saveOrderLocally(base44, "WooCommerce", order.number || order.id?.toString(), `${order.billing?.first_name || ''} ${order.billing?.last_name || ''}`.trim() || "عميل WooCommerce", parseFloat(order.total), order.currency, mapWooStatus(order.status), wooItems, user.id, fx);
                             addedCount++;
                         }
                     }
@@ -109,7 +118,12 @@ Deno.serve(async (req) => {
     }
 });
 
-async function saveOrderLocally(base44, platform, orderNumber, customerName, total, currency, status, items, createdBy) {
+async function saveOrderLocally(base44, platform, orderNumber, customerName, total, currency, status, items, createdBy, fx) {
+    // Currency conversion to local currency
+    const curKey = (currency || "").toUpperCase().trim();
+    const rate = fx?.rateMap?.[curKey] || 1;
+    const localAmount = Math.round((total || 0) * rate * 100) / 100;
+
     // Check if order already exists
     const existing = await base44.asServiceRole.entities.EcomOrder.filter({ order_number: orderNumber, platform, created_by_id: createdBy });
     
@@ -119,7 +133,10 @@ async function saveOrderLocally(base44, platform, orderNumber, customerName, tot
             status,
             total_amount: total,
             customer_name: customerName,
-            items: items || []
+            items: items || [],
+            local_amount: localAmount,
+            local_currency: fx?.localSymbol || "",
+            exchange_rate_used: rate
         });
     } else {
         // Create new
@@ -133,7 +150,10 @@ async function saveOrderLocally(base44, platform, orderNumber, customerName, tot
             order_date: new Date().toISOString().split('T')[0],
             items: items || [],
             inventory_processed: false,
-            created_by_id: createdBy
+            created_by_id: createdBy,
+            local_amount: localAmount,
+            local_currency: fx?.localSymbol || "",
+            exchange_rate_used: rate
         });
     }
 }
