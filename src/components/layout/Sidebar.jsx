@@ -198,7 +198,7 @@ const ITEM_PERMISSIONS = {
 };
 
 function SidebarItem({ item, onNavigate }) {
-  const { canView, isAdmin } = usePermissions();
+  const { canViewPage, isAdmin } = usePermissions();
   const { hasFeature } = useSubscription() || { hasFeature: () => true };
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
@@ -207,8 +207,7 @@ function SidebarItem({ item, onNavigate }) {
     const visibleChildren = item.children.filter((c) => {
       const feat = ITEM_FEATURES[c.path];
       if (feat && !hasFeature(feat)) return false;
-      const sec = ITEM_PERMISSIONS[c.path];
-      return !sec || isAdmin() || canView(sec);
+      return isAdmin() || canViewPage(c.path);
     });
     if (visibleChildren.length === 0) return null;
     const isActive = visibleChildren.some((c) => location.pathname === c.path);
@@ -251,6 +250,8 @@ function SidebarItem({ item, onNavigate }) {
       </div>);
 
   }
+
+  if (!isAdmin() && !canViewPage(item.path)) return null;
 
   const isActive = location.pathname === item.path;
   return (

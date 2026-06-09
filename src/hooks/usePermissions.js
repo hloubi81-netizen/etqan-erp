@@ -1,4 +1,5 @@
 import { useAuth } from "@/lib/AuthContext";
+import { findPage } from "@/lib/pageRegistry";
 
 // ─── Sections ───────────────────────────────────────────────
 export const SECTIONS = {
@@ -54,7 +55,7 @@ const ALL_PERMS = () => {
   return p;
 };
 
-const ROLE_DEFAULTS = {
+export const ROLE_DEFAULTS = {
   admin: ALL_PERMS(),
   accountant: {
     "dashboard.view": true,
@@ -138,10 +139,27 @@ export function usePermissions() {
 
   function isAdmin() { return user?.role === "admin"; }
 
+  /**
+   * هل يمكن للمستخدم عرض صفحة معينة؟
+   * أولوية: تخصيص صريح للصفحة (page:<path>) > صلاحية القسم > افتراضي
+   */
+  function canViewPage(path) {
+    if (!user) return false;
+    if (user.role === "admin") return true;
+    const perms = user.permissions;
+    if (perms && typeof perms === "object" && !Array.isArray(perms)) {
+      const key = `page:${path}`;
+      if (perms[key] !== undefined) return !!perms[key];
+    }
+    const page = findPage(path);
+    if (page?.section) return canView(page.section);
+    return true; // صفحات غير مسجلة أو بدون قسم تبقى متاحة افتراضياً
+  }
+
   // Legacy shim so existing hasPermission() calls still work
   function hasPermission(module) { return can(module, "view") || can(module); }
 
-  return { can, canView, canCreate, canEdit, canDelete, hasPermission, isAdmin, user };
+  return { can, canView, canCreate, canEdit, canDelete, canViewPage, hasPermission, isAdmin, user };
 }
 
 // ─── Legacy MODULES shim ─────────────────────────────────────

@@ -7,6 +7,7 @@ import { useLang } from "@/hooks/useLang.jsx";
 import ThemePicker from "./ThemePicker";
 import { base44 } from "@/api/base44Client";
 import GlobalSearch from "./GlobalSearch";
+import PageAccessGuard from "@/components/shared/PageAccessGuard";
 import { cn } from "@/lib/utils";
 
 export default function AppLayout() {
@@ -84,7 +85,9 @@ export default function AppLayout() {
 
         {/* Main content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
-          <Outlet />
+          <PageAccessGuard>
+            <Outlet />
+          </PageAccessGuard>
         </main>
       </div>
     </div>

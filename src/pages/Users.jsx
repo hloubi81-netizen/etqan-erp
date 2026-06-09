@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
+import PageAccessEditor from "../components/users/PageAccessEditor";
 import { MODULES, SECTIONS, ACTIONS, SECTION_LABELS, ACTION_LABELS, ROLE_LABELS } from "@/hooks/usePermissions";
 
 const ROLE_COLORS = {
@@ -372,6 +373,20 @@ export default function Users() {
                     <Shield className="h-8 w-8 text-amber-500 mx-auto mb-1"/>
                     <p className="text-sm font-semibold text-amber-700">المدير يملك جميع الصلاحيات تلقائياً</p>
                   </div>
+                )}
+
+                {/* Page-level access customization */}
+                {!isAdminRole && (
+                  <PageAccessEditor
+                    editUser={editUser}
+                    onChange={(updates, fullPerms) => {
+                      if (fullPerms) {
+                        setEditUser({ ...editUser, permissions: fullPerms });
+                      } else {
+                        setEditUser({ ...editUser, permissions: { ...(editUser.permissions || {}), ...updates } });
+                      }
+                    }}
+                  />
                 )}
               </div>
 
