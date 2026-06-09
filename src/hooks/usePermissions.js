@@ -89,6 +89,12 @@ const ROLE_DEFAULTS = {
     "reports.view": true,
     "financial.view": true,
   },
+  user: {
+    "dashboard.view": true,
+    "users.view": true,
+    "users.create": true,
+    "users.edit": true,
+  }
 };
 
 // ─── Hook ────────────────────────────────────────────────────
@@ -104,9 +110,17 @@ export function usePermissions() {
 
     const key = action ? `${sectionOrKey}.${action}` : sectionOrKey;
 
+    // Every user with a subscription can manage users (view, create, edit)
+    if (user.subscription_id && sectionOrKey === "users" && ["view", "create", "edit"].includes(action)) {
+      return true;
+    }
+    if (user.subscription_id && sectionOrKey === "users" && !action) {
+      return true; // for hasPermission("users")
+    }
+
     // Custom permissions stored on the user override role defaults
     if (user.permissions && typeof user.permissions === "object" && !Array.isArray(user.permissions)) {
-      return !!user.permissions[key];
+      if (user.permissions[key] !== undefined) return !!user.permissions[key];
     }
     // Legacy array support
     if (Array.isArray(user.permissions) && user.permissions.length > 0) {

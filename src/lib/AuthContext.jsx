@@ -91,7 +91,24 @@ export const AuthProvider = ({ children }) => {
     try {
       // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+      let currentUser = await base44.auth.me();
+      
+      // Process pending invites for new users without a subscription
+      if (currentUser && !currentUser.subscription_id) {
+        try {
+          const res = await base44.functions.invoke('claimInvite', {});
+          if (res.data?.success) {
+            currentUser = { 
+              ...currentUser, 
+              subscription_id: res.data.subscription_id, 
+              role: res.data.role 
+            };
+          }
+        } catch (e) {
+          console.error("Failed to process pending invite", e);
+        }
+      }
+
       setUser(currentUser);
       setIsAuthenticated(true);
       setIsLoadingAuth(false);

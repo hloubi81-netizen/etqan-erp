@@ -50,7 +50,7 @@ export default function SelectPlan() {
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
 
-    await base44.entities.Subscription.create({
+    const newSub = await base44.entities.Subscription.create({
       client_name: clientName.trim(),
       plan: selected,
       features: { ...preset.features },
@@ -60,6 +60,12 @@ export default function SelectPlan() {
       is_active: true,
       notes: selected === "free_trial" ? "تجربة مجانية 3 أشهر" : `اشتراك ${preset.label}`,
     });
+
+    try {
+      await base44.auth.updateMe({ subscription_id: newSub.id });
+    } catch (e) {
+      console.error("Failed to update user subscription_id", e);
+    }
 
     toast.success(`🎉 تم تفعيل اشتراك ${preset.label} بنجاح!`);
     setSaving(false);

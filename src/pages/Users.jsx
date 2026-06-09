@@ -63,31 +63,51 @@ export default function Users() {
 
   async function handleInvite() {
     if (!inviteEmail) return;
-    await base44.users.inviteUser(inviteEmail, inviteRole === "admin" ? "admin" : "user");
+    
+    try {
+      const currentUser = await base44.auth.me();
+      
+      // Save invite details if the user has a subscription
+      if (currentUser?.subscription_id) {
+        await base44.entities.PendingInvite.create({
+          email: inviteEmail.toLowerCase(),
+          subscription_id: currentUser.subscription_id,
+          role: inviteRole,
+        });
+      }
 
-    await base44.entities.Notification.create({
-      title: `تم إرسال دعوة إلى ${inviteEmail}`,
-      message: `تم إرسال بريد إلكتروني بالدعوة إلى ${inviteEmail}. سيظهر المستخدم في القائمة بعد قبوله للدعوة وإكمال تسجيله.`,
-      type: "معلومة",
-      related_module: "المستخدمون",
-      is_read: false,
-      trigger_date: new Date().toISOString().split("T")[0],
-    });
+      await base44.users.inviteUser(inviteEmail, inviteRole === "admin" ? "admin" : "user");
 
-    toast.success("تم إرسال الدعوة بنجاح");
-    setShowInvite(false);
-    setInviteEmail("");
+      await base44.entities.Notification.create({
+        title: `تم إرسال دعوة إلى ${inviteEmail}`,
+        message: `تم إرسال بريد إلكتروني بالدعوة إلى ${inviteEmail}. سيظهر المستخدم في القائمة بعد قبوله للدعوة وإكمال تسجيله.`,
+        type: "معلومة",
+        related_module: "المستخدمون",
+        is_read: false,
+        trigger_date: new Date().toISOString().split("T")[0],
+      });
+
+      toast.success("تم إرسال الدعوة بنجاح");
+      setShowInvite(false);
+      setInviteEmail("");
+    } catch (err) {
+      toast.error(err.message || "حدث خطأ أثناء إرسال الدعوة");
+    }
   }
 
   async function handleSavePermissions() {
     const originalUser = users.find(u => u.id === editUser.id);
-    await base44.entities.User.update(editUser.id, {
-      role: editUser.role,
-      permissions: editUser.permissions || {},
-      is_active: editUser.is_active,
-      department: editUser.department,
-      branch_id: editUser.branch_id || "",
-      branch_name: editUser.branch_name || "",
+    
+    await base44.functions.invoke('updateSubscriptionUser', {
+      userId: editUser.id,
+      updates: {
+        role: editUser.role,
+        permissions: editUser.permissions || {},
+        is_active: editUser.is_active,
+        department: editUser.department,
+        branch_id: editUser.branch_id || "",
+        branch_name: editUser.branch_name || "",
+      }
     });
 
     // تنبيه عند تغيير القسم
@@ -214,7 +234,9 @@ export default function Users() {
                 <Select value={inviteRole} onValueChange={setInviteRole}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                    {Object.entries(ROLE_LABELS)
+                      .filter(([k]) => isAdmin() || k !== "admin")
+                      .map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -242,7 +264,9 @@ export default function Users() {
                     <Select value={editUser.role || "user"} onValueChange={(v) => setEditUser({ ...editUser, role: v, permissions: v === "admin" ? {} : editUser.permissions })}>
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {Object.entries(ROLE_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                        {Object.entries(ROLE_LABELS)
+                          .filter(([k]) => isAdmin() || k !== "admin")
+                          .map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
