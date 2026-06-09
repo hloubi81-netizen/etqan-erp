@@ -24,9 +24,12 @@ export default function POS() {
   const [lastReceipt, setLastReceipt] = useState(null);
   const [scanMode, setScanMode] = useState(false);
   const [printers, setPrinters] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [activeGroup, setActiveGroup] = useState("all");
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
+    base44.entities.ProductGroup.list().then(setGroups);
     base44.entities.Printer.list().then(setPrinters);
     // تركيز تلقائي على خانة البحث عند فتح الشاشة
     setTimeout(() => searchRef.current?.focus(), 100);
@@ -58,8 +61,12 @@ export default function POS() {
   }
 
   const filtered = products.filter((p) =>
-    p.name?.includes(search) || p.item_code?.includes(search) || p.barcode?.includes(search)
+    (activeGroup === "all" || p.group_id === activeGroup) &&
+    (p.name?.includes(search) || p.item_code?.includes(search) || p.barcode?.includes(search))
   );
+
+  // المجموعات التي تحتوي على منتجات فقط
+  const groupsWithProducts = groups.filter((g) => products.some((p) => p.group_id === g.id));
 
   function addToCart(product, selectedUnit = null) {
     const unit = selectedUnit || getBaseUnit(product.units || [{ name: "قطعة", conversion_factor: 1 }]);
@@ -207,6 +214,34 @@ export default function POS() {
               <ScanBarcode className="h-3 w-3" />
               وضع المسح مفعّل — امسح الباركود الآن
             </p>
+          )}
+          {/* شريط المجموعات */}
+          {groupsWithProducts.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 mt-2">
+              <button
+                onClick={() => setActiveGroup("all")}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  activeGroup === "all"
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "bg-card border border-border text-muted-foreground hover:border-primary/50"
+                }`}
+              >
+                الكل
+              </button>
+              {groupsWithProducts.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setActiveGroup(g.id)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    activeGroup === g.id
+                      ? "bg-primary text-primary-foreground shadow"
+                      : "bg-card border border-border text-muted-foreground hover:border-primary/50"
+                  }`}
+                >
+                  {g.name}
+                </button>
+              ))}
+            </div>
           )}
         </div>
         {loading ? (
