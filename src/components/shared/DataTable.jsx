@@ -3,12 +3,13 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft } from "lucide-react";
 import EmptyState from "./EmptyState";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-export default function DataTable({ columns, data, onEdit, onDelete, emptyMessage, pageSize: defaultPageSize = 25 }) {
+export default function DataTable({ columns, data, onEdit, onDelete, emptyMessage, pageSize: defaultPageSize = 25, selectable = false, selectedIds = [], onSelectionChange = () => {} }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
 
@@ -27,6 +28,21 @@ export default function DataTable({ columns, data, onEdit, onDelete, emptyMessag
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
+              {selectable && (
+                <TableHead className="w-10">
+                  <Checkbox 
+                    checked={paginated.length > 0 && paginated.every(r => selectedIds.includes(r.id))}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const newIds = new Set([...selectedIds, ...paginated.map(r => r.id)]);
+                        onSelectionChange(Array.from(newIds));
+                      } else {
+                        onSelectionChange(selectedIds.filter(id => !paginated.some(r => r.id === id)));
+                      }
+                    }}
+                  />
+                </TableHead>
+              )}
               <TableHead className="text-right font-semibold text-xs w-10">#</TableHead>
               {columns.map((col) => (
                 <TableHead key={col.key} className="text-right font-semibold text-xs">{col.label}</TableHead>
@@ -39,6 +55,20 @@ export default function DataTable({ columns, data, onEdit, onDelete, emptyMessag
           <TableBody>
             {paginated.map((row, idx) => (
               <TableRow key={row.id || idx} className="hover:bg-muted/30 transition-colors">
+                {selectable && (
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedIds.includes(row.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          onSelectionChange([...selectedIds, row.id]);
+                        } else {
+                          onSelectionChange(selectedIds.filter(id => id !== row.id));
+                        }
+                      }}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="text-xs text-muted-foreground">{(page - 1) * pageSize + idx + 1}</TableCell>
                 {columns.map((col) => (
                   <TableCell key={col.key} className="text-sm">

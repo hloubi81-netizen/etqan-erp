@@ -5,7 +5,8 @@ import ProductForm from "../components/products/ProductForm";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GitBranch } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plus, GitBranch, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
 
@@ -18,6 +19,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const { filterByBranch, getDefaultBranchValues, isAdmin } = useBranchFilter();
 
   useEffect(() => {
@@ -69,6 +71,24 @@ export default function Products() {
     if (confirm("هل أنت متأكد من حذف هذه المادة؟")) {
       await base44.entities.Product.delete(product.id);
       toast.success("تم حذف المادة");
+      loadData();
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (confirm("هل أنت متأكد من حذف المواد المحددة؟")) {
+      await Promise.all(selectedIds.map(id => base44.entities.Product.delete(id)));
+      setSelectedIds([]);
+      toast.success("تم الحذف الجماعي بنجاح");
+      loadData();
+    }
+  }
+
+  async function handleBulkUpdateBranch(branchId) {
+    if (confirm("هل أنت متأكد من نقل المواد المحددة للفرع المختار؟")) {
+      await Promise.all(selectedIds.map(id => base44.entities.Product.update(id, { branch_id: branchId })));
+      setSelectedIds([]);
+      toast.success("تم النقل بنجاح");
       loadData();
     }
   }
@@ -148,12 +168,35 @@ export default function Products() {
         </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+          <span className="text-sm font-semibold ml-2">تم تحديد {selectedIds.length} عنصر</span>
+          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+            <Trash2 className="h-4 w-4 ml-1.5" />
+            حذف المحدد
+          </Button>
+          {isAdmin && branches.length > 0 && (
+            <Select onValueChange={handleBulkUpdateBranch}>
+              <SelectTrigger className="w-48 h-8 text-xs bg-background">
+                <SelectValue placeholder="نقل إلى فرع..." />
+              </SelectTrigger>
+              <SelectContent>
+                {branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={filteredProducts}
         onEdit={openEdit}
         onDelete={handleDelete}
         emptyMessage="لا توجد مواد بعد"
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
 
       {dialogOpen && (
