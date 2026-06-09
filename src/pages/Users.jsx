@@ -54,14 +54,19 @@ export default function Users() {
     try {
       const usersRes = await base44.functions.invoke('getAllUsers', {});
       setUsers(usersRes.data?.users || []);
-      
-      const brs = await base44.entities.Branch.list();
-      setBranches(brs);
     } catch (error) {
       console.error(error);
       toast.error("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
+    }
+
+    // تحميل الفروع بشكل مستقل - قد لا يملك بعض المستخدمين صلاحية قراءتها
+    try {
+      const brs = await base44.entities.Branch.list();
+      setBranches(brs || []);
+    } catch {
+      setBranches([]);
     }
   }
 
