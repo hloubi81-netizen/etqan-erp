@@ -43,7 +43,8 @@ function getMenuItems(lang) {
     { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
     { label: lang === 'ar' ? "شاشة البيع" : "POS Screen", path: "/pos", icon: ShoppingCart },
     { label: lang === 'ar' ? "سجل مبيعات نقطة البيع" : "POS History", path: "/pos/history", icon: Receipt },
-    { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag }]
+    { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag },
+    { label: lang === 'ar' ? "طلبات المتاجر الإلكترونية" : "E-com Orders", path: "/ecom-orders", icon: ShoppingCart }]
 
   },
 
@@ -158,7 +159,7 @@ function getMenuItems(lang) {
 const ITEM_FEATURES = {
   "/accounts": "accounting", "/currencies": "accounting", "/invoice-patterns": "accounting",
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices", "/invoices/sales-return": "invoices",
-  "/invoices/purchases-return": "invoices", "/invoices/opening-balance": "invoices",
+  "/invoices/purchases-return": "invoices", "/invoices/opening-balance": "invoices", "/ecom-orders": "invoices",
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/groups": "warehouses", "/products": "warehouses", "/warehouses": "warehouses",
@@ -181,6 +182,7 @@ const ITEM_PERMISSIONS = {
   "/currencies": "accounting", "/invoice-patterns": "accounting",
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices",
   "/invoices/sales-return": "invoices", "/invoices/purchases-return": "invoices",
+  "/ecom-orders": "invoices",
   "/invoices/opening-balance": "invoices", "/vouchers/receipt": "vouchers",
   "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
