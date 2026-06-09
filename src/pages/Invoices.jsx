@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Trash2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { ChevronDown, Trash2, CheckCircle } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
@@ -80,33 +81,21 @@ export default function Invoices() {
   }
 
   async function handleBulkDelete() {
-    if (confirm("هل أنت متأكد من حذف الفواتير المحددة؟")) {
-      await Promise.all(selectedIds.map(async id => {
-        const inv = invoices.find(i => i.id === id);
-        await base44.entities.Invoice.delete(id);
-        if (inv) {
-          await logActivity({ action: "حذف جماعي", documentType: "فاتورة", documentNumber: inv.invoice_number, documentSubtype: inv.pattern_type, documentId: inv.id, amount: inv.total, details: `حذف فاتورة ${inv.pattern_type}` });
-        }
-      }));
+    if (selectedIds.length === 0) return;
+    if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} فواتير؟`)) {
+      await Promise.all(selectedIds.map(id => base44.entities.Invoice.delete(id)));
+      toast.success("تم حذف الفواتير المحددة");
       setSelectedIds([]);
-      toast.success("تم الحذف الجماعي بنجاح");
       loadData();
     }
   }
 
-  async function handleBulkApprove() {
-    if (confirm("هل أنت متأكد من ترحيل الفواتير المحددة؟")) {
-      await Promise.all(selectedIds.map(async id => {
-        const inv = invoices.find(i => i.id === id);
-        if (inv && inv.status !== "مرحّلة") {
-          await base44.entities.Invoice.update(id, { status: "مرحّلة" });
-          await logActivity({ action: "ترحيل جماعي", documentType: "فاتورة", documentNumber: inv.invoice_number, documentSubtype: inv.pattern_type, documentId: inv.id, amount: inv.total, details: `ترحيل فاتورة ${inv.pattern_type}` });
-        }
-      }));
-      setSelectedIds([]);
-      toast.success("تم الترحيل الجماعي بنجاح");
-      loadData();
-    }
+  async function handleBulkStatus(status) {
+    if (selectedIds.length === 0) return;
+    await Promise.all(selectedIds.map(id => base44.entities.Invoice.update(id, { status })));
+    toast.success(`تم تغيير حالة الفواتير إلى ${status}`);
+    setSelectedIds([]);
+    loadData();
   }
 
   async function handleSave(data) {
@@ -154,33 +143,46 @@ export default function Invoices() {
         onAdd={canCreate("invoices") ? openNew : null}
         addLabel="فاتورة جديدة"
       />
+      
       {selectedIds.length > 0 && (
-        <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg border border-border">
-          <span className="text-sm font-semibold ml-2">تم تحديد {selectedIds.length} فاتورة</span>
-          {canDelete("invoices") && (
-            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
-              <Trash2 className="h-4 w-4 ml-1.5" />
-              حذف المحدد
-            </Button>
-          )}
-          {canEdit("invoices") && (
-            <Button variant="default" size="sm" onClick={handleBulkApprove}>
-              <CheckCircle2 className="h-4 w-4 ml-1.5" />
-              ترحيل الفواتير المحددة
-            </Button>
-          )}
+        <div className="mb-4 flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-9 gap-1">
+                إجراءات جماعية ({selectedIds.length})
+                <ChevronDown className="h-3.5 w-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleBulkStatus("مرحّلة")}>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                ترحيل المحدد
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleBulkStatus("مسودة")}>
+                <CheckCircle className="mr-2 h-4 w-4 text-muted-foreground" />
+                تغيير إلى مسودة
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleBulkDelete} className="text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                حذف المحدد
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
 
       <DataTable
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
         columns={columns}
         data={invoices}
         onEdit={canEdit("invoices") ? openEdit : null}
         onDelete={canDelete("invoices") ? handleDelete : null}
         emptyMessage="لا توجد فواتير"
-        selectable={true}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
       />
 
       {/* Pattern Picker Dialog */}

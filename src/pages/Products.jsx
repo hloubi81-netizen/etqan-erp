@@ -5,9 +5,10 @@ import ProductForm from "../components/products/ProductForm";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Plus, GitBranch, Trash2 } from "lucide-react";
+import { Plus, GitBranch, ChevronDown, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
 
 export default function Products() {
@@ -76,21 +77,22 @@ export default function Products() {
   }
 
   async function handleBulkDelete() {
-    if (confirm("هل أنت متأكد من حذف المواد المحددة؟")) {
+    if (selectedIds.length === 0) return;
+    if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} مواد؟`)) {
       await Promise.all(selectedIds.map(id => base44.entities.Product.delete(id)));
+      toast.success("تم حذف المواد المحددة");
       setSelectedIds([]);
-      toast.success("تم الحذف الجماعي بنجاح");
       loadData();
     }
   }
 
-  async function handleBulkUpdateBranch(branchId) {
-    if (confirm("هل أنت متأكد من نقل المواد المحددة للفرع المختار؟")) {
-      await Promise.all(selectedIds.map(id => base44.entities.Product.update(id, { branch_id: branchId })));
-      setSelectedIds([]);
-      toast.success("تم النقل بنجاح");
-      loadData();
-    }
+  async function handleBulkBranch(branchId) {
+    if (selectedIds.length === 0) return;
+    const branchName = branches.find(b => b.id === branchId)?.name || "";
+    await Promise.all(selectedIds.map(id => base44.entities.Product.update(id, { branch_id: branchId, branch_name: branchName })));
+    toast.success("تم نقل المواد المحددة للفرع");
+    setSelectedIds([]);
+    loadData();
   }
 
   // First apply branch security filter (non-admins see only their branch)
@@ -158,6 +160,39 @@ export default function Products() {
               { key: "retail_price", label: "سعر المستهلك", type: "number" },
             ]}
           />
+          {selectedIds.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-9 gap-1">
+                  إجراءات جماعية ({selectedIds.length})
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleBulkDelete} className="text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  حذف المحدد
+                </DropdownMenuItem>
+                {isAdmin && branches.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>نقل إلى فرع</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => handleBulkBranch("")}>
+                      كل الفروع (عام)
+                    </DropdownMenuItem>
+                    {branches.map(b => (
+                      <DropdownMenuItem key={b.id} onClick={() => handleBulkBranch(b.id)}>
+                        {b.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <button
             onClick={openNew}
             className="inline-flex items-center gap-2 h-9 px-4 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -168,35 +203,15 @@ export default function Products() {
         </div>
       </div>
 
-      {selectedIds.length > 0 && (
-        <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg border border-border">
-          <span className="text-sm font-semibold ml-2">تم تحديد {selectedIds.length} عنصر</span>
-          <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
-            <Trash2 className="h-4 w-4 ml-1.5" />
-            حذف المحدد
-          </Button>
-          {isAdmin && branches.length > 0 && (
-            <Select onValueChange={handleBulkUpdateBranch}>
-              <SelectTrigger className="w-48 h-8 text-xs bg-background">
-                <SelectValue placeholder="نقل إلى فرع..." />
-              </SelectTrigger>
-              <SelectContent>
-                {branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      )}
-
       <DataTable
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
         columns={columns}
         data={filteredProducts}
         onEdit={openEdit}
         onDelete={handleDelete}
         emptyMessage="لا توجد مواد بعد"
-        selectable={true}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
       />
 
       {dialogOpen && (
