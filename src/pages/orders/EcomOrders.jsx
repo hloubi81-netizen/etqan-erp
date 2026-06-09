@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShoppingCart } from "lucide-react";
+import { RefreshCw, ShoppingCart, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function EcomOrders() {
@@ -75,6 +76,12 @@ export default function EcomOrders() {
       />
 
       <div className="flex justify-end mb-4 gap-2">
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/store-connections">
+            <Settings className="w-4 h-4" />
+            إعدادات المتاجر
+          </Link>
+        </Button>
         <Button onClick={syncOrders} disabled={syncing} className="gap-2">
           <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
           مزامنة الطلبات الآن
