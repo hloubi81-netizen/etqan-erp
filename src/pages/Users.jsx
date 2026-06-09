@@ -235,7 +235,7 @@ export default function Users() {
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(ROLE_LABELS)
-                      .filter(([k]) => isAdmin() || k !== "admin")
+                      .filter(([k]) => isAdmin || k !== "admin")
                       .map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -265,7 +265,7 @@ export default function Users() {
                       <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {Object.entries(ROLE_LABELS)
-                          .filter(([k]) => isAdmin() || k !== "admin")
+                          .filter(([k]) => isAdmin || k !== "admin")
                           .map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>
                     </Select>
