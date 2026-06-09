@@ -52,6 +52,7 @@ import ExpiryTracking from './pages/inventory/ExpiryTracking';
 import BarcodeManagement from './pages/inventory/BarcodeManagement';
 import ActivityLogPage from './pages/reports/ActivityLog';
 import PurchaseOrders from './pages/orders/PurchaseOrders';
+import EcomOrders from './pages/orders/EcomOrders';
 import BudgetManagement from './pages/budget/BudgetManagement';
 import CRM from './pages/crm/CRM';
 import NotificationsCenter from './pages/notifications/NotificationsCenter';
@@ -133,6 +134,7 @@ const AuthenticatedApp = () => {
         <Route path="/inventory/barcode" element={<BarcodeManagement />} />
         <Route path="/reports/activity-log" element={<ActivityLogPage />} />
         <Route path="/orders" element={<PurchaseOrders />} />
+        <Route path="/ecom-orders" element={<EcomOrders />} />
         <Route path="/budget" element={<BudgetManagement />} />
         <Route path="/crm" element={<CRM />} />
         <Route path="/notifications" element={<NotificationsCenter />} />
