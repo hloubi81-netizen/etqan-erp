@@ -1,7 +1,11 @@
 import { Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 
-export default function EmptyState({ icon: Icon = Inbox, title = "لا توجد بيانات", desc, action, actionLabel }) {
+export default function EmptyState({ icon: Icon = Inbox, title, desc, action, actionLabel }) {
+  const { lang } = useLang() || { lang: "ar" };
+  title = title || tr("noData", lang);
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
       <div className="h-16 w-16 rounded-2xl bg-muted/60 flex items-center justify-center">

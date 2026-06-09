@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { FileDown, FileText, Printer } from "lucide-react";
 import { exportToCSV, exportToPDF, printElement } from "@/utils/exportUtils";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 
 export default function ExportButtons({ columns, data, title, filename, printId }) {
+  const { lang } = useLang() || { lang: "ar" };
   return (
     <div className="flex items-center gap-2">
       <Button
@@ -31,7 +34,7 @@ export default function ExportButtons({ columns, data, title, filename, printId 
           onClick={() => printElement(printId, title)}
         >
           <Printer className="h-3.5 w-3.5" />
-          طباعة
+          {tr("print", lang)}
         </Button>
       )}
     </div>

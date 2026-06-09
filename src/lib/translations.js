@@ -113,6 +113,12 @@ export const t = {
   // Permission denied
   permissionDenied: { ar: "ليس لديك صلاحية الوصول لهذه الصفحة", en: "You don't have permission to access this page" },
   contactAdmin: { ar: "يرجى التواصل مع المدير", en: "Please contact your administrator" },
+
+  // Tables & exports
+  print: { ar: "طباعة", en: "Print" },
+  show: { ar: "عرض", en: "Show" },
+  of: { ar: "من", en: "of" },
+  record: { ar: "سجل", en: "records" },
 };
 
 export function tr(key, lang) {

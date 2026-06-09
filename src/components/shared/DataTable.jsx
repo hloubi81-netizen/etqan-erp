@@ -6,15 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft } from "lucide-react";
 import EmptyState from "./EmptyState";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 export default function DataTable({ columns, data, onEdit, onDelete, emptyMessage, pageSize: defaultPageSize = 25, selectable = false, selectedIds = [], onSelectionChange = () => {} }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
+  const { lang } = useLang() || { lang: "ar" };
 
   if (!data || data.length === 0) {
-    return <div className="bg-card rounded-xl border border-border"><EmptyState title={emptyMessage || "لا توجد بيانات"} /></div>;
+    return <div className="bg-card rounded-xl border border-border"><EmptyState title={emptyMessage || tr("noData", lang)} /></div>;
   }
 
   const totalPages = Math.ceil(data.length / pageSize);
@@ -48,7 +51,7 @@ export default function DataTable({ columns, data, onEdit, onDelete, emptyMessag
                 <TableHead key={col.key} className="text-right font-semibold text-xs">{col.label}</TableHead>
               ))}
               {(onEdit || onDelete) && (
-                <TableHead className="text-right font-semibold text-xs w-24">إجراءات</TableHead>
+                <TableHead className="text-right font-semibold text-xs w-24">{tr("actions", lang)}</TableHead>
               )}
             </TableRow>
           </TableHeader>
@@ -101,7 +104,7 @@ export default function DataTable({ columns, data, onEdit, onDelete, emptyMessag
       {data.length > PAGE_SIZE_OPTIONS[0] && (
         <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/20 gap-2 flex-wrap">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>عرض</span>
+            <span>{tr("show", lang)}</span>
             <select
               value={pageSize}
               onChange={e => { setPageSize(+e.target.value); setPage(1); }}
@@ -109,7 +112,7 @@ export default function DataTable({ columns, data, onEdit, onDelete, emptyMessag
             >
               {PAGE_SIZE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
-            <span>من {data.length} سجل</span>
+            <span>{tr("of", lang)} {data.length} {tr("record", lang)}</span>
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => goTo(1)} disabled={page === 1}>

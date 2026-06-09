@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useLang } from "@/hooks/useLang.jsx";
+import { tr } from "@/lib/translations";
 
 export default function PageHeader({ title, subtitle, onAdd, addLabel }) {
+  const { lang } = useLang() || { lang: "ar" };
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
       <div>
@@ -11,7 +14,7 @@ export default function PageHeader({ title, subtitle, onAdd, addLabel }) {
       {onAdd && (
         <Button onClick={onAdd} className="gap-2">
           <Plus className="h-4 w-4" />
-          {addLabel || "إضافة جديد"}
+          {addLabel || tr("addNew", lang)}
         </Button>
       )}
     </div>
