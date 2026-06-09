@@ -85,11 +85,15 @@ const SubscriptionContext = createContext(null);
 
 export function SubscriptionProvider({ children }) {
   const [subscription, setSubscription] = useState(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
 
   useEffect(() => {
     base44.entities.Subscription.filter({ is_active: true }, "-created_date", 1)
-      .then(list => { if (list.length > 0) setSubscription(list[0]); })
-      .catch(() => {});
+      .then(list => {
+        if (list.length > 0) setSubscription(list[0]);
+        setSubscriptionLoaded(true);
+      })
+      .catch(() => { setSubscriptionLoaded(true); });
   }, []);
 
   function hasFeature(key) {
@@ -98,7 +102,7 @@ export function SubscriptionProvider({ children }) {
   }
 
   return (
-    <SubscriptionContext.Provider value={{ subscription, hasFeature }}>
+    <SubscriptionContext.Provider value={{ subscription, hasFeature, subscriptionLoaded }}>
       {children}
     </SubscriptionContext.Provider>
   );

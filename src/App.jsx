@@ -64,6 +64,7 @@ import About from './pages/About';
 import UserGuide from './pages/UserGuide';
 import Contact from './pages/Contact';
 import Messages from './pages/Messages';
+import SelectPlan from './pages/SelectPlan';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -144,6 +145,7 @@ const AuthenticatedApp = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/messages" element={<Messages />} />
+        <Route path="/select-plan" element={<SelectPlan />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLang } from "@/hooks/useLang.jsx";
+import { useSubscription } from "@/hooks/useSubscription.jsx";
+import { useAuth } from "@/lib/AuthContext";
 import { tr } from "@/lib/translations";
 import {
   Package, Receipt, FileText, Warehouse, DollarSign,
@@ -61,11 +63,21 @@ const TYPE_COLORS = {
 export default function Dashboard() {
   const { lang, fNum, fCur } = useLang();
   const l = (key) => tr(key, lang);
+  const { subscription, subscriptionLoaded } = useSubscription();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [stats, setStats] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Redirect new users without a subscription to select a plan
+  useEffect(() => {
+    if (subscriptionLoaded && !subscription && user?.role !== "admin") {
+      navigate("/select-plan");
+    }
+  }, [subscriptionLoaded, subscription, user]);
 
   const loadData = async (silent = false) => {
     if (silent) setRefreshing(true);
