@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
@@ -24,6 +25,7 @@ export default function AccountStatement() {
   const [vouchers, setVouchers] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [filters, setFilters] = useState({ account_id: "", date_from: "", date_to: "", movement_type: "الكل" });
+  const [isDetailed, setIsDetailed] = useState(false);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hasForeignCurrency, setHasForeignCurrency] = useState(false);
@@ -79,6 +81,26 @@ export default function AccountStatement() {
         debitLocal: isDebit ? total * rate : 0,
         creditLocal: isDebit ? 0 : total * rate,
       });
+
+      if (isDetailed && inv.items && inv.items.length > 0) {
+        inv.items.forEach(item => {
+          movements.push({
+            date: inv.date,
+            type: "بند فاتورة",
+            number: `${item.product_name} (${item.quantity} ${item.unit || ""} × ${item.price})`,
+            currency: inv.currency,
+            exchangeRate: rate,
+            debit: 0,
+            credit: 0,
+            debitLocal: 0,
+            creditLocal: 0,
+            isDetail: true,
+            isDebitItem: isDebit,
+            total: item.total || 0,
+            totalLocal: (item.total || 0) * rate
+          });
+        });
+      }
     });
 
     // Vouchers
@@ -185,7 +207,11 @@ export default function AccountStatement() {
               <Label className="text-xs">إلى تاريخ</Label>
               <Input className="h-9" type="date" value={filters.date_to} onChange={(e) => setFilters({ ...filters, date_to: e.target.value })} />
             </div>
-            <div className="flex items-end">
+            <div className="flex flex-col justify-end gap-2">
+              <div className="flex items-center gap-2">
+                <Checkbox id="isDetailed" checked={isDetailed} onCheckedChange={setIsDetailed} />
+                <Label htmlFor="isDetailed" className="text-xs cursor-pointer whitespace-nowrap">كشف تفصيلي (إظهار البنود)</Label>
+              </div>
               <Button size="sm" onClick={generateReport} className="w-full"><Search className="h-4 w-4 ml-1" /> عرض</Button>
             </div>
           </div>
@@ -225,21 +251,28 @@ export default function AccountStatement() {
             </TableHeader>
             <TableBody>
               {results.map((r, i) => {
+                const isDetail = r.isDetail;
                 const debit = showInLocal && hasForeignCurrency ? r.debitLocal : r.debit;
                 const credit = showInLocal && hasForeignCurrency ? r.creditLocal : r.credit;
                 const balance = showInLocal && hasForeignCurrency ? r.balanceLocal : r.balance;
+                const itemTotal = showInLocal && hasForeignCurrency ? r.totalLocal : r.total;
+
                 return (
-                  <TableRow key={i}>
-                    <TableCell className="text-sm">{r.date}</TableCell>
-                    <TableCell className="text-sm">{r.type}</TableCell>
-                    <TableCell className="text-sm">{r.number}</TableCell>
+                  <TableRow key={i} className={isDetail ? "bg-muted/30" : ""}>
+                    <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : ""}`}>{!isDetail ? r.date : ""}</TableCell>
+                    <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : ""}`}>{isDetail ? `↳ ${r.type}` : r.type}</TableCell>
+                    <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : ""}`}>{r.number}</TableCell>
                     {!showInLocal && hasForeignCurrency && (
-                      <TableCell className="text-sm text-muted-foreground">{r.currency || "-"}</TableCell>
+                      <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : ""}`}>{!isDetail ? (r.currency || "-") : ""}</TableCell>
                     )}
-                    <TableCell className="text-sm text-green-600 font-medium">{debit > 0 ? debit.toLocaleString() : ""}</TableCell>
-                    <TableCell className="text-sm text-red-500 font-medium">{credit > 0 ? credit.toLocaleString() : ""}</TableCell>
+                    <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : "text-green-600 font-medium"}`}>
+                      {isDetail ? (r.isDebitItem && itemTotal > 0 ? itemTotal.toLocaleString() : "") : (debit > 0 ? debit.toLocaleString() : "")}
+                    </TableCell>
+                    <TableCell className={`text-sm ${isDetail ? "text-muted-foreground" : "text-red-500 font-medium"}`}>
+                      {isDetail ? (!r.isDebitItem && itemTotal > 0 ? itemTotal.toLocaleString() : "") : (credit > 0 ? credit.toLocaleString() : "")}
+                    </TableCell>
                     <TableCell className={`text-sm font-bold ${balance >= 0 ? "text-green-600" : "text-red-500"}`}>
-                      {balance.toLocaleString()}
+                      {!isDetail ? balance.toLocaleString() : ""}
                     </TableCell>
                   </TableRow>
                 );
