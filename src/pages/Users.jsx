@@ -50,13 +50,18 @@ export default function Users() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [usersRes, brs] = await Promise.all([
-      base44.functions.invoke('getAllUsers', {}),
-      base44.entities.Branch.list(),
-    ]);
-    setUsers(usersRes.data?.users || []);
-    setBranches(brs);
-    setLoading(false);
+    try {
+      const usersRes = await base44.functions.invoke('getAllUsers', {});
+      setUsers(usersRes.data?.users || []);
+      
+      const brs = await base44.entities.Branch.list();
+      setBranches(brs);
+    } catch (error) {
+      console.error(error);
+      toast.error("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function loadUsers() { loadData(); }
