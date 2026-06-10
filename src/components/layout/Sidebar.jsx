@@ -27,6 +27,7 @@ function getMenuItems(lang) {
     children: [
     { label: l('groups'), path: "/groups", icon: FolderTree },
     { label: l('products'), path: "/products", icon: Package },
+    { label: lang === 'ar' ? "الخدمات" : "Services", path: "/services", icon: Wrench },
     { label: l('warehouses'), path: "/warehouses", icon: WarehouseIcon },
     { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
     { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },

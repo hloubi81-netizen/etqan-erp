@@ -70,6 +70,7 @@ import UserGuide from './pages/UserGuide';
 import Contact from './pages/Contact';
 import Messages from './pages/Messages';
 import SelectPlan from './pages/SelectPlan';
+import Services from './pages/Services';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -97,6 +98,7 @@ const AuthenticatedApp = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/products" element={<Products />} />
+        <Route path="/services" element={<Services />} />
         <Route path="/warehouses" element={<Warehouses />} />
         <Route path="/cost-centers" element={<CostCenters />} />
         <Route path="/accounts" element={<Accounts />} />
