@@ -76,6 +76,10 @@
       "type": "string",
       "title": "\u0627\u0644\u0645\u0633\u0624\u0648\u0644"
     },
+    "subscription_id": {
+      "type": "string",
+      "title": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -95,36 +99,18 @@
   ],
   "rls": {
     "create": {
-      "created_by_id": "{{user.id}}"
+      "data.subscription_id": "{{user.subscription_id}}"
     },
     "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.subscription_id": "{{user.subscription_id}}"
     },
     "update": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.subscription_id": "{{user.subscription_id}}"
     },
     "delete": {
-      "$or": [
+      "$and": [
         {
-          "created_by_id": "{{user.id}}"
+          "data.subscription_id": "{{user.subscription_id}}"
         },
         {
           "user_condition": {

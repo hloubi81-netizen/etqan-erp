@@ -17,6 +17,7 @@ import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import { SkeletonCard } from "@/components/shared/SkeletonLoader";
 import CurrencySelector from "@/components/dashboard/CurrencySelector";
 import BranchMonthlyReport from "@/components/dashboard/BranchMonthlyReport";
+import SubscriptionSummary from "@/components/dashboard/SubscriptionSummary";
 
 function StatCard({ icon: Icon, label, value, sub, color, loading }) {
   if (loading) return <SkeletonCard />;
@@ -129,6 +130,7 @@ export default function Dashboard() {
       </div>
 
       <CurrencySelector />
+      <SubscriptionSummary />
       <AlertsPanel lang={lang} />
 
       {/* Financial KPIs */}
