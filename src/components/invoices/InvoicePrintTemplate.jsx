@@ -246,18 +246,30 @@ export default function InvoicePrintTemplate({ invoice, open, onClose }) {
                   </p>
                   {invoice.approved_by ? (
                     <div className="flex flex-col items-center gap-1">
-                      <div
-                        className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-md"
-                        style={{ background: "#16a34a" }}
-                      >
-                        ✓
-                      </div>
-                      <p className="text-xs font-semibold text-green-700 mt-1">معتمد</p>
-                      <p className="text-[10px] text-gray-500">{invoice.approved_by}</p>
+                      {invoice.approval_signature ? (
+                        <img
+                          src={invoice.approval_signature}
+                          alt="توقيع إلكتروني"
+                          style={{ height: 64, maxWidth: 160, objectFit: "contain" }}
+                          className="border border-gray-200 rounded bg-white"
+                        />
+                      ) : (
+                        <div
+                          className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-md"
+                          style={{ background: "#16a34a" }}
+                        >
+                          ✓
+                        </div>
+                      )}
+                      <p className="text-xs font-semibold text-green-700 mt-1">معتمد رسمياً</p>
+                      <p className="text-[10px] text-gray-600 font-medium">{invoice.approved_by}</p>
                       {invoice.approved_at && (
                         <p className="text-[10px] text-gray-400">
                           {new Date(invoice.approved_at).toLocaleDateString("ar-EG")}
                         </p>
+                      )}
+                      {invoice.approval_note && (
+                        <p className="text-[10px] text-gray-400 italic">"{invoice.approval_note}"</p>
                       )}
                     </div>
                   ) : (

@@ -13,7 +13,9 @@ import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
 import ArchiveButton from "@/components/shared/ArchiveButton";
 import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import { exportToExcel } from "@/utils/exportUtils";
-import { CheckCircle, Trash2, FileSpreadsheet, Archive } from "lucide-react";
+import { CheckCircle, Trash2, FileSpreadsheet, Archive, ShieldCheck } from "lucide-react";
+import VoucherApprovalDialog from "@/components/vouchers/VoucherApprovalDialog";
+import { Button } from "@/components/ui/button";
 
 const TYPE_MAP = {
   receipt: "سند قبض",
@@ -32,6 +34,7 @@ export default function Vouchers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [approvalTarget, setApprovalTarget] = useState(null);
   const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
 
   const filteredVouchers = useMemo(() => {
@@ -161,6 +164,26 @@ export default function Vouchers() {
     { key: "_archive", label: "", render: (_, row) => (
       <ArchiveButton entity="Voucher" record={row} onDone={loadData} />
     )},
+    { key: "_approval", label: "الاعتماد", render: (_, row) => (
+      <div className="flex items-center gap-1.5">
+        {row.approved_by ? (
+          <span className="text-xs text-emerald-600 font-medium flex items-center gap-1">
+            <ShieldCheck className="h-3.5 w-3.5" />{row.approved_by}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-foreground">—</span>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs gap-1 text-emerald-700 hover:bg-emerald-50"
+          onClick={(e) => { e.stopPropagation(); setApprovalTarget(row); }}
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          {row.approved_by ? "إدارة" : "اعتماد"}
+        </Button>
+      </div>
+    )},
   ];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
@@ -199,6 +222,15 @@ export default function Vouchers() {
           onSave={handleSave}
           voucher={editing}
           voucherType={voucherType}
+        />
+      )}
+
+      {approvalTarget && (
+        <VoucherApprovalDialog
+          voucher={approvalTarget}
+          open={!!approvalTarget}
+          onClose={() => setApprovalTarget(null)}
+          onDone={loadData}
         />
       )}
     </div>
