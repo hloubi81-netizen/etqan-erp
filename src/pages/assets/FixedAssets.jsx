@@ -4,71 +4,69 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Plus, Building2, TrendingDown, CheckCircle, AlertCircle,
-  LayoutGrid, List, MapPin, Filter, Search
+  Plus, Building2, TrendingDown, CheckCircle, RefreshCw,
+  Search, MapPin, LayoutGrid, List, AlertCircle, ShieldAlert
 } from "lucide-react";
 import { toast } from "sonner";
 import AssetForm from "@/components/assets/AssetForm";
 import AssetCard from "@/components/assets/AssetCard";
 
 const CATEGORIES = ["الكل", "مباني", "آلات ومعدات", "سيارات", "أثاث ومفروشات", "أجهزة حاسوب", "أصول أخرى"];
+const STATUSES   = ["الكل", "نشط", "تحت الصيانة", "مستهلك بالكامل", "مباع", "مسقط"];
 
 export default function FixedAssets() {
-  const [assets, setAssets] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  const [depOpen, setDepOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [depAsset, setDepAsset] = useState(null);
-  const [depDate, setDepDate] = useState(new Date().toISOString().split("T")[0]);
-  const [depNotes, setDepNotes] = useState("");
-  const [view, setView] = useState("grid");
-  const [search, setSearch] = useState("");
+  const [assets, setAssets]       = useState([]);
+  const [branches, setBranches]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [formOpen, setFormOpen]   = useState(false);
+  const [editing, setEditing]     = useState(null);
+  const [depOpen, setDepOpen]     = useState(false);
+  const [depAsset, setDepAsset]   = useState(null);
+  const [depDate, setDepDate]     = useState(new Date().toISOString().split("T")[0]);
+  const [depNotes, setDepNotes]   = useState("");
+  const [viewMode, setViewMode]   = useState("grid");
+
+  // Filters
+  const [search, setSearch]         = useState("");
   const [filterBranch, setFilterBranch] = useState("الكل");
   const [filterCategory, setFilterCategory] = useState("الكل");
-  const [filterStatus, setFilterStatus] = useState("الكل");
+  const [filterStatus, setFilterStatus]   = useState("الكل");
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
+    setLoading(true);
     const [a, br] = await Promise.all([
       base44.entities.FixedAsset.list("-purchase_date"),
-      base44.entities.Branch.list(),
+      base44.entities.Branch.list()
     ]);
     setAssets(a); setBranches(br); setLoading(false);
   }
 
-  function openAdd() { setEditing(null); setFormOpen(true); }
-  function openEdit(asset) { setEditing(asset); setFormOpen(true); }
+  function openAdd()        { setEditing(null); setFormOpen(true); }
+  function openEdit(asset)  { setEditing(asset); setFormOpen(true); }
 
   async function handleSave(data) {
-    const annual = calcDepreciation(data);
-    const record = {
-      ...data,
-      annual_depreciation: annual,
-      net_book_value: Math.max(0, (data.purchase_cost || 0) - (data.accumulated_depreciation || 0)),
-    };
     if (editing) {
-      await base44.entities.FixedAsset.update(editing.id, record);
+      await base44.entities.FixedAsset.update(editing.id, data);
+      setAssets(p => p.map(a => a.id === editing.id ? { ...a, ...data } : a));
       toast.success("تم تحديث بيانات الأصل");
     } else {
-      await base44.entities.FixedAsset.create(record);
+      const created = await base44.entities.FixedAsset.create(data);
+      setAssets(p => [created, ...p]);
       toast.success("تم تسجيل الأصل بنجاح ✅");
     }
     setFormOpen(false);
-    loadData();
   }
 
   async function handleDelete(id) {
-    if (!confirm("حذف هذا الأصل نهائياً؟")) return;
+    if (!confirm("هل أنت متأكد من حذف هذا الأصل؟")) return;
     await base44.entities.FixedAsset.delete(id);
-    setAssets((p) => p.filter((a) => a.id !== id));
+    setAssets(p => p.filter(a => a.id !== id));
     toast.success("تم الحذف");
   }
 
@@ -79,8 +77,10 @@ export default function FixedAssets() {
   }
 
   async function postDepreciation() {
+    if (!depAsset) return;
     if (!depAsset.depreciation_account_id || !depAsset.accumulated_account_id) {
-      toast.error("يجب تحديد حسابات الإهلاك في بيانات الأصل أولاً"); return;
+      toast.error("يجب تحديد حساب الإهلاك وحساب مجمع الإهلاك أولاً");
+      return;
     }
     const amount = depAsset.annual_depreciation || 0;
     if (amount <= 0) { toast.error("مبلغ الإهلاك يجب أن يكون أكبر من صفر"); return; }
@@ -105,41 +105,36 @@ export default function FixedAssets() {
       net_book_value: newNBV,
       status: newStatus,
     });
-    loadData();
+    setAssets(p => p.map(a => a.id === depAsset.id
+      ? { ...a, accumulated_depreciation: newAccumulated, net_book_value: newNBV, status: newStatus }
+      : a));
     toast.success(`تم ترحيل قيد الإهلاك بمبلغ ${amount.toLocaleString()}`);
     setDepOpen(false);
   }
 
-  function calcDepreciation(form) {
-    const cost = parseFloat(form.purchase_cost) || 0;
-    const salvage = parseFloat(form.salvage_value) || 0;
-    const life = parseFloat(form.useful_life_years) || 1;
-    if (form.depreciation_method === "القسط الثابت") return parseFloat(((cost - salvage) / life).toFixed(2));
-    const rate = 2 / life;
-    const nbv = cost - (parseFloat(form.accumulated_depreciation) || 0);
-    return parseFloat((nbv * rate).toFixed(2));
-  }
-
-  // Filtered assets
-  const filtered = assets.filter((a) => {
-    const matchSearch = !search || a.name?.includes(search) || a.asset_number?.includes(search) || a.serial_number?.includes(search) || a.supplier_name?.includes(search);
+  // ── Filtered assets ──
+  const filtered = assets.filter(a => {
+    const matchSearch = !search || a.name?.includes(search) || a.asset_number?.includes(search) || a.responsible_party?.includes(search);
     const matchBranch = filterBranch === "الكل" || a.branch_name === filterBranch;
-    const matchCat = filterCategory === "الكل" || a.category === filterCategory;
+    const matchCat    = filterCategory === "الكل" || a.category === filterCategory;
     const matchStatus = filterStatus === "الكل" || a.status === filterStatus;
     return matchSearch && matchBranch && matchCat && matchStatus;
   });
 
-  // KPIs
-  const totalCost = assets.reduce((s, a) => s + (a.purchase_cost || 0), 0);
-  const totalNBV = assets.reduce((s, a) => s + (a.net_book_value || 0), 0);
-  const totalDep = assets.reduce((s, a) => s + (a.accumulated_depreciation || 0), 0);
-  const activeCount = assets.filter((a) => a.status === "نشط").length;
-  const maintenanceDue = assets.filter((a) =>
-    a.next_maintenance_date && new Date(a.next_maintenance_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  ).length;
+  // ── KPIs ──
+  const totalCost       = assets.reduce((s, a) => s + (a.purchase_cost || 0), 0);
+  const totalNBV        = assets.reduce((s, a) => s + (a.net_book_value || 0), 0);
+  const totalDepreciated = assets.reduce((s, a) => s + (a.accumulated_depreciation || 0), 0);
+  const activeCount     = assets.filter(a => a.status === "نشط").length;
+  const maintenanceDue  = assets.filter(a => a.next_maintenance_date && new Date(a.next_maintenance_date) <= new Date()).length;
 
-  const branchNames = ["الكل", ...new Set(assets.map(a => a.branch_name).filter(Boolean))];
-  const nextNumber = String(assets.length + 1).padStart(4, "0");
+  // ── Branch distribution ──
+  const branchGroups = branches.map(br => ({
+    name: br.name,
+    count: assets.filter(a => a.branch_id === br.id).length,
+    value: assets.filter(a => a.branch_id === br.id).reduce((s, a) => s + (a.net_book_value || 0), 0),
+  })).filter(b => b.count > 0);
+  const unassigned = assets.filter(a => !a.branch_id).length;
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -152,134 +147,164 @@ export default function FixedAssets() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">الأصول الثابتة</h1>
-          <p className="text-sm text-muted-foreground">تسجيل وتتبع أصول الشركة عبر الفروع</p>
+          <h1 className="text-2xl font-bold">سجل الأصول الثابتة</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">تسجيل وتتبع ممتلكات الشركة عبر الفروع</p>
         </div>
-        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" />تسجيل أصل جديد</Button>
+        <Button onClick={openAdd} className="gap-2">
+          <Plus className="h-4 w-4" /> تسجيل أصل جديد
+        </Button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
-          { label: "إجمالي التكلفة", value: totalCost.toLocaleString(), icon: "💰", bg: "bg-blue-50 border-blue-100", text: "text-blue-700" },
-          { label: "القيمة الدفترية", value: totalNBV.toLocaleString(), icon: "📊", bg: "bg-green-50 border-green-100", text: "text-green-700" },
-          { label: "الإهلاك المتراكم", value: totalDep.toLocaleString(), icon: "📉", bg: "bg-orange-50 border-orange-100", text: "text-orange-700" },
-          { label: "أصول نشطة", value: activeCount, icon: "✅", bg: "bg-emerald-50 border-emerald-100", text: "text-emerald-700" },
-          { label: "صيانة مستحقة", value: maintenanceDue, icon: "🔧", bg: maintenanceDue > 0 ? "bg-amber-50 border-amber-200" : "bg-slate-50 border-slate-100", text: maintenanceDue > 0 ? "text-amber-700" : "text-slate-600" },
-        ].map(({ label, value, icon, bg, text }) => (
-          <Card key={label} className={`border ${bg}`}>
+          { label: "إجمالي التكلفة",    value: totalCost.toLocaleString(),        Ic: Building2,    bg: "bg-blue-600" },
+          { label: "القيمة الدفترية",    value: totalNBV.toLocaleString(),         Ic: CheckCircle,  bg: "bg-emerald-600" },
+          { label: "الإهلاك المتراكم",   value: totalDepreciated.toLocaleString(), Ic: TrendingDown, bg: "bg-orange-500" },
+          { label: "أصول نشطة",          value: `${activeCount} أصل`,             Ic: RefreshCw,    bg: "bg-purple-600" },
+          { label: "صيانة مستحقة",       value: `${maintenanceDue} أصل`,          Ic: AlertCircle,  bg: maintenanceDue > 0 ? "bg-red-500" : "bg-slate-400" },
+        ].map(({ label, value, Ic, bg }) => (
+          <Card key={label}>
             <CardContent className="p-3 flex items-center gap-3">
-              <span className="text-2xl">{icon}</span>
+              <div className={`h-9 w-9 ${bg} rounded-lg flex items-center justify-center shrink-0`}>
+                <Ic className="h-4 w-4 text-white" />
+              </div>
               <div>
                 <p className="text-xs text-muted-foreground">{label}</p>
-                <p className={`text-lg font-bold ${text}`}>{value}</p>
+                <p className="text-sm font-bold">{value}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {/* Branch Distribution */}
+      {branchGroups.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" /> توزيع الأصول على الفروع
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {branchGroups.map(b => (
+                <div key={b.name} className="flex items-center gap-2 bg-muted/40 border rounded-lg px-3 py-2 text-xs">
+                  <span className="font-semibold">{b.name}</span>
+                  <Badge variant="secondary" className="text-xs">{b.count} أصل</Badge>
+                  <span className="text-muted-foreground">{b.value.toLocaleString()}</span>
+                </div>
+              ))}
+              {unassigned > 0 && (
+                <div className="flex items-center gap-2 bg-muted/20 border border-dashed rounded-lg px-3 py-2 text-xs text-muted-foreground">
+                  <ShieldAlert className="h-3 w-3" />
+                  <span>{unassigned} أصل غير مخصص لفرع</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
         <div className="relative flex-1 min-w-[180px]">
-          <Search className="absolute right-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
-            placeholder="بحث باسم الأصل أو الرقم..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pr-8 h-9 text-sm"
+            placeholder="بحث بالاسم أو الرقم أو المسؤول..."
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            className="h-9 pr-8 text-sm"
           />
         </div>
         <Select value={filterBranch} onValueChange={setFilterBranch}>
-          <SelectTrigger className="h-9 text-sm w-36"><SelectValue placeholder="الفرع" /></SelectTrigger>
-          <SelectContent>{branchNames.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={filterCategory} onValueChange={setFilterCategory}>
-          <SelectTrigger className="h-9 text-sm w-40"><SelectValue placeholder="التصنيف" /></SelectTrigger>
-          <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="h-9 text-sm w-36"><SelectValue placeholder="الحالة" /></SelectTrigger>
+          <SelectTrigger className="h-9 w-36 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {["الكل", "نشط", "مستهلك بالكامل", "مباع", "مسقط", "تحت الصيانة"].map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
+            <SelectItem value="الكل">كل الفروع</SelectItem>
+            {branches.map(b => <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex border rounded-md overflow-hidden">
-          <button onClick={() => setView("grid")} className={`px-2.5 py-1.5 text-xs ${view === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-            <LayoutGrid className="h-3.5 w-3.5" />
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="h-9 w-36 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c === "الكل" ? "كل التصنيفات" : c}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="h-9 w-32 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s === "الكل" ? "كل الحالات" : s}</SelectItem>)}</SelectContent>
+        </Select>
+        <div className="flex border rounded-lg overflow-hidden">
+          <button onClick={() => setViewMode("grid")} className={`p-2 ${viewMode === "grid" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+            <LayoutGrid className="h-4 w-4" />
           </button>
-          <button onClick={() => setView("list")} className={`px-2.5 py-1.5 text-xs ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-            <List className="h-3.5 w-3.5" />
+          <button onClick={() => setViewMode("table")} className={`p-2 ${viewMode === "table" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+            <List className="h-4 w-4" />
           </button>
         </div>
-        <span className="text-xs text-muted-foreground">{filtered.length} أصل</span>
       </div>
 
-      {/* Assets */}
+      {/* Results count */}
+      <p className="text-xs text-muted-foreground">
+        عرض {filtered.length} من {assets.length} أصل
+      </p>
+
+      {/* Assets — Grid View */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <Building2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>لا توجد أصول تطابق الفلترة</p>
+          <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">لا توجد أصول مطابقة لمعايير البحث</p>
+          {assets.length === 0 && (
+            <Button variant="outline" size="sm" onClick={openAdd} className="mt-3 gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> سجّل أول أصل
+            </Button>
+          )}
         </div>
-      ) : view === "grid" ? (
+      ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((asset) => (
-            <AssetCard
-              key={asset.id}
-              asset={asset}
-              onEdit={openEdit}
-              onDelete={handleDelete}
-              onDepreciate={openDepreciate}
-            />
+          {filtered.map(asset => (
+            <AssetCard key={asset.id} asset={asset}
+              onEdit={openEdit} onDelete={handleDelete} onDepreciate={openDepreciate} />
           ))}
         </div>
       ) : (
         <Card>
           <CardContent className="p-0 overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50">
+              <thead className="bg-muted/50 text-xs">
                 <tr>
-                  {["رقم الأصل", "الاسم", "التصنيف", "الفرع", "الموقع", "تاريخ الشراء", "التكلفة", "القيمة الدفترية", "المسؤول", "الحالة", "إجراءات"].map((h) => (
-                    <th key={h} className="p-3 text-right text-xs text-muted-foreground font-medium whitespace-nowrap">{h}</th>
+                  {["رقم الأصل","الاسم","التصنيف","الفرع","الموقع","تاريخ الشراء","التكلفة","القيمة الدفترية","المسؤول","الحالة","إجراءات"].map(h => (
+                    <th key={h} className="p-3 text-right text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((asset) => (
+                {filtered.map(asset => (
                   <tr key={asset.id} className="border-t hover:bg-muted/20">
                     <td className="p-3 font-mono text-xs text-muted-foreground">{asset.asset_number}</td>
-                    <td className="p-3 font-medium">{asset.name}</td>
+                    <td className="p-3 font-medium whitespace-nowrap">{asset.name}</td>
                     <td className="p-3 text-xs">{asset.category}</td>
-                    <td className="p-3 text-xs">
-                      {asset.branch_name ? (
-                        <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 rounded-full px-2 py-0.5 border border-blue-100">
-                          <MapPin className="h-2.5 w-2.5" />{asset.branch_name}
-                        </span>
-                      ) : "—"}
-                    </td>
-                    <td className="p-3 text-xs text-muted-foreground">{asset.location || "—"}</td>
-                    <td className="p-3 text-xs">{asset.purchase_date || "—"}</td>
-                    <td className="p-3">{(asset.purchase_cost || 0).toLocaleString()}</td>
+                    <td className="p-3 text-xs">{asset.branch_name || "—"}</td>
+                    <td className="p-3 text-xs max-w-[140px] truncate" title={asset.location}>{asset.location || "—"}</td>
+                    <td className="p-3 text-xs whitespace-nowrap">{asset.purchase_date || "—"}</td>
+                    <td className="p-3 font-medium">{(asset.purchase_cost || 0).toLocaleString()}</td>
                     <td className="p-3 font-semibold text-green-700">{(asset.net_book_value || 0).toLocaleString()}</td>
-                    <td className="p-3 text-xs text-muted-foreground">{asset.responsible_party || "—"}</td>
+                    <td className="p-3 text-xs">{asset.responsible_party || "—"}</td>
                     <td className="p-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                      <span className={`text-xs border rounded-full px-2 py-0.5 ${
                         asset.status === "نشط" ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
                         asset.status === "تحت الصيانة" ? "bg-amber-100 text-amber-700 border-amber-200" :
-                        "bg-slate-100 text-slate-600 border-slate-200"
+                        "bg-muted text-muted-foreground"
                       }`}>{asset.status || "نشط"}</span>
                     </td>
                     <td className="p-3">
                       <div className="flex gap-1.5">
                         {asset.status === "نشط" && (
-                          <button onClick={() => openDepreciate(asset)} title="ترحيل إهلاك" className="text-orange-500 hover:text-orange-600 p-1">
+                          <button onClick={() => openDepreciate(asset)} className="text-orange-500 hover:text-orange-600" title="إهلاك">
                             <TrendingDown className="h-3.5 w-3.5" />
                           </button>
                         )}
-                        <button onClick={() => openEdit(asset)} className="text-muted-foreground hover:text-primary p-1">✏️</button>
-                        <button onClick={() => handleDelete(asset.id)} className="text-muted-foreground hover:text-destructive p-1">🗑️</button>
+                        <button onClick={() => openEdit(asset)} className="text-muted-foreground hover:text-primary">
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button onClick={() => handleDelete(asset.id)} className="text-muted-foreground hover:text-destructive">
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -290,26 +315,26 @@ export default function FixedAssets() {
         </Card>
       )}
 
-      {/* Asset Form */}
+      {/* Add/Edit Form */}
       <AssetForm
         open={formOpen}
         onClose={() => setFormOpen(false)}
         onSave={handleSave}
         asset={editing}
-        nextNumber={nextNumber}
+        assetCount={assets.length}
       />
 
       {/* Depreciation Dialog */}
       <Dialog open={depOpen} onOpenChange={setDepOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>ترحيل قيد إهلاك</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><TrendingDown className="h-5 w-5 text-orange-500" />ترحيل قيد إهلاك</DialogTitle></DialogHeader>
           {depAsset && (
             <div className="space-y-4 mt-2">
               <div className="bg-muted/30 rounded-xl p-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">الأصل</span><span className="font-bold">{depAsset.name}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">طريقة الإهلاك</span><span>{depAsset.depreciation_method}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">الإهلاك السنوي</span><span className="font-bold text-orange-600">{(depAsset.annual_depreciation || 0).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">القيمة الدفترية الحالية</span><span className="font-bold text-green-700">{(depAsset.net_book_value || 0).toLocaleString()}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">القيمة الدفترية</span><span className="font-bold text-green-700">{(depAsset.net_book_value || 0).toLocaleString()}</span></div>
               </div>
               {(!depAsset.depreciation_account_id || !depAsset.accumulated_account_id) && (
                 <div className="flex items-center gap-2 text-xs text-orange-600 bg-orange-50 rounded-lg p-3">
@@ -317,26 +342,18 @@ export default function FixedAssets() {
                   يرجى تحديد حسابات الإهلاك في بيانات الأصل أولاً
                 </div>
               )}
-              <div>
-                <Label className="text-xs mb-1 block">تاريخ القيد</Label>
-                <Input type="date" value={depDate} onChange={(e) => setDepDate(e.target.value)} className="h-8" />
-              </div>
-              <div>
-                <Label className="text-xs mb-1 block">البيان</Label>
-                <Input value={depNotes} onChange={(e) => setDepNotes(e.target.value)} className="h-8" />
-              </div>
-              <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => setDepOpen(false)}>إلغاء</Button>
-                <Button
-                  onClick={postDepreciation}
-                  disabled={!depAsset.depreciation_account_id || !depAsset.accumulated_account_id}
-                  className="gap-2"
-                >
-                  <CheckCircle className="h-4 w-4" />ترحيل القيد
-                </Button>
-              </DialogFooter>
+              <div><Label className="text-xs">تاريخ القيد</Label><Input type="date" value={depDate} onChange={(e) => setDepDate(e.target.value)} className="mt-1 h-9" /></div>
+              <div><Label className="text-xs">البيان</Label><Input value={depNotes} onChange={(e) => setDepNotes(e.target.value)} className="mt-1 h-9" /></div>
             </div>
           )}
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDepOpen(false)}>إلغاء</Button>
+            <Button onClick={postDepreciation}
+              disabled={!depAsset?.depreciation_account_id || !depAsset?.accumulated_account_id}
+              className="gap-2 bg-orange-600 hover:bg-orange-700">
+              <CheckCircle className="h-4 w-4" /> ترحيل القيد
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
