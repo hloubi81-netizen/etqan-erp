@@ -356,6 +356,64 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
 
             {form.is_service ? (
               <div className="space-y-4">
+                {/* تسعير الخدمة */}
+                <div className="border rounded-xl p-4 space-y-3 bg-green-50/40 border-green-200">
+                  <p className="font-semibold text-sm text-green-800 flex items-center gap-1.5">
+                    💰 تسعير الخدمة
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-red-700 font-medium">تكلفة الخدمة (سعر الشراء)</Label>
+                      <Input
+                        type="number"
+                        className="mt-1 h-9"
+                        placeholder="0.00"
+                        value={form.cost_price}
+                        onChange={(e) => updateField("cost_price", parseFloat(e.target.value) || 0)}
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">ما يُدفع لمنفذ الخدمة أو تكلفتها الفعلية</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-blue-700 font-medium">سعر البيع المتوقع (للعميل)</Label>
+                      <Input
+                        type="number"
+                        className="mt-1 h-9"
+                        placeholder="0.00"
+                        value={form.retail_price}
+                        onChange={(e) => updateField("retail_price", parseFloat(e.target.value) || 0)}
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-0.5">السعر الذي يُعرض في الفاتورة تلقائياً</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-purple-700 font-medium">سعر الجملة (اختياري)</Label>
+                      <Input
+                        type="number"
+                        className="mt-1 h-9"
+                        placeholder="0.00"
+                        value={form.wholesale_price}
+                        onChange={(e) => updateField("wholesale_price", parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="flex flex-col justify-end">
+                      {form.cost_price > 0 && form.retail_price > 0 ? (
+                        <div className={`rounded-lg p-3 text-center ${form.retail_price > form.cost_price ? "bg-green-100 border border-green-300" : "bg-red-100 border border-red-300"}`}>
+                          <p className="text-xs text-muted-foreground">هامش الربح المتوقع</p>
+                          <p className={`text-lg font-bold mt-0.5 ${form.retail_price > form.cost_price ? "text-green-700" : "text-red-700"}`}>
+                            {(((form.retail_price - form.cost_price) / form.retail_price) * 100).toFixed(1)}%
+                          </p>
+                          <p className={`text-xs font-medium ${form.retail_price > form.cost_price ? "text-green-600" : "text-red-600"}`}>
+                            ربح: {(form.retail_price - form.cost_price).toLocaleString()}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg p-3 text-center bg-muted/30 border border-dashed">
+                          <p className="text-xs text-muted-foreground">أدخل التكلفة والسعر<br />لحساب هامش الربح</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 {/* معلومات أساسية للخدمة */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
