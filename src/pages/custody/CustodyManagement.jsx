@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2, CalendarDays } from "lucide-react";
+import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2, CalendarDays, Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import CustodyForm from "@/components/custody/CustodyForm";
 import CustodyExpenses from "@/components/custody/CustodyExpenses";
 import CustodySettlement from "@/components/custody/CustodySettlement";
@@ -97,6 +97,10 @@ export default function CustodyManagement() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterEmp, setFilterEmp] = useState("all");
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [filterCC, setFilterCC] = useState("all");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -122,9 +126,27 @@ export default function CustodyManagement() {
   const filtered = useMemo(() => custodies.filter(c => {
     if (filterStatus !== "all" && c.status !== filterStatus) return false;
     if (filterEmp !== "all" && c.employee_id !== filterEmp) return false;
-    if (search && !c.custody_number?.includes(search) && !c.employee_name?.toLowerCase().includes(search.toLowerCase()) && !c.purpose?.includes(search)) return false;
+    if (filterCC !== "all" && c.cost_center_id !== filterCC) return false;
+    if (dateFrom && c.issue_date && c.issue_date < dateFrom) return false;
+    if (dateTo && c.issue_date && c.issue_date > dateTo) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const matchNum = c.custody_number?.toLowerCase().includes(q);
+      const matchEmp = c.employee_name?.toLowerCase().includes(q);
+      const matchPurpose = c.purpose?.toLowerCase().includes(q);
+      const matchDept = c.department?.toLowerCase().includes(q);
+      const matchCC = c.cost_center_name?.toLowerCase().includes(q);
+      if (!matchNum && !matchEmp && !matchPurpose && !matchDept && !matchCC) return false;
+    }
     return true;
-  }), [custodies, filterStatus, filterEmp, search]);
+  }), [custodies, filterStatus, filterEmp, filterCC, dateFrom, dateTo, search]);
+
+  const hasActiveFilters = filterStatus !== "all" || filterEmp !== "all" || filterCC !== "all" || dateFrom || dateTo;
+
+  function clearFilters() {
+    setFilterStatus("all"); setFilterEmp("all"); setFilterCC("all");
+    setDateFrom(""); setDateTo(""); setSearch("");
+  }
 
   // KPIs
   const totalIssued = custodies.filter(c => c.status !== "مغلقة").reduce((s, c) => s + (c.issued_amount || 0), 0);
@@ -191,26 +213,100 @@ export default function CustodyManagement() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <Input placeholder="بحث برقم العهدة أو الموظف..." value={search} onChange={e => setSearch(e.target.value)} className="h-9 w-52" />
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="h-9 w-36"><SelectValue placeholder="الحالة" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">جميع الحالات</SelectItem>
-            {["مفتوحة", "تحت التسوية", "مسواة", "مغلقة"].map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterEmp} onValueChange={setFilterEmp}>
-          <SelectTrigger className="h-9 w-44"><SelectValue placeholder="الموظف" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">جميع الموظفين</SelectItem>
-            {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Advanced Search Bar */}
+      <Card className="border-border/60">
+        <CardContent className="pt-3 pb-3">
+          {/* Main search row */}
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="بحث برقم العهدة، اسم الموظف، الغرض، القسم..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="h-10 pr-9 text-sm"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-10 w-40"><SelectValue placeholder="الحالة" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الحالات</SelectItem>
+                {["مفتوحة", "تحت التسوية", "مسواة", "مغلقة"].map(s => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant={showAdvanced ? "secondary" : "outline"}
+              size="sm"
+              className="h-10 gap-1.5 whitespace-nowrap"
+              onClick={() => setShowAdvanced(v => !v)}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              بحث متقدم
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+            </Button>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" className="h-10 text-destructive gap-1" onClick={clearFilters}>
+                <X className="h-3.5 w-3.5" /> مسح الفلاتر
+              </Button>
+            )}
+          </div>
+
+          {/* Advanced filters row */}
+          {showAdvanced && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 pt-3 border-t">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">الموظف</p>
+                <Select value={filterEmp} onValueChange={setFilterEmp}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="الكل" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الموظفين</SelectItem>
+                    {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">مركز التكلفة</p>
+                <Select value={filterCC} onValueChange={setFilterCC}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="الكل" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع المراكز</SelectItem>
+                    {costCenters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">تاريخ الصرف من</p>
+                <Input type="date" className="h-9 text-sm" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">تاريخ الصرف إلى</p>
+                <Input type="date" className="h-9 text-sm" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+              </div>
+            </div>
+          )}
+
+          {/* Active filters summary */}
+          {(hasActiveFilters || search) && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className="text-xs text-muted-foreground">نتائج البحث:</span>
+              <span className="text-xs font-semibold text-primary">{filtered.length} عهدة</span>
+              {search && <Badge variant="secondary" className="text-xs gap-1 py-0">{search} <button onClick={() => setSearch("")}><X className="h-2.5 w-2.5" /></button></Badge>}
+              {filterStatus !== "all" && <Badge variant="secondary" className="text-xs gap-1 py-0">{filterStatus} <button onClick={() => setFilterStatus("all")}><X className="h-2.5 w-2.5" /></button></Badge>}
+              {filterEmp !== "all" && <Badge variant="secondary" className="text-xs gap-1 py-0">{employees.find(e => e.id === filterEmp)?.name} <button onClick={() => setFilterEmp("all")}><X className="h-2.5 w-2.5" /></button></Badge>}
+              {filterCC !== "all" && <Badge variant="secondary" className="text-xs gap-1 py-0">{costCenters.find(c => c.id === filterCC)?.name} <button onClick={() => setFilterCC("all")}><X className="h-2.5 w-2.5" /></button></Badge>}
+              {dateFrom && <Badge variant="secondary" className="text-xs gap-1 py-0">من {dateFrom} <button onClick={() => setDateFrom("")}><X className="h-2.5 w-2.5" /></button></Badge>}
+              {dateTo && <Badge variant="secondary" className="text-xs gap-1 py-0">إلى {dateTo} <button onClick={() => setDateTo("")}><X className="h-2.5 w-2.5" /></button></Badge>}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Custodies Table */}
       <Card>
