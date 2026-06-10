@@ -69,7 +69,8 @@ function getMenuItems(lang) {
     { label: l('currencies'), path: "/currencies", icon: Coins },
     { label: l('invoicePatterns'), path: "/invoice-patterns", icon: FileText },
     { label: l('openingBalance'), path: "/invoices/opening-balance", icon: Receipt },
-    { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark }]
+    { label: lang === 'ar' ? "التسويات البنكية" : "Bank Reconciliation", path: "/accounting/bank-reconciliation", icon: Landmark },
+    { label: lang === 'ar' ? "إدارة النسب الضريبية" : "Tax Rates", path: "/tax-rates", icon: Calculator }]
 
   },
 

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Download, FileText, Calculator, TrendingUp, ShoppingCart, AlertCircle, Printer } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Download, FileText, Calculator, TrendingUp, ShoppingCart, AlertCircle, Printer, Percent } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const COUNTRY_CONFIGS = {
   sa: {
@@ -56,6 +57,7 @@ function Section({ title, value, indent = false, bold = false, separator = false
 
 export default function TaxReport() {
   const [invoices, setInvoices] = useState([]);
+  const [taxRates, setTaxRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [country, setCountry] = useState("sa");
   const [periodType, setPeriodType] = useState("ربع سنوي");
@@ -68,8 +70,12 @@ export default function TaxReport() {
   const cfg = COUNTRY_CONFIGS[country];
 
   useEffect(() => {
-    base44.entities.Invoice.list("-date", 1000).then(data => {
+    Promise.all([
+      base44.entities.Invoice.list("-date", 1000),
+      base44.entities.TaxRate.filter({ is_active: true }),
+    ]).then(([data, rates]) => {
       setInvoices(data);
+      setTaxRates(rates);
       setLoading(false);
     });
   }, []);
@@ -174,6 +180,9 @@ export default function TaxReport() {
           <p className="text-sm text-muted-foreground">{cfg.reportName}</p>
         </div>
         <div className="flex gap-2 print:hidden">
+          <Link to="/tax-rates">
+            <Button variant="outline" size="sm" className="gap-1.5"><Percent className="h-4 w-4" /> إدارة النسب الضريبية</Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5"><Download className="h-4 w-4" /> تصدير CSV</Button>
           <Button variant="outline" size="sm" onClick={printReport} className="gap-1.5"><Printer className="h-4 w-4" /> طباعة</Button>
         </div>
@@ -251,6 +260,7 @@ export default function TaxReport() {
           <TabsTrigger value="sales" className="gap-1.5"><TrendingUp className="h-4 w-4" /> تفاصيل المبيعات</TabsTrigger>
           <TabsTrigger value="purchases" className="gap-1.5"><ShoppingCart className="h-4 w-4" /> تفاصيل المشتريات</TabsTrigger>
           <TabsTrigger value="chart" className="gap-1.5"><Calculator className="h-4 w-4" /> التحليل الشهري</TabsTrigger>
+          <TabsTrigger value="byrate" className="gap-1.5"><Percent className="h-4 w-4" /> تحليل حسب النسبة</TabsTrigger>
         </TabsList>
 
         {/* إقرار ضريبي رسمي */}
@@ -448,7 +458,149 @@ export default function TaxReport() {
             </Card>
           </div>
         </TabsContent>
+        {/* تحليل حسب النسبة الضريبية */}
+        <TabsContent value="byrate" className="mt-4">
+          <TaxByRatePanel taxRates={taxRates} filtered={filtered} cfg={cfg} />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// ─── Tax By Rate Panel ────────────────────────────────────────────────────────
+function TaxByRatePanel({ taxRates, filtered, cfg }) {
+  // تجميع الفواتير حسب مبلغ الضريبة المسجل لمحاولة ربطها بالنسبة
+  const ratesData = useMemo(() => {
+    if (taxRates.length === 0) {
+      // إذا لم تُعرَّف نسب، نعرض ملخصاً عاماً
+      const sales = filtered.filter(i => i.pattern_type === "مبيعات");
+      const purchases = filtered.filter(i => i.pattern_type === "مشتريات");
+      const salesBase = sales.reduce((s, i) => s + ((i.subtotal || 0) - (i.discount_value || 0)), 0);
+      const purchasesBase = purchases.reduce((s, i) => s + ((i.subtotal || 0) - (i.discount_value || 0)), 0);
+      const salesTax = sales.reduce((s, i) => s + (i.tax_amount || 0), 0);
+      const purchasesTax = purchases.reduce((s, i) => s + (i.tax_amount || 0), 0);
+      return [{
+        name: `الضريبة (${cfg.taxRate}%)`,
+        rate: cfg.taxRate,
+        salesCount: sales.length,
+        purchasesCount: purchases.length,
+        salesBase, purchasesBase, salesTax, purchasesTax,
+        netTax: salesTax - purchasesTax,
+      }];
+    }
+
+    return taxRates.map(tr => {
+      // نحاول مطابقة الفواتير بنسبة الضريبة المحسوبة
+      const rateDecimal = tr.rate / 100;
+      const matchedSales = filtered.filter(i => {
+        if (i.pattern_type !== "مبيعات") return false;
+        if (!i.tax_amount || !i.subtotal) return false;
+        const base = (i.subtotal - (i.discount_value || 0));
+        if (base <= 0) return false;
+        const calcRate = i.tax_amount / base;
+        return Math.abs(calcRate - rateDecimal) < 0.005;
+      });
+      const matchedPurchases = filtered.filter(i => {
+        if (i.pattern_type !== "مشتريات") return false;
+        if (!i.tax_amount || !i.subtotal) return false;
+        const base = (i.subtotal - (i.discount_value || 0));
+        if (base <= 0) return false;
+        const calcRate = i.tax_amount / base;
+        return Math.abs(calcRate - rateDecimal) < 0.005;
+      });
+      const salesBase = matchedSales.reduce((s, i) => s + ((i.subtotal || 0) - (i.discount_value || 0)), 0);
+      const purchasesBase = matchedPurchases.reduce((s, i) => s + ((i.subtotal || 0) - (i.discount_value || 0)), 0);
+      const salesTax = matchedSales.reduce((s, i) => s + (i.tax_amount || 0), 0);
+      const purchasesTax = matchedPurchases.reduce((s, i) => s + (i.tax_amount || 0), 0);
+      return {
+        name: tr.name,
+        rate: tr.rate,
+        type: tr.type,
+        salesCount: matchedSales.length,
+        purchasesCount: matchedPurchases.length,
+        salesBase, purchasesBase, salesTax, purchasesTax,
+        netTax: salesTax - purchasesTax,
+      };
+    }).filter(r => r.salesCount > 0 || r.purchasesCount > 0);
+  }, [taxRates, filtered, cfg]);
+
+  const totalNetTax = ratesData.reduce((s, r) => s + r.netTax, 0);
+
+  return (
+    <div className="space-y-4">
+      {taxRates.length === 0 && (
+        <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>لم تُعرَّف نسب ضريبية بعد. <Link to="/tax-rates" className="underline font-semibold">انقر هنا لإضافة نسب ضريبية</Link> لرؤية تحليل مفصّل.</span>
+        </div>
+      )}
+
+      {/* Chart */}
+      {ratesData.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">الضريبة المستحقة حسب النسبة</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={ratesData} margin={{ right: 10, left: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => [v.toLocaleString("ar-SA", { minimumFractionDigits: 2 }), ""]} />
+                <Bar dataKey="salesTax" name="ضريبة المبيعات" fill="#3b82f6" radius={[4,4,0,0]} />
+                <Bar dataKey="purchasesTax" name="ضريبة المشتريات" fill="#f97316" radius={[4,4,0,0]} />
+                <Bar dataKey="netTax" name="صافي الضريبة" fill="#8b5cf6" radius={[4,4,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Table */}
+      <Card>
+        <CardHeader className="pb-2"><CardTitle className="text-sm">تفصيل الضريبة حسب كل نسبة ({ratesData.length})</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-right font-medium">النسبة الضريبية</th>
+                <th className="px-4 py-3 text-right font-medium">النسبة %</th>
+                <th className="px-4 py-3 text-right font-medium">وعاء المبيعات</th>
+                <th className="px-4 py-3 text-right font-medium">ضريبة المبيعات</th>
+                <th className="px-4 py-3 text-right font-medium">وعاء المشتريات</th>
+                <th className="px-4 py-3 text-right font-medium">ضريبة المشتريات</th>
+                <th className="px-4 py-3 text-right font-medium">صافي الضريبة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ratesData.length === 0 ? (
+                <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">لا توجد بيانات مطابقة</td></tr>
+              ) : ratesData.map((r, i) => (
+                <tr key={i} className="border-t hover:bg-muted/20">
+                  <td className="px-4 py-3 font-semibold">{r.name}</td>
+                  <td className="px-4 py-3 font-bold text-primary">{r.rate}%</td>
+                  <td className="px-4 py-3">{r.salesBase.toLocaleString("ar-SA", { maximumFractionDigits: 0 })}</td>
+                  <td className="px-4 py-3 text-blue-700 font-medium">{r.salesTax.toLocaleString("ar-SA", { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-3">{r.purchasesBase.toLocaleString("ar-SA", { maximumFractionDigits: 0 })}</td>
+                  <td className="px-4 py-3 text-orange-700 font-medium">{r.purchasesTax.toLocaleString("ar-SA", { minimumFractionDigits: 2 })}</td>
+                  <td className={`px-4 py-3 font-bold ${r.netTax >= 0 ? "text-red-600" : "text-green-600"}`}>
+                    {r.netTax.toLocaleString("ar-SA", { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              ))}
+              {ratesData.length > 1 && (
+                <tr className="border-t-2 bg-muted/30 font-bold">
+                  <td className="px-4 py-3" colSpan={2}>الإجمالي</td>
+                  <td className="px-4 py-3">{ratesData.reduce((s,r)=>s+r.salesBase,0).toLocaleString("ar-SA",{maximumFractionDigits:0})}</td>
+                  <td className="px-4 py-3 text-blue-700">{ratesData.reduce((s,r)=>s+r.salesTax,0).toLocaleString("ar-SA",{minimumFractionDigits:2})}</td>
+                  <td className="px-4 py-3">{ratesData.reduce((s,r)=>s+r.purchasesBase,0).toLocaleString("ar-SA",{maximumFractionDigits:0})}</td>
+                  <td className="px-4 py-3 text-orange-700">{ratesData.reduce((s,r)=>s+r.purchasesTax,0).toLocaleString("ar-SA",{minimumFractionDigits:2})}</td>
+                  <td className={`px-4 py-3 text-base ${totalNetTax >= 0 ? "text-red-700" : "text-green-700"}`}>{totalNetTax.toLocaleString("ar-SA",{minimumFractionDigits:2})}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
