@@ -16,6 +16,7 @@ import { deductSalesInventory, addPurchaseInventory } from "@/utils/inventoryEng
 import { createCurrencyDiffEntry, toLocalCurrency } from "@/utils/currencyEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
+import AttachmentsUploader from "@/components/shared/AttachmentsUploader";
 
 /**
  * ترحيل قيود يومية للبنود الخدمية في الفاتورة
@@ -152,6 +153,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     paid_amount: invoice?.paid_amount || 0,
     remaining_amount: invoice?.remaining_amount || 0,
     notes: invoice?.notes || "",
+    attachments: invoice?.attachments || [],
     cost_center_id: invoice?.cost_center_id || pattern?.cost_center_id || "",
     cost_center_name: invoice?.cost_center_name || "",
     status: invoice?.status || "مسودة",
@@ -547,6 +549,11 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
             <Label>البيان / ملاحظات</Label>
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
+
+          <AttachmentsUploader
+            attachments={form.attachments}
+            onChange={(atts) => setForm({ ...form, attachments: atts })}
+          />
         </div>
 
         <DialogFooter className="gap-2 mt-4">

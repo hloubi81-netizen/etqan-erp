@@ -10,6 +10,7 @@ import { Plus, Trash2, Zap } from "lucide-react";
 import { refreshAccountBalances } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
+import AttachmentsUploader from "@/components/shared/AttachmentsUploader";
 
 export default function VoucherForm({ open, onClose, onSave, voucher, voucherType }) {
   const [accounts, setAccounts] = useState([]);
@@ -32,6 +33,7 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
     total_debit: voucher?.total_debit || 0,
     total_credit: voucher?.total_credit || 0,
     status: voucher?.status || "مسودة",
+    attachments: voucher?.attachments || [],
   });
 
   useEffect(() => {
@@ -210,6 +212,11 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
             </>
           )}
         </div>
+
+        <AttachmentsUploader
+          attachments={form.attachments}
+          onChange={(atts) => setForm({ ...form, attachments: atts })}
+        />
 
         <DialogFooter className="gap-2 mt-4">
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
