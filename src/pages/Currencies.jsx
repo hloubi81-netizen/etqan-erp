@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { autoUpdateExchangeRates } from "@/utils/currencyEngine";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, TrendingUp, Clock, Globe, CheckCircle2 } from "lucide-react";
 
 export default function Currencies() {
   const [currencies, setCurrencies] = useState([]);
@@ -19,6 +20,8 @@ export default function Currencies() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: "", symbol: "", unit_name: "", sub_unit: "", exchange_rate: 1, is_local: false });
   const [updating, setUpdating] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [updateResults, setUpdateResults] = useState([]);
 
   useEffect(() => { loadData(); }, []);
 
@@ -62,10 +65,12 @@ export default function Currencies() {
 
   async function handleAutoUpdate() {
     setUpdating(true);
-    const { updated, errors } = await autoUpdateExchangeRates();
+    const { updated, errors, rates } = await autoUpdateExchangeRates();
     setUpdating(false);
     if (updated > 0) {
       toast.success(`تم تحديث ${updated} عملة بأسعار الصرف الحالية`);
+      setLastUpdate(new Date());
+      setUpdateResults(rates || []);
       loadData();
     } else {
       toast.warning("لم يتم تحديث أي عملة. تأكد من وجود عملات أجنبية مضافة.");
@@ -82,17 +87,87 @@ export default function Currencies() {
     { key: "is_local", label: "النوع", render: (val) => val ? <Badge>محلية</Badge> : <Badge variant="outline">أجنبية</Badge> },
   ];
 
+  const localCurrency = currencies.find(c => c.is_local);
+  const foreignCurrencies = currencies.filter(c => !c.is_local);
+
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
-    <div>
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <PageHeader title="العملات" subtitle="إدارة العملات وأسعار الصرف" onAdd={openNew} addLabel="عملة جديدة" />
-        <Button variant="outline" onClick={handleAutoUpdate} disabled={updating} className="gap-2">
+        <Button onClick={handleAutoUpdate} disabled={updating} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
-          {updating ? "جاري التحديث..." : "تحديث أسعار الصرف تلقائياً"}
+          {updating ? "جاري التحديث..." : "تحديث أسعار الصرف الآن"}
         </Button>
       </div>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="border">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+              <Globe className="h-4 w-4 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">العملة المحلية</p>
+              <p className="font-bold text-sm">{localCurrency ? `${localCurrency.symbol} — ${localCurrency.name}` : "غير محددة"}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-green-50 border border-green-100 flex items-center justify-center shrink-0">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">العملات الأجنبية</p>
+              <p className="font-bold text-sm">{foreignCurrencies.length} عملة</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+              <Clock className="h-4 w-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">آخر تحديث</p>
+              <p className="font-bold text-sm">{lastUpdate ? lastUpdate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : "—"}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardContent className="p-3 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-4 w-4 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">الجدولة التلقائية</p>
+              <p className="font-bold text-sm text-green-600">يومياً 8 صباحاً ✓</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Live rates after update */}
+      {updateResults.length > 0 && (
+        <Card className="border border-green-200 bg-green-50">
+          <CardContent className="p-3">
+            <p className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> أسعار الصرف المحدّثة
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {updateResults.map(r => (
+                <Badge key={r.symbol} variant="outline" className="border-green-300 text-green-800 bg-white text-xs">
+                  {r.symbol}: {r.rate}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <DataTable columns={columns} data={currencies} onEdit={openEdit} onDelete={handleDelete} emptyMessage="لا توجد عملات" />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
