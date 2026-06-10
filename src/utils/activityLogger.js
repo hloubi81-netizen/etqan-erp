@@ -18,5 +18,7 @@ export async function logActivity({ action, documentType, documentNumber, docume
     timestamp: new Date().toISOString(),
     details: details || "",
     amount: amount || 0,
+    branch_id: user?.branch_id || "",
+    branch_name: user?.branch_name || "",
   }).catch(() => {}); // لا نوقف العملية الأصلية إذا فشل التسجيل
 }
