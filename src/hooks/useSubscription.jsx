@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 export const FEATURE_LABELS = {
   accounting: "المحاسبة",
@@ -86,15 +87,21 @@ const SubscriptionContext = createContext(null);
 export function SubscriptionProvider({ children }) {
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    base44.entities.Subscription.filter({ is_active: true }, "-created_date", 1)
+    if (!user) return;
+    const filter = user.subscription_id
+      ? { id: user.subscription_id, is_active: true }
+      : { is_active: true, created_by_id: user.id };
+
+    base44.entities.Subscription.filter(filter, "-created_date", 1)
       .then(list => {
         if (list.length > 0) setSubscription(list[0]);
         setSubscriptionLoaded(true);
       })
       .catch(() => { setSubscriptionLoaded(true); });
-  }, []);
+  }, [user?.id]);
 
   function hasFeature(key) {
     if (!subscription) return true; // no subscription = full access (admin mode)
