@@ -45,6 +45,7 @@ import BalanceSheet from './pages/financial/BalanceSheet';
 import AdvancedReports from './pages/reports/AdvancedReports';
 import FixedAssets from './pages/assets/FixedAssets';
 import CashFlow from './pages/financial/CashFlow';
+import CashCalendar from './pages/financial/CashCalendar';
 import Settings from './pages/Settings';
 import LeaveRequests from './pages/hr/LeaveRequests';
 import BankReconciliation from './pages/accounting/BankReconciliation';
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
         <Route path="/financial/income-statement" element={<IncomeStatement />} />
         <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
         <Route path="/financial/cash-flow" element={<CashFlow />} />
+        <Route path="/financial/cash-calendar" element={<CashCalendar />} />
         <Route path="/branches" element={<Branches />} />
         <Route path="/reports/branches" element={<BranchReport />} />
         <Route path="/costs/management" element={<CostManagement />} />

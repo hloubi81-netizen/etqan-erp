@@ -93,6 +93,7 @@ function getMenuItems(lang) {
     { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
     { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
     { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
+    { label: lang === 'ar' ? "تقويم التدفقات النقدية" : "Cash Calendar", path: "/financial/cash-calendar", icon: CalendarCheck },
     { label: lang === 'ar' ? "الميزانية والتخطيط" : "Budget & Planning", path: "/budget", icon: PieChart }]
 
   },
