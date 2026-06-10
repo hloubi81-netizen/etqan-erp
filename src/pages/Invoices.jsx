@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, CheckCircle } from "lucide-react";
+import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet } from "lucide-react";
+import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
@@ -118,6 +119,27 @@ export default function Invoices() {
     loadData();
   }
 
+  function handleExportExcel() {
+    const excelColumns = [
+      { key: "invoice_number", label: "رقم الفاتورة" },
+      { key: "date", label: "التاريخ" },
+      { key: "pattern_name", label: "النمط" },
+      { key: "client_name", label: invoiceType.includes("مبيعات") ? "العميل" : "المورد" },
+      { key: "warehouse_name", label: "المستودع" },
+      { key: "branch_name", label: "الفرع" },
+      { key: "payment_method", label: "طريقة الدفع" },
+      { key: "currency", label: "العملة" },
+      { key: "subtotal", label: "المجموع الفرعي" },
+      { key: "discount_value", label: "الخصم" },
+      { key: "total", label: "الإجمالي" },
+      { key: "paid_amount", label: "المدفوع" },
+      { key: "remaining_amount", label: "المتبقي" },
+      { key: "status", label: "الحالة" },
+      { key: "notes", label: "البيان" },
+    ];
+    exportToExcel(excelColumns, invoices, `فواتير_${invoiceType}`, invoiceType);
+  }
+
   const columns = [
     { key: "invoice_number", label: "رقم الفاتورة" },
     { key: "date", label: "التاريخ" },
@@ -148,6 +170,13 @@ export default function Invoices() {
         addLabel="فاتورة جديدة"
       />
       
+      <div className="mb-4 flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExportExcel} className="h-9 gap-1.5">
+          <FileSpreadsheet className="h-4 w-4 text-green-600" />
+          تصدير Excel
+        </Button>
+      </div>
+
       {selectedIds.length > 0 && (
         <div className="mb-4 flex justify-end">
           <DropdownMenu>

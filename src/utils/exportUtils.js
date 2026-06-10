@@ -1,4 +1,32 @@
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
+
+// ─── Excel Export (.xlsx) ─────────────────────────────────────────────
+export function exportToExcel(columns, data, filename = "export", sheetName = "البيانات") {
+  const header = columns.map(c => c.label);
+  const rows = data.map(row =>
+    columns.map(c => {
+      const val = c.excelValue
+        ? c.excelValue(row[c.key], row)
+        : (c.render ? undefined : row[c.key]);
+      return val !== undefined && val !== null ? val : (row[c.key] ?? "");
+    })
+  );
+  const wsData = [header, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // ضبط عرض الأعمدة تلقائياً
+  ws["!cols"] = header.map((_, i) => ({
+    wch: Math.max(
+      header[i]?.toString().length || 10,
+      ...rows.map(r => String(r[i] ?? "").length)
+    ) + 4,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, `${filename}.xlsx`);
+}
 
 // ─── CSV / Excel Export ───────────────────────────────────────────────
 export function exportToCSV(columns, data, filename = "export") {

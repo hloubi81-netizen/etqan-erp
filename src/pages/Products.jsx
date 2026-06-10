@@ -5,7 +5,8 @@ import ProductForm from "../components/products/ProductForm";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GitBranch, ChevronDown, Trash2 } from "lucide-react";
+import { Plus, GitBranch, ChevronDown, Trash2, FileSpreadsheet } from "lucide-react";
+import { exportToExcel } from "@/utils/exportUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,22 @@ export default function Products() {
       ? branchSecureProducts
       : branchSecureProducts.filter((p) => p.branch_id === branchFilter);
 
+  function handleExportExcel() {
+    const excelColumns = [
+      { key: "item_code", label: "رمز الصنف" },
+      { key: "name", label: "اسم الصنف" },
+      { key: "group_id", label: "المجموعة", excelValue: (val) => getGroupName(val) },
+      { key: "branch_name", label: "الفرع" },
+      { key: "origin", label: "المنشأ" },
+      { key: "cost_price", label: "سعر التكلفة" },
+      { key: "wholesale_price", label: "سعر الجملة" },
+      { key: "retail_price", label: "سعر المستهلك" },
+      { key: "available_qty", label: "الكمية المتاحة" },
+      { key: "barcode", label: "الباركود" },
+    ];
+    exportToExcel(excelColumns, filteredProducts, "بيانات_المخزون", "المواد والأصناف");
+  }
+
   const columns = [
     { key: "item_code", label: "رمز الصنف" },
     { key: "name", label: "اسم الصنف" },
@@ -144,6 +161,10 @@ export default function Products() {
               </SelectContent>
             </Select>
           )}
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="h-9 gap-1.5">
+            <FileSpreadsheet className="h-4 w-4 text-green-600" />
+            تصدير Excel
+          </Button>
           <ExcelImport
             entityName="Product"
             templateName="نموذج_استيراد_المنتجات.xlsx"
