@@ -65,6 +65,7 @@ import TaxReport from './pages/reports/TaxReport';
 import InventoryVarianceReport from './pages/reports/InventoryVarianceReport';
 import BranchPerformance from './pages/reports/BranchPerformance';
 import ServiceProfitability from './pages/reports/ServiceProfitability';
+import ServicesDashboard from './pages/reports/ServicesDashboard';
 import About from './pages/About';
 import UserGuide from './pages/UserGuide';
 import Contact from './pages/Contact';
@@ -153,6 +154,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/inventory-variance" element={<InventoryVarianceReport />} />
         <Route path="/reports/branch-performance" element={<BranchPerformance />} />
         <Route path="/reports/service-profitability" element={<ServiceProfitability />} />
+        <Route path="/reports/services-dashboard" element={<ServicesDashboard />} />
         <Route path="/user-guide" element={<UserGuide />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
