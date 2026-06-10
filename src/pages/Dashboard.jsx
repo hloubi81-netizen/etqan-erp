@@ -18,6 +18,7 @@ import { SkeletonCard } from "@/components/shared/SkeletonLoader";
 import CurrencySelector from "@/components/dashboard/CurrencySelector";
 import BranchMonthlyReport from "@/components/dashboard/BranchMonthlyReport";
 import SubscriptionSummary from "@/components/dashboard/SubscriptionSummary";
+import CompanyDataExport from "@/components/dashboard/CompanyDataExport";
 
 function StatCard({ icon: Icon, label, value, sub, color, loading }) {
   if (loading) return <SkeletonCard />;
@@ -123,10 +124,13 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold">ETQAN ERP</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-1.5">
-          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          <CompanyDataExport />
+          <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-1.5">
+            <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        </div>
       </div>
 
       <CurrencySelector />
