@@ -25,10 +25,12 @@ const CAT_COLORS = {
 const EMPTY = {
   custody_id: "", custody_number: "", expense_date: new Date().toISOString().split("T")[0],
   description: "", category: "أخرى", amount: 0, vendor: "",
-  invoice_number: "", account_id: "", account_name: "", is_verified: false, notes: "",
+  invoice_number: "", account_id: "", account_name: "",
+  cost_center_id: "", cost_center_name: "",
+  is_verified: false, notes: "",
 };
 
-export default function CustodyExpenses({ custodies, expenses, accounts, onRefresh }) {
+export default function CustodyExpenses({ custodies, expenses, accounts, costCenters = [], onRefresh }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
@@ -48,7 +50,14 @@ export default function CustodyExpenses({ custodies, expenses, accounts, onRefre
 
   function setCustody(id) {
     const c = custodies.find(c => c.id === id);
-    setForm(f => ({ ...f, custody_id: id, custody_number: c?.custody_number || "" }));
+    setForm(f => ({
+      ...f,
+      custody_id: id,
+      custody_number: c?.custody_number || "",
+      // يرث مركز التكلفة من العهدة تلقائياً
+      cost_center_id:   c?.cost_center_id   || f.cost_center_id,
+      cost_center_name: c?.cost_center_name || f.cost_center_name,
+    }));
   }
 
   async function uploadFile(file) {
@@ -238,6 +247,18 @@ export default function CustodyExpenses({ custodies, expenses, accounts, onRefre
                 <SelectTrigger><SelectValue placeholder="اختياري" /></SelectTrigger>
                 <SelectContent>{accounts.slice(0, 80).map(a => <SelectItem key={a.id} value={a.id}>{a.account_number} — {a.name}</SelectItem>)}</SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>مركز التكلفة</Label>
+              <Select value={form.cost_center_id || ""} onValueChange={v => { const cc = costCenters.find(c => c.id === v); setForm(f => ({ ...f, cost_center_id: v, cost_center_name: cc?.name || "" })); }}>
+                <SelectTrigger><SelectValue placeholder="يُرث من العهدة" /></SelectTrigger>
+                <SelectContent>
+                  {costCenters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {form.cost_center_name && (
+                <p className="text-xs text-muted-foreground mt-1">مركز التكلفة: <span className="text-primary font-medium">{form.cost_center_name}</span></p>
+              )}
             </div>
             {/* Upload Receipt */}
             <div className="col-span-2">

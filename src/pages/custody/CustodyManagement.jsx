@@ -85,6 +85,7 @@ export default function CustodyManagement() {
   const [employees, setEmployees] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
   const [accounts, setAccounts] = useState([]);
+  const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -100,15 +101,16 @@ export default function CustodyManagement() {
 
   async function loadAll() {
     setLoading(true);
-    const [c, ex, emp, cc, acc] = await Promise.all([
+    const [c, ex, emp, cc, acc, bud] = await Promise.all([
       base44.entities.Custody.list("-created_date"),
       base44.entities.CustodyExpense.list("-created_date"),
       base44.entities.Employee.list(),
       base44.entities.CostCenter.list(),
       base44.entities.Account.filter({ is_parent: false }),
+      base44.entities.Budget.list(),
     ]);
     setCustodies(c); setExpenses(ex); setEmployees(emp);
-    setCostCenters(cc); setAccounts(acc);
+    setCostCenters(cc); setAccounts(acc); setBudgets(bud);
     setLoading(false);
   }
 
@@ -356,15 +358,19 @@ export default function CustodyManagement() {
                 <TabsContent value="expenses" className="mt-4">
                   <CustodyExpenses
                     custody={detailCustody}
+                    custodies={[detailCustody]}
                     expenses={getCustodyExpenses(detailCustody.id)}
                     accounts={accounts}
+                    costCenters={costCenters}
                     onRefresh={loadAll}
                   />
                 </TabsContent>
                 <TabsContent value="settlement" className="mt-4">
                   <CustodySettlement
                     custody={detailCustody}
+                    custodies={[detailCustody]}
                     expenses={getCustodyExpenses(detailCustody.id)}
+                    budgets={budgets}
                     onRefresh={loadAll}
                     onClose={() => setDetailCustody(null)}
                   />

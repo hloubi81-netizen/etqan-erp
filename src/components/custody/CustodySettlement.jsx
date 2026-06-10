@@ -6,9 +6,38 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, AlertCircle, Clock, Printer, BookOpen } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Printer, BookOpen, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { refreshAccountBalances } from "@/utils/journalEngine";
+
+async function postCostEntries(custody, expenses) {
+  const today = new Date().toISOString().split("T")[0];
+  const period = today.slice(0, 7); // YYYY-MM
+  const costCenterId   = custody.cost_center_id   || "";
+  const costCenterName = custody.cost_center_name || "";
+  if (!costCenterId) return 0;
+
+  const entries = expenses.map((exp, idx) => base44.entities.CostEntry.create({
+    entry_number: `CE-${custody.custody_number}-${idx + 1}`,
+    date: exp.expense_date || today,
+    cost_center_id:   exp.cost_center_id   || costCenterId,
+    cost_center_name: exp.cost_center_name || costCenterName,
+    cost_type: "مصروفات إدارية",
+    account_id:   exp.account_id   || "",
+    account_name: exp.account_name || exp.category || "مصروف عهدة",
+    description: `عهدة ${custody.custody_number} — ${exp.description}`,
+    quantity: 1,
+    unit_cost: exp.amount,
+    total_cost: exp.amount,
+    period,
+    subscription_id: custody.subscription_id || "",
+    status: "مرحّل",
+    notes: `مصروف عهدة — ${exp.category || "أخرى"}`,
+  }));
+
+  await Promise.all(entries);
+  return entries.length;
+}
 
 async function postCustodyJournalEntries(custody, expenses, returnedAmount, diff) {
   const today = new Date().toISOString().split("T")[0];
@@ -83,16 +112,17 @@ async function postCustodyJournalEntries(custody, expenses, returnedAmount, diff
   return expensePromises.length;
 }
 
-export default function CustodySettlement({ custodies, expenses, onRefresh }) {
-  const [selectedId, setSelectedId] = useState("");
+export default function CustodySettlement({ custodies, expenses, budgets = [], onRefresh }) {
+  const settleable = custodies.filter(c => c.status === "مفتوحة" || c.status === "قيد التسوية");
+
+  // إذا كانت هناك عهدة واحدة فقط، نختارها تلقائياً
+  const defaultId = settleable.length === 1 ? settleable[0].id : "";
+  const [selectedId, setSelectedId] = useState(defaultId);
   const [open, setOpen] = useState(false);
   const [returnedAmount, setReturnedAmount] = useState(0);
   const [settlementNotes, setSettlementNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [postToJournal, setPostToJournal] = useState(true);
-
-  // العهد القابلة للتسوية (مفتوحة أو قيد التسوية)
-  const settleable = custodies.filter(c => c.status === "مفتوحة" || c.status === "قيد التسوية");
 
   const selected = custodies.find(c => c.id === selectedId);
   const selectedExpenses = useMemo(() => expenses.filter(e => e.custody_id === selectedId), [expenses, selectedId]);
@@ -102,6 +132,18 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
   const diff = amount - expTotal - returnedAmount;
   const verifiedCount = selectedExpenses.filter(e => e.is_verified).length;
   const unverifiedTotal = selectedExpenses.filter(e => !e.is_verified).reduce((s, e) => s + (e.amount || 0), 0);
+
+  // ميزانية مركز التكلفة المرتبط
+  const ccBudget = useMemo(() => {
+    if (!selected?.cost_center_id) return null;
+    const b = budgets.find(b => b.cost_center_id === selected.cost_center_id && b.status === "معتمدة");
+    if (!b) return null;
+    const budgeted = b.total_budgeted || 0;
+    const actual   = b.total_actual   || 0;
+    const remaining = budgeted - actual;
+    const usagePercent = budgeted > 0 ? Math.round((actual / budgeted) * 100) : 0;
+    return { name: b.name, budgeted, actual, remaining, usagePercent, willExceed: actual + expTotal > budgeted };
+  }, [budgets, selected, expTotal]);
 
   async function markPending() {
     if (!selectedId) return;
@@ -125,10 +167,14 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
       difference: Math.round(diff * 100) / 100,
     });
 
-    // ترحيل القيود المحاسبية تلقائياً
+    // ترحيل القيود المحاسبية وقيود التكلفة تلقائياً
     if (postToJournal && selectedExpenses.length > 0) {
-      const count = await postCustodyJournalEntries(selected, selectedExpenses, returnedAmount, diff);
-      toast.success(`تمت تسوية العهدة بنجاح وتم ترحيل ${count} قيد محاسبي تلقائياً`);
+      const [journalCount, costCount] = await Promise.all([
+        postCustodyJournalEntries(selected, selectedExpenses, returnedAmount, diff),
+        postCostEntries(selected, selectedExpenses),
+      ]);
+      const costMsg = costCount > 0 ? ` و${costCount} قيد تكلفة لمركز (${selected.cost_center_name || "غير محدد"})` : "";
+      toast.success(`تمت تسوية العهدة بنجاح — تم ترحيل ${journalCount} قيد محاسبي${costMsg}`);
     } else {
       toast.success("تمت تسوية العهدة بنجاح");
     }
@@ -179,7 +225,7 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
     <div>القسم: <strong>${selected.department || "—"}</strong></div>
     <div>الغرض: <strong>${selected.purpose || "—"}</strong></div>
     <div>تاريخ الصرف: <strong>${selected.issue_date}</strong></div>
-    <div>طريقة الصرف: <strong>${selected.payment_method}</strong></div>
+    <div>مركز التكلفة: <strong>${selected.cost_center_name || "—"}</strong></div>
   </div>
   <div class="summary">
     <div class="scard"><div class="val" style="color:#1d3a8a">${amount.toLocaleString()}</div><div>المبلغ المصروف</div></div>
@@ -260,6 +306,62 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
             </div>
           </div>
 
+          {/* Cost Center Budget Banner */}
+          {selected?.cost_center_id && (
+            <div className={`rounded-xl border p-4 ${ccBudget?.willExceed ? "bg-red-50 border-red-200" : ccBudget ? "bg-emerald-50 border-emerald-200" : "bg-muted/30 border-muted"}`}>
+              <div className="flex items-start gap-3">
+                <Target className={`h-5 w-5 mt-0.5 shrink-0 ${ccBudget?.willExceed ? "text-red-500" : "text-emerald-600"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-medium text-sm">
+                      مركز التكلفة: <span className="text-primary">{selected.cost_center_name}</span>
+                    </span>
+                    {ccBudget ? (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${ccBudget.willExceed ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        {ccBudget.usagePercent}% مُستهلك من الميزانية
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">لا توجد ميزانية معتمدة</span>
+                    )}
+                  </div>
+                  {ccBudget && (
+                    <>
+                      <div className="mt-2 grid grid-cols-3 gap-3 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">الميزانية المعتمدة</span>
+                          <p className="font-semibold text-sm">{ccBudget.budgeted.toLocaleString("ar-SA")}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">المصروف الفعلي</span>
+                          <p className="font-semibold text-sm text-orange-600">{ccBudget.actual.toLocaleString("ar-SA")}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">المتاح بعد التسوية</span>
+                          <p className={`font-semibold text-sm ${ccBudget.willExceed ? "text-red-600" : "text-emerald-600"}`}>
+                            {(ccBudget.remaining - expTotal).toLocaleString("ar-SA")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${ccBudget.willExceed ? "bg-red-500" : ccBudget.usagePercent > 80 ? "bg-orange-400" : "bg-emerald-500"}`}
+                            style={{ width: `${Math.min(ccBudget.usagePercent + Math.round((expTotal / ccBudget.budgeted) * 100), 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      {ccBudget.willExceed && (
+                        <p className="mt-2 text-xs text-red-700 font-medium">
+                          ⚠️ تسجيل هذه المصاريف سيتجاوز ميزانية القسم بمقدار {(ccBudget.actual + expTotal - ccBudget.budgeted).toLocaleString("ar-SA")}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Alerts */}
           {unverifiedTotal > 0 && (
             <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-800">
@@ -278,6 +380,7 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
                     <th className="px-4 py-2.5 text-right font-medium">التاريخ</th>
                     <th className="px-4 py-2.5 text-right font-medium">الوصف</th>
                     <th className="px-4 py-2.5 text-right font-medium">التصنيف</th>
+                    <th className="px-4 py-2.5 text-right font-medium">مركز التكلفة</th>
                     <th className="px-4 py-2.5 text-right font-medium">المبلغ</th>
                     <th className="px-4 py-2.5 text-center font-medium">موثق</th>
                   </tr>
@@ -290,12 +393,18 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
                         <td className="px-4 py-2.5">{e.expense_date}</td>
                         <td className="px-4 py-2.5">{e.description}</td>
                         <td className="px-4 py-2.5 text-xs text-muted-foreground">{e.category}</td>
+                        <td className="px-4 py-2.5 text-xs">
+                          {e.cost_center_name || selected?.cost_center_name
+                            ? <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs">{e.cost_center_name || selected?.cost_center_name}</span>
+                            : <span className="text-muted-foreground">—</span>
+                          }
+                        </td>
                         <td className="px-4 py-2.5 font-semibold">{(e.amount || 0).toLocaleString("ar-SA")}</td>
                         <td className="px-4 py-2.5 text-center">{e.is_verified ? <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" /> : <AlertCircle className="h-4 w-4 text-orange-400 mx-auto" />}</td>
                       </tr>
                     ))}
                   <tr className="border-t bg-muted/30 font-bold">
-                    <td colSpan={3} className="px-4 py-2.5">الإجمالي</td>
+                    <td colSpan={4} className="px-4 py-2.5">الإجمالي</td>
                     <td className="px-4 py-2.5 text-primary">{expTotal.toLocaleString("ar-SA")}</td>
                     <td></td>
                   </tr>
