@@ -8,7 +8,7 @@ import ProductForm from "../components/products/ProductForm";
 import {
   Wrench, Plus, Clock, User, Tag, DollarSign, Edit2, Trash2
 } from "lucide-react";
-import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
+import ProductAdvancedSearch from "../components/products/ProductAdvancedSearch";
 
 export default function Services() {
   const [services, setServices] = useState([]);
@@ -17,7 +17,7 @@ export default function Services() {
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
+  const [search, setSearch] = useState({ text: "", groupId: "", branch: "", priceMin: "", priceMax: "" });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
 
@@ -66,8 +66,10 @@ export default function Services() {
       if (t && !s.name?.toLowerCase().includes(t) &&
           !s.item_code?.toLowerCase().includes(t) &&
           !s.service_provider?.toLowerCase().includes(t)) return false;
-      if (search.client && !s.service_provider?.toLowerCase().includes(search.client.toLowerCase())) return false;
-      if (search.invoiceNumber && !s.item_code?.toLowerCase().includes(search.invoiceNumber.toLowerCase())) return false;
+      if (search.groupId && s.group_id !== search.groupId) return false;
+      if (search.branch && !s.service_provider?.toLowerCase().includes(search.branch.toLowerCase())) return false;
+      if (search.priceMin !== "" && (s.retail_price || 0) < Number(search.priceMin)) return false;
+      if (search.priceMax !== "" && (s.retail_price || 0) > Number(search.priceMax)) return false;
       return true;
     });
   }, [services, search]);
@@ -121,12 +123,12 @@ export default function Services() {
       </div>
 
       {/* Search */}
-      <AdvancedSearchBar
+      <ProductAdvancedSearch
         value={search}
         onChange={setSearch}
-        placeholder="ابحث بالاسم أو الرمز أو المزود..."
-        clientLabel="المزود / المنفذ"
-        showInvoice={true}
+        groups={groups}
+        branches={[]}
+        isService={true}
       />
 
       {/* Empty State */}
@@ -134,9 +136,9 @@ export default function Services() {
         <div className="text-center py-20 text-muted-foreground">
           <Wrench className="h-12 w-12 mx-auto mb-3 opacity-25" />
           <p className="font-medium text-base">
-            {search.text || search.client || search.invoiceNumber ? "لا توجد خدمات تطابق البحث" : "لا توجد خدمات بعد"}
+            {search.text || search.groupId || search.branch || search.priceMin || search.priceMax ? "لا توجد خدمات تطابق البحث" : "لا توجد خدمات بعد"}
           </p>
-          {!search.text && !search.client && !search.invoiceNumber && (
+          {!search.text && !search.groupId && !search.branch && (
             <Button onClick={openNew} className="mt-4 gap-2" variant="outline">
               <Plus className="h-4 w-4" /> إضافة أول خدمة
             </Button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import DataTable from "../components/shared/DataTable";
 import ProductForm from "../components/products/ProductForm";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
+import ProductAdvancedSearch from "../components/products/ProductAdvancedSearch";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -23,6 +24,7 @@ export default function Products() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const { filterByBranch, getDefaultBranchValues, isAdmin } = useBranchFilter();
+  const [advSearch, setAdvSearch] = useState({ text: "", groupId: "", branch: "", priceMin: "", priceMax: "" });
 
   useEffect(() => {
     loadData();
@@ -99,11 +101,24 @@ export default function Products() {
   // First apply branch security filter (non-admins see only their branch)
   const branchSecureProducts = filterByBranch(products);
   // Then apply manual branch dropdown filter (admins can additionally filter by branch)
-  const filteredProducts = !isAdmin
+  const branchFiltered = !isAdmin
     ? branchSecureProducts
     : branchFilter === "all"
       ? branchSecureProducts
       : branchSecureProducts.filter((p) => p.branch_id === branchFilter);
+
+  // Advanced search filter
+  const filteredProducts = useMemo(() => {
+    return branchFiltered.filter((p) => {
+      const t = advSearch.text?.toLowerCase();
+      if (t && !p.name?.toLowerCase().includes(t) && !p.item_code?.toLowerCase().includes(t) && !p.barcode?.toLowerCase().includes(t)) return false;
+      if (advSearch.groupId && p.group_id !== advSearch.groupId) return false;
+      if (advSearch.branch && !p.branch_name?.toLowerCase().includes(advSearch.branch.toLowerCase())) return false;
+      if (advSearch.priceMin !== "" && (p.retail_price || 0) < Number(advSearch.priceMin)) return false;
+      if (advSearch.priceMax !== "" && (p.retail_price || 0) > Number(advSearch.priceMax)) return false;
+      return true;
+    });
+  }, [branchFiltered, advSearch]);
 
   function handleExportExcel() {
     const excelColumns = [
@@ -224,6 +239,13 @@ export default function Products() {
         </div>
       </div>
 
+      <ProductAdvancedSearch
+        value={advSearch}
+        onChange={setAdvSearch}
+        groups={groups}
+        branches={branches}
+      />
+
       <DataTable
         selectable={true}
         selectedIds={selectedIds}
@@ -232,7 +254,7 @@ export default function Products() {
         data={filteredProducts}
         onEdit={openEdit}
         onDelete={handleDelete}
-        emptyMessage="لا توجد مواد بعد"
+        emptyMessage="لا توجد مواد تطابق البحث"
       />
 
       {dialogOpen && (
