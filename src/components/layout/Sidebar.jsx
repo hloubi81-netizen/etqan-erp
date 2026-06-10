@@ -131,6 +131,7 @@ function getMenuItems(lang) {
     { label: l('clientStatement'), path: "/reports/client-statement", icon: FileText },
     { label: l('supplierStatement'), path: "/reports/supplier-statement", icon: FileText },
     { label: l('ledger'), path: "/reports/ledger", icon: BookOpen },
+    { label: lang === 'ar' ? "دفتر الأستاذ العام" : "General Ledger", path: "/reports/general-ledger", icon: BookOpen },
     { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
     { label: lang === 'ar' ? "لوحة تحكم المبيعات" : "Sales Dashboard", path: "/reports/sales-dashboard", icon: TrendingUp },
     { label: lang === 'ar' ? "التقارير المتقدمة" : "Advanced Reports", path: "/reports/advanced", icon: BarChart3 },
