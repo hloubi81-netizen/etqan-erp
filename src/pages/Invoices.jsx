@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck } from "lucide-react";
+import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck, Printer } from "lucide-react";
 import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -20,6 +20,7 @@ import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
 import DocumentComments from "@/components/shared/DocumentComments";
 import InvoiceApprovalBadge from "../components/invoices/InvoiceApprovalBadge";
 import InvoiceApprovalDialog from "../components/invoices/InvoiceApprovalDialog";
+import InvoicePrintTemplate from "../components/invoices/InvoicePrintTemplate";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -42,6 +43,7 @@ export default function Invoices() {
   const [editing, setEditing] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [approvalTarget, setApprovalTarget] = useState(null);
+  const [printTarget, setPrintTarget] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -152,6 +154,17 @@ export default function Invoices() {
     { key: "total", label: "الإجمالي", render: (val) => val ? val.toLocaleString() : "0" },
     { key: "status", label: "الحالة", render: (val) => (
       <Badge variant={val === "مرحّلة" ? "default" : "secondary"}>{val || "مسودة"}</Badge>
+    )},
+    { key: "_print", label: "", render: (_, row) => (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 px-2 text-xs gap-1 text-blue-700 hover:bg-blue-50"
+        onClick={(e) => { e.stopPropagation(); setPrintTarget(row); }}
+      >
+        <Printer className="h-3.5 w-3.5" />
+        طباعة
+      </Button>
     )},
     { key: "_whatsapp", label: "", render: (_, row) => (
       <WhatsAppSendButton invoice={row} phone={row.client_phone} size="sm" />
@@ -274,6 +287,14 @@ export default function Invoices() {
           invoice={editing}
           invoiceType={invoiceType}
           pattern={selectedPattern}
+        />
+      )}
+
+      {printTarget && (
+        <InvoicePrintTemplate
+          invoice={printTarget}
+          open={!!printTarget}
+          onClose={() => setPrintTarget(null)}
         />
       )}
 
