@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { Building2, Users, Layers, TrendingUp } from "lucide-react";
+import { Building2, Users, Layers, TrendingUp, ShieldCheck, ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { ROLE_LABELS } from "@/hooks/usePermissions";
 
 export default function SubscriptionSummary() {
   const { user } = useAuth();
@@ -17,10 +20,15 @@ export default function SubscriptionSummary() {
     Promise.all([
       base44.entities.Employee.filter({ subscription_id: sid }).catch(() => []),
       base44.entities.FixedAsset.filter({ subscription_id: sid }).catch(() => []),
-    ]).then(([employees, assets]) => {
+      base44.functions.invoke('getAllUsers', {}).catch(() => ({ data: { users: [] } })),
+    ]).then(([employees, assets, usersRes]) => {
       const activeEmployees = employees.filter(e => e.status === "نشط");
       const totalAssetCost = assets.reduce((s, a) => s + (a.purchase_cost || 0), 0);
       const netBookValue = assets.reduce((s, a) => s + (a.net_book_value || 0), 0);
+      const subUsers = (usersRes?.data?.users || []).filter(u => u.subscription_id === sid);
+      // count by role
+      const roleCounts = {};
+      subUsers.forEach(u => { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
 
       setData({
         totalEmployees: employees.length,
@@ -28,6 +36,8 @@ export default function SubscriptionSummary() {
         totalAssets: assets.length,
         totalAssetCost,
         netBookValue,
+        subUsers,
+        roleCounts,
       });
       setLoading(false);
     });
@@ -87,7 +97,8 @@ export default function SubscriptionSummary() {
           بيانات خاصة باشتراكك
         </Badge>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {cards.map((c, i) => (
             <div key={i} className={`flex items-center gap-3 p-3 rounded-xl ${c.bg} border border-transparent`}>
@@ -102,6 +113,53 @@ export default function SubscriptionSummary() {
             </div>
           ))}
         </div>
+
+        {/* Team management panel */}
+        {user?.role === "admin" && (
+          <div className="border border-violet-200 bg-violet-50/60 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-violet-600" />
+                <span className="text-sm font-semibold text-violet-800">فريق العمل والصلاحيات</span>
+              </div>
+              <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1 border-violet-300 text-violet-700 hover:bg-violet-100">
+                <Link to="/users">
+                  إدارة الصلاحيات <ChevronLeft className="h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="flex gap-2">
+                {[1,2,3].map(i => <div key={i} className="h-6 w-20 rounded bg-violet-200/60 animate-pulse" />)}
+              </div>
+            ) : data?.subUsers?.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(data.roleCounts).map(([role, count]) => (
+                    <Badge key={role} variant="outline" className="text-[11px] border-violet-300 text-violet-700 bg-white gap-1">
+                      {ROLE_LABELS[role] || role}
+                      <span className="bg-violet-200 text-violet-800 rounded-full px-1.5 font-bold">{count}</span>
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {data.subUsers.slice(0, 6).map(u => (
+                    <span key={u.id} className="text-[10px] bg-white border border-violet-200 text-violet-700 rounded-full px-2 py-0.5">
+                      {u.full_name || u.email?.split("@")[0]}
+                      {u.is_active === false && <span className="text-red-400 mr-1">• موقوف</span>}
+                    </span>
+                  ))}
+                  {data.subUsers.length > 6 && (
+                    <span className="text-[10px] text-violet-500">+{data.subUsers.length - 6} آخرين</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-violet-600">لا يوجد مستخدمون مرتبطون بهذا الاشتراك بعد.</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
