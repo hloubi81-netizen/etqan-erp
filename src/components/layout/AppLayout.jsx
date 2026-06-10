@@ -9,7 +9,6 @@ import { base44 } from "@/api/base44Client";
 import GlobalSearch from "./GlobalSearch";
 import PageAccessGuard from "@/components/shared/PageAccessGuard";
 import { cn } from "@/lib/utils";
-import AIChatbot from "@/components/assistant/AIChatbot";
 import OnboardingGuide from "@/components/assistant/OnboardingGuide";
 
 export default function AppLayout() {
@@ -93,8 +92,7 @@ export default function AppLayout() {
         </main>
       </div>
 
-      {/* AI Chatbot & Onboarding */}
-      <AIChatbot />
+      {/* Onboarding */}
       <OnboardingGuide />
     </div>
   );

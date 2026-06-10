@@ -80,6 +80,7 @@ import SelectPlan from './pages/SelectPlan';
 import Services from './pages/Services';
 import Archive from './pages/Archive';
 import CustodyManagement from './pages/custody/CustodyManagement';
+import AIChatbot from './components/assistant/AIChatbot';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -192,6 +193,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <AuthenticatedApp />
+          <AIChatbot />
         </Router>
         <Toaster />
       </QueryClientProvider>
