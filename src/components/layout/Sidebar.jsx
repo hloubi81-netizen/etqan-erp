@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -124,6 +124,9 @@ function getMenuItems(lang) {
 
   // ── الأصول الثابتة ──
   { label: lang === 'ar' ? "الأصول الثابتة" : "Fixed Assets", icon: Landmark, path: "/assets" },
+
+  // ── العهد المالية ──
+  { label: lang === 'ar' ? "العهد المالية" : "Financial Custody", icon: Wallet, path: "/custody" },
 
   // ── التقارير ──
   {

@@ -79,6 +79,7 @@ import Messages from './pages/Messages';
 import SelectPlan from './pages/SelectPlan';
 import Services from './pages/Services';
 import Archive from './pages/Archive';
+import CustodyManagement from './pages/custody/CustodyManagement';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -174,6 +175,7 @@ const AuthenticatedApp = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/select-plan" element={<SelectPlan />} />
         <Route path="/archive" element={<Archive />} />
+        <Route path="/custody" element={<CustodyManagement />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
