@@ -12,12 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck } from "lucide-react";
 import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
 import DocumentComments from "@/components/shared/DocumentComments";
+import InvoiceApprovalBadge from "../components/invoices/InvoiceApprovalBadge";
+import InvoiceApprovalDialog from "../components/invoices/InvoiceApprovalDialog";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -39,6 +41,7 @@ export default function Invoices() {
   const [selectedPattern, setSelectedPattern] = useState(null);
   const [editing, setEditing] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [approvalTarget, setApprovalTarget] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -156,6 +159,25 @@ export default function Invoices() {
     { key: "_comments", label: "تعليقات", render: (_, row) => (
       <DocumentComments documentType="فاتورة" documentId={row.id} documentNumber={row.invoice_number} />
     )},
+    { key: "_approval", label: "الاعتماد", render: (_, row) => (
+      <div className="flex items-center gap-1.5">
+        {row.approved_by
+          ? <InvoiceApprovalBadge invoice={row} />
+          : <span className="text-xs text-muted-foreground">—</span>
+        }
+        {(canEdit("invoices") || row.approved_by) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1 text-emerald-700 hover:bg-emerald-50"
+            onClick={(e) => { e.stopPropagation(); setApprovalTarget(row); }}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {row.approved_by ? "إدارة" : "اعتماد"}
+          </Button>
+        )}
+      </div>
+    )},
   ];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
@@ -252,6 +274,15 @@ export default function Invoices() {
           invoice={editing}
           invoiceType={invoiceType}
           pattern={selectedPattern}
+        />
+      )}
+
+      {approvalTarget && (
+        <InvoiceApprovalDialog
+          invoice={approvalTarget}
+          open={!!approvalTarget}
+          onClose={() => setApprovalTarget(null)}
+          onDone={loadData}
         />
       )}
     </div>

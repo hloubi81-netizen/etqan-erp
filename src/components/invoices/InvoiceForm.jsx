@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, Zap } from "lucide-react";
+import InvoiceApprovalBadge from "@/components/invoices/InvoiceApprovalBadge";
 import WhatsAppSendButton from "@/components/invoices/WhatsAppSendButton";
 import BarcodeScanner from "@/components/barcode/BarcodeScanner";
 import { priceForUnit, toBaseUnit, getBaseUnit } from "@/utils/unitConvert";
@@ -208,10 +209,11 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-          {invoice ? "تعديل" : "إنشاء"} فاتورة {invoiceType}
-          {form.pattern_name && <span className="text-sm font-normal text-muted-foreground mr-2">| نمط: {form.pattern_name}</span>}
-        </DialogTitle>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <span>{invoice ? "تعديل" : "إنشاء"} فاتورة {invoiceType}</span>
+            {form.pattern_name && <span className="text-sm font-normal text-muted-foreground">| نمط: {form.pattern_name}</span>}
+            {invoice?.approved_by && <InvoiceApprovalBadge invoice={invoice} />}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
