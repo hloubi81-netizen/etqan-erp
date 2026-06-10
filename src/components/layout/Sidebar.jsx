@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -151,6 +151,9 @@ function getMenuItems(lang) {
   { label: lang === 'ar' ? "إدارة علاقات العملاء" : "CRM", icon: MessageSquare, path: "/crm" },
   { label: lang === 'ar' ? "الرسائل الداخلية" : "Internal Messages", icon: Mail, path: "/messages" },
   { label: lang === 'ar' ? "الإشعارات والتنبيهات" : "Notifications", icon: Bell, path: "/notifications" },
+
+  // ── أرشيف المستندات ──
+  { label: lang === 'ar' ? "أرشيف المستندات" : "Document Archive", icon: Archive, path: "/archive" },
 
   // ── الإدارة والإعدادات ──
   { label: l('users'), icon: Users, path: "/users" },

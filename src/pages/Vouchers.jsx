@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { logActivity } from "@/utils/activityLogger";
 import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
+import ArchiveButton from "@/components/shared/ArchiveButton";
 
 const TYPE_MAP = {
   receipt: "سند قبض",
@@ -31,6 +32,7 @@ export default function Vouchers() {
 
   const filteredVouchers = useMemo(() => {
     return vouchers.filter((v) => {
+      if (v.is_archived) return false;
       const t = search.text?.toLowerCase();
       if (t && !v.voucher_number?.toLowerCase().includes(t) &&
           !v.account_name?.toLowerCase().includes(t) &&
@@ -94,6 +96,9 @@ export default function Vouchers() {
       { key: "amount", label: "المبلغ", render: (v) => (v || 0).toLocaleString() },
     ]),
     { key: "status", label: "الحالة", render: (v) => <Badge variant={v === "مرحّل" ? "default" : "secondary"}>{v || "مسودة"}</Badge> },
+    { key: "_archive", label: "", render: (_, row) => (
+      <ArchiveButton entity="Voucher" record={row} onDone={loadData} />
+    )},
   ];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;

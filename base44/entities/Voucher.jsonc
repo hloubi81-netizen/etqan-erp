@@ -93,6 +93,19 @@
         "\u0645\u0631\u062d\u0651\u0644"
       ],
       "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "title": "\u0645\u0624\u0631\u0634\u0641",
+      "default": false
+    },
+    "archived_at": {
+      "type": "string",
+      "title": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0623\u0631\u0634\u0641\u0629"
+    },
+    "archived_by": {
+      "type": "string",
+      "title": "\u0623\u0631\u0634\u0641 \u0628\u0648\u0627\u0633\u0637\u0629"
     }
   },
   "required": [

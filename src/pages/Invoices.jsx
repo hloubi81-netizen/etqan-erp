@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck, Printer } from "lucide-react";
+import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck, Printer, Archive } from "lucide-react";
+import ArchiveButton from "@/components/shared/ArchiveButton";
 import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -50,6 +51,7 @@ export default function Invoices() {
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
+      if (inv.is_archived) return false;
       const t = search.text?.toLowerCase();
       if (t && !inv.invoice_number?.toLowerCase().includes(t) &&
           !inv.client_name?.toLowerCase().includes(t) &&
@@ -188,6 +190,9 @@ export default function Invoices() {
     )},
     { key: "_comments", label: "تعليقات", render: (_, row) => (
       <DocumentComments documentType="فاتورة" documentId={row.id} documentNumber={row.invoice_number} />
+    )},
+    { key: "_archive", label: "", render: (_, row) => (
+      <ArchiveButton entity="Invoice" record={row} onDone={loadData} />
     )},
     { key: "_approval", label: "الاعتماد", render: (_, row) => (
       <div className="flex items-center gap-1.5">

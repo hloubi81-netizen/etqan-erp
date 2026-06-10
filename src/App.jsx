@@ -72,6 +72,7 @@ import Contact from './pages/Contact';
 import Messages from './pages/Messages';
 import SelectPlan from './pages/SelectPlan';
 import Services from './pages/Services';
+import Archive from './pages/Archive';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -160,6 +161,7 @@ const AuthenticatedApp = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/select-plan" element={<SelectPlan />} />
+        <Route path="/archive" element={<Archive />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
