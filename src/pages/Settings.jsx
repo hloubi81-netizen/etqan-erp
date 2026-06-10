@@ -11,8 +11,10 @@ import { toast } from "sonner";
 import {
   Settings as SettingsIcon, Palette, Globe, Building2, Bell, Shield,
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
-  UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle
+  UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle,
+  Printer
 } from "lucide-react";
+import PrintTemplateDesigner from "@/components/print/PrintTemplateDesigner";
 import BackupPanel from "@/components/settings/BackupPanel";
 import PrintersManager from "@/components/pos/PrintersManager";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
@@ -25,6 +27,7 @@ const TABS = [
   { id: "language",      label: "اللغة",             icon: Globe },
   { id: "company",       label: "بيانات الشركة",     icon: Building2 },
   { id: "invoices",      label: "الفواتير",          icon: Receipt },
+  { id: "print_design",  label: "تصميم الطباعة",    icon: Printer },
   { id: "accounting",    label: "المحاسبة",          icon: CircleDollarSign },
   { id: "warehouse",     label: "المخزون",           icon: WarehouseIcon },
   { id: "pos",           label: "نقطة البيع",        icon: ShoppingCart },
@@ -106,6 +109,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
+  const [showPrintDesigner, setShowPrintDesigner] = useState(false);
 
   useEffect(() => {
     try {
@@ -461,6 +465,46 @@ export default function Settings() {
           </div>
         );
 
+      case "print_design":
+        return (
+          <div className="space-y-4">
+            <SectionHeader title="تصميم قالب الطباعة" desc="تخصيص شكل الفواتير والسندات عند الطباعة — شعار، ألوان، خطوط، بيانات ضريبية" />
+            <div className="flex flex-col gap-4">
+              <div className="p-4 rounded-xl border bg-muted/20 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Printer className="h-6 w-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm mb-1">مصمّم قالب الطباعة</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    تحكّم كامل في شكل الفواتير والسندات المطبوعة: اختر القالب، ارفع شعار شركتك، حدّد الألوان والخطوط، أضف البيانات الضريبية والبنكية، والمزيد.
+                  </p>
+                </div>
+                <Button onClick={() => setShowPrintDesigner(true)} className="gap-2 shrink-0">
+                  <Printer className="h-4 w-4" />
+                  فتح المصمّم
+                </Button>
+              </div>
+              {[
+                { icon: "🎨", title: "4 قوالب احترافية", desc: "حديث، كلاسيكي، بسيط، مميز" },
+                { icon: "🖼️", title: "شعار الشركة", desc: "رفع الشعار وتحديد موضعه" },
+                { icon: "🏷️", title: "البيانات الضريبية", desc: "رقم ضريبي، سجل تجاري، مبلغ بالكلمات" },
+                { icon: "🏦", title: "بيانات التحويل البنكي", desc: "IBAN، رقم الحساب، اسم البنك" },
+                { icon: "✍️", title: "الشروط والأحكام", desc: "نص مخصص أسفل الفاتورة" },
+                { icon: "💧", title: "علامة مائية", desc: "نص خلفي شفاف على المستند" },
+              ].map((f, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/10">
+                  <span className="text-xl">{f.icon}</span>
+                  <div>
+                    <p className="text-sm font-medium">{f.title}</p>
+                    <p className="text-xs text-muted-foreground">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case "backup":
         return (
           <div className="space-y-4">
@@ -483,13 +527,17 @@ export default function Settings() {
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
-        {!["general","appearance","language","security","access","backup"].includes(activeTab) && (
+        {!["general","appearance","language","security","access","backup","print_design"].includes(activeTab) && (
           <Button onClick={saveSettings} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
           </Button>
         )}
       </div>
+
+      {showPrintDesigner && (
+        <PrintTemplateDesigner open={showPrintDesigner} onClose={() => setShowPrintDesigner(false)} />
+      )}
 
       <div className="flex gap-5">
         {/* Sidebar tabs */}
