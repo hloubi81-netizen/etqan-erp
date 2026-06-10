@@ -9,6 +9,8 @@ import { base44 } from "@/api/base44Client";
 import GlobalSearch from "./GlobalSearch";
 import PageAccessGuard from "@/components/shared/PageAccessGuard";
 import { cn } from "@/lib/utils";
+import AIChatbot from "@/components/assistant/AIChatbot";
+import OnboardingGuide from "@/components/assistant/OnboardingGuide";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -90,6 +92,10 @@ export default function AppLayout() {
           </PageAccessGuard>
         </main>
       </div>
+
+      {/* AI Chatbot & Onboarding */}
+      <AIChatbot />
+      <OnboardingGuide />
     </div>
   );
 }
