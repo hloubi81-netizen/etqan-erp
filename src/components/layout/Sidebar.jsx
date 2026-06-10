@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -137,7 +137,8 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
     { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
     { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
-    { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch }]
+    { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch },
+    { label: lang === 'ar' ? "تقرير الخدمات" : "Services Report", path: "/reports/services", icon: Wrench }]
 
   },
 
