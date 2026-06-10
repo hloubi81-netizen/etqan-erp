@@ -80,6 +80,7 @@ import SelectPlan from './pages/SelectPlan';
 import Services from './pages/Services';
 import Archive from './pages/Archive';
 import CustodyManagement from './pages/custody/CustodyManagement';
+import CustodyBudgetReport from './pages/custody/CustodyBudgetReport';
 import AIChatbot from './components/assistant/AIChatbot';
 
 const AuthenticatedApp = () => {
@@ -177,6 +178,7 @@ const AuthenticatedApp = () => {
         <Route path="/select-plan" element={<SelectPlan />} />
         <Route path="/archive" element={<Archive />} />
         <Route path="/custody" element={<CustodyManagement />} />
+        <Route path="/custody/budget-report" element={<CustodyBudgetReport />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

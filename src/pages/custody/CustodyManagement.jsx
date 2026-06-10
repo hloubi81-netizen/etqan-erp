@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2 } from "lucide-react";
 import CustodyForm from "@/components/custody/CustodyForm";
 import CustodyExpenses from "@/components/custody/CustodyExpenses";
 import CustodySettlement from "@/components/custody/CustodySettlement";
@@ -155,9 +156,16 @@ export default function CustodyManagement() {
           <h1 className="text-xl font-bold">إدارة العهد المالية</h1>
           <p className="text-sm text-muted-foreground">صرف العهد وتسجيل المصاريف وإجراء التسويات</p>
         </div>
-        <Button onClick={() => { setEditingCustody(null); setFormOpen(true); }} className="gap-1.5">
-          <Plus className="h-4 w-4" /> صرف عهدة جديدة
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline" className="gap-1.5">
+            <Link to="/custody/budget-report">
+              <BarChart2 className="h-4 w-4" /> تقرير مراكز التكلفة
+            </Link>
+          </Button>
+          <Button onClick={() => { setEditingCustody(null); setFormOpen(true); }} className="gap-1.5">
+            <Plus className="h-4 w-4" /> صرف عهدة جديدة
+          </Button>
+        </div>
       </div>
 
       {/* KPIs */}
