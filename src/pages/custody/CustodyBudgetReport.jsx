@@ -10,7 +10,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
-import { Target, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Wallet, FileBarChart2, Download } from "lucide-react";
+import { Target, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Wallet, FileBarChart2 } from "lucide-react";
+import ExportButtons from "@/components/shared/ExportButtons";
 
 const COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16"];
 const fmt = v => (v || 0).toLocaleString("ar-SA", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -178,26 +179,25 @@ export default function CustodyBudgetReport() {
     value: r.actualTotal,
   }));
 
-  function exportCSV() {
-    const rows = [["مركز التكلفة", "الميزانية المعتمدة", "المصروف الفعلي", "مصاريف العهد", "الفارق", "نسبة التنفيذ", "الحالة"]];
-    ccReport.forEach(r => {
-      rows.push([
-        r.cc.name,
-        r.totalBudgeted,
-        r.actualTotal,
-        r.custodyExpTotal,
-        r.variance,
-        `${r.pct}%`,
-        r.over ? "تجاوز" : r.pct >= 80 ? "تحذير" : "طبيعي",
-      ]);
-    });
-    const csv = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `تقرير_عهد_مراكز_التكلفة_${filterYear}.csv`;
-    a.click();
-  }
+  const exportColumns = [
+    { key: "name", label: "مركز التكلفة" },
+    { key: "totalBudgeted", label: "الميزانية المعتمدة" },
+    { key: "actualTotal", label: "المصروف الفعلي" },
+    { key: "custodyExpTotal", label: "مصاريف العهد" },
+    { key: "variance", label: "الفارق" },
+    { key: "pct", label: "نسبة التنفيذ %", render: v => `${v}%` },
+    { key: "status", label: "الحالة" },
+  ];
+
+  const exportData = ccReport.map(r => ({
+    name: r.cc.name,
+    totalBudgeted: r.totalBudgeted,
+    actualTotal: r.actualTotal,
+    custodyExpTotal: r.custodyExpTotal,
+    variance: r.variance,
+    pct: r.pct,
+    status: r.over ? "تجاوز" : r.pct >= 80 ? "تحذير" : "طبيعي",
+  }));
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -216,9 +216,13 @@ export default function CustodyBudgetReport() {
           </h1>
           <p className="text-muted-foreground text-sm mt-1">مقارنة الميزانية المخصصة مقابل المصاريف الفعلية المترحلة من العهد</p>
         </div>
-        <Button variant="outline" onClick={exportCSV} className="gap-2">
-          <Download className="h-4 w-4" /> تصدير CSV
-        </Button>
+        <ExportButtons
+          columns={exportColumns}
+          data={exportData}
+          title="تقرير العهد ومراكز التكلفة"
+          filename={`custody-budget-report-${filterYear}`}
+          printId="custody-budget-table"
+        />
       </div>
 
       {/* Filters */}
@@ -567,7 +571,7 @@ export default function CustodyBudgetReport() {
               <CardTitle className="text-sm">جدول المقارنة الملخص</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <div id="custody-budget-table" className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/50 border-b">
                     <tr>

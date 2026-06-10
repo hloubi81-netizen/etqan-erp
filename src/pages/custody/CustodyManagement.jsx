@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2, CalendarDays, Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import ExportButtons from "@/components/shared/ExportButtons";
 import CustodyForm from "@/components/custody/CustodyForm";
 import CustodyExpenses from "@/components/custody/CustodyExpenses";
 import CustodySettlement from "@/components/custody/CustodySettlement";
@@ -308,10 +309,33 @@ export default function CustodyManagement() {
         </CardContent>
       </Card>
 
+      {/* Export */}
+      {filtered.length > 0 && (
+        <div className="flex justify-end">
+          <ExportButtons
+            columns={[
+              { key: "custody_number", label: "رقم العهدة" },
+              { key: "employee_name", label: "الموظف" },
+              { key: "department", label: "القسم" },
+              { key: "purpose", label: "الغرض" },
+              { key: "issued_amount", label: "المبلغ المصروف" },
+              { key: "cost_center_name", label: "مركز التكلفة" },
+              { key: "issue_date", label: "تاريخ الصرف" },
+              { key: "expected_return_date", label: "تاريخ الإرجاع" },
+              { key: "status", label: "الحالة" },
+            ]}
+            data={filtered}
+            title="كشف العهد المالية"
+            filename="custody-list"
+            printId="custody-table"
+          />
+        </div>
+      )}
+
       {/* Custodies Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div id="custody-table" className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-muted-foreground">
                 <tr>
