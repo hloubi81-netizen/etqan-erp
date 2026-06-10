@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch } from "lucide-react";
+import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch, Briefcase } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import PageAccessEditor from "../components/users/PageAccessEditor";
+import RoleTemplatesDialog from "../components/users/RoleTemplates";
 import { MODULES, SECTIONS, ACTIONS, SECTION_LABELS, ACTION_LABELS, ROLE_LABELS } from "@/hooks/usePermissions";
 
 const ROLE_COLORS = {
@@ -46,6 +47,7 @@ export default function Users() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
   const [showInvite, setShowInvite] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const { isAdmin } = useBranchFilter();
 
   useEffect(() => { loadData(); }, []);
@@ -218,10 +220,21 @@ export default function Users() {
 
                 {u.role === "admin" ? (
                   <p className="text-xs text-amber-600 mb-3 flex items-center gap-1"><Shield className="h-3 w-3"/>كل الصلاحيات</p>
+                ) : countPerms(u) > 0 ? (
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">{countPerms(u)} صلاحية مخصصة:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(SECTION_LABELS)
+                        .filter(([sec]) => Object.keys(u.permissions || {}).some(k => k.startsWith(sec + ".")))
+                        .map(([sec, cfg]) => (
+                          <span key={sec} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                            {cfg.label}
+                          </span>
+                        ))}
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground mb-3">
-                    {countPerms(u) > 0 ? `${countPerms(u)} صلاحية مخصصة` : "صلاحيات افتراضية حسب الدور"}
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">صلاحيات افتراضية حسب الدور</p>
                 )}
 
                 <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs"
@@ -255,6 +268,16 @@ export default function Users() {
             <DialogFooter><Button onClick={handleInvite}>إرسال الدعوة</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Role Templates Dialog */}
+        <RoleTemplatesDialog
+          open={showTemplates}
+          onClose={() => setShowTemplates(false)}
+          onApply={(tpl) => {
+            setEditUser({ ...editUser, permissions: tpl.permissions });
+            toast.success(`تم تطبيق قالب: ${tpl.label}`);
+          }}
+        />
 
         {/* Edit Permissions Dialog */}
         {editUser && (
@@ -319,6 +342,10 @@ export default function Users() {
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground mb-2">⚡ حزم جاهزة (تطبيق سريع):</p>
                     <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" className="text-xs h-7 gap-1 border-primary text-primary hover:bg-primary/10"
+                        onClick={() => setShowTemplates(true)}>
+                        <Briefcase className="h-3 w-3"/>قوالب الأدوار الوظيفية
+                      </Button>
                       {PACKAGES.map(pkg => (
                         <Button key={pkg.label} variant="outline" size="sm" className="text-xs h-7 gap-1"
                           onClick={() => applyPackage(pkg)}>
