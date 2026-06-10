@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2 } from "lucide-react";
+import { Plus, Pencil, Wallet, FileText, Scale, AlertTriangle, CheckCircle2, Clock, Lock, PenLine, ShieldCheck, BarChart2, CalendarDays } from "lucide-react";
 import CustodyForm from "@/components/custody/CustodyForm";
 import CustodyExpenses from "@/components/custody/CustodyExpenses";
 import CustodySettlement from "@/components/custody/CustodySettlement";
@@ -157,6 +157,11 @@ export default function CustodyManagement() {
           <p className="text-sm text-muted-foreground">صرف العهد وتسجيل المصاريف وإجراء التسويات</p>
         </div>
         <div className="flex gap-2">
+          <Button asChild variant="outline" className="gap-1.5">
+            <Link to="/custody/calendar">
+              <CalendarDays className="h-4 w-4" /> تقويم العهد
+            </Link>
+          </Button>
           <Button asChild variant="outline" className="gap-1.5">
             <Link to="/custody/budget-report">
               <BarChart2 className="h-4 w-4" /> تقرير مراكز التكلفة
