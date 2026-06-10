@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { ShieldCheck, Clock } from "lucide-react";
 
 const STATUS_STYLES = {
   "مفتوحة": "bg-blue-100 text-blue-700",
@@ -107,6 +108,30 @@ export default function CustodyDetail({ custody, expenses }) {
           <p className="text-muted-foreground">{custody.settlement_notes}</p>
         </div>
       )}
+
+      {/* Signature Status */}
+      <div className={`rounded-xl p-3 text-sm flex items-center gap-3 ${custody.approval_signature ? "bg-green-50 border border-green-200" : "bg-orange-50 border border-orange-200"}`}>
+        {custody.approval_signature ? (
+          <>
+            <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />
+            <div className="flex-1">
+              <p className="font-semibold text-green-700">معتمد ومُوقَّع رقمياً</p>
+              <p className="text-xs text-muted-foreground">
+                {custody.approved_by && `الموقِّع: ${custody.approved_by}`}
+                {custody.approved_at && ` — ${new Date(custody.approved_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`}
+              </p>
+            </div>
+            <div className="border border-green-200 rounded bg-white p-1">
+              <img src={custody.approval_signature} alt="توقيع" className="h-8 w-auto" />
+            </div>
+          </>
+        ) : (
+          <>
+            <Clock className="h-5 w-5 text-orange-400 shrink-0" />
+            <p className="text-orange-600 font-medium">بانتظار الاعتماد والتوقيع الرقمي</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }
