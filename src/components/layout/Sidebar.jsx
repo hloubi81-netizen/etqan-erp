@@ -135,6 +135,7 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "دفتر الأستاذ العام" : "General Ledger", path: "/reports/general-ledger", icon: BookOpen },
     { label: l('trialBalance'), path: "/reports/trial-balance", icon: Scale },
     { label: lang === 'ar' ? "لوحة تحكم المبيعات" : "Sales Dashboard", path: "/reports/sales-dashboard", icon: TrendingUp },
+    { label: lang === 'ar' ? "تكلفة البضاعة المباعة (COGS)" : "COGS Report", path: "/reports/cogs", icon: Calculator },
     { label: lang === 'ar' ? "التقارير المتقدمة" : "Advanced Reports", path: "/reports/advanced", icon: BarChart3 },
     { label: lang === 'ar' ? "فروقات الجرد" : "Inventory Variance", path: "/reports/inventory-variance", icon: ClipboardList },
     { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
