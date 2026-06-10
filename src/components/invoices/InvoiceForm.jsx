@@ -17,6 +17,74 @@ import { createCurrencyDiffEntry, toLocalCurrency } from "@/utils/currencyEngine
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 
+/**
+ * ترحيل قيود يومية للبنود الخدمية في الفاتورة
+ * - بيع خدمة:  مدين (العميل) | دائن (حساب إيرادات الخدمة)
+ * - شراء خدمة: مدين (حساب تكلفة الخدمة) | دائن (المورد)
+ */
+async function createServiceJournalEntries(invoice, products) {
+  const serviceItems = (invoice.items || []).filter(item => {
+    const prod = products.find(p => p.id === item.product_id);
+    return prod?.is_service && item.total > 0;
+  });
+  if (!serviceItems.length) return 0;
+
+  const isSales = invoice.pattern_type?.includes("مبيعات") && !invoice.pattern_type?.includes("مرتجع");
+  const isPurchase = invoice.pattern_type?.includes("مشتريات") && !invoice.pattern_type?.includes("مرتجع");
+  const isSalesReturn = invoice.pattern_type?.includes("مرتجع مبيعات");
+  const isPurchaseReturn = invoice.pattern_type?.includes("مرتجع مشتريات");
+
+  let count = 0;
+  for (const item of serviceItems) {
+    const prod = products.find(p => p.id === item.product_id);
+    const amount = item.total;
+
+    let debitAccountId, debitAccountName, creditAccountId, creditAccountName;
+
+    if (isSales) {
+      // العميل مدين ← حساب إيرادات الخدمة دائن
+      debitAccountId = invoice.client_account_id;
+      debitAccountName = invoice.client_name;
+      creditAccountId = prod.service_revenue_account_id;
+      creditAccountName = prod.service_revenue_account_name;
+    } else if (isPurchase) {
+      // حساب تكلفة الخدمة مدين ← المورد دائن
+      debitAccountId = prod.service_cost_account_id;
+      debitAccountName = prod.service_cost_account_name;
+      creditAccountId = invoice.client_account_id;
+      creditAccountName = invoice.client_name;
+    } else if (isSalesReturn) {
+      // عكس قيد البيع
+      debitAccountId = prod.service_revenue_account_id;
+      debitAccountName = prod.service_revenue_account_name;
+      creditAccountId = invoice.client_account_id;
+      creditAccountName = invoice.client_name;
+    } else if (isPurchaseReturn) {
+      // عكس قيد الشراء
+      debitAccountId = invoice.client_account_id;
+      debitAccountName = invoice.client_name;
+      creditAccountId = prod.service_cost_account_id;
+      creditAccountName = prod.service_cost_account_name;
+    }
+
+    if (!debitAccountId || !creditAccountId) continue;
+
+    await base44.entities.JournalEntry.create({
+      date: invoice.date,
+      description: `${invoice.pattern_type} خدمة - ${item.product_name} - فاتورة ${invoice.invoice_number}`,
+      debit_account_id: debitAccountId,
+      debit_account_name: debitAccountName,
+      credit_account_id: creditAccountId,
+      credit_account_name: creditAccountName,
+      amount,
+      reference: invoice.invoice_number,
+      notes: `ترحيل تلقائي - خدمة: ${item.product_name}`,
+    }).catch(() => {});
+    count++;
+  }
+  return count;
+}
+
 async function createCostEntryFromInvoice(invoice, costCenters) {
   if (!invoice.cost_center_id || !invoice.total || invoice.total <= 0) return;
   const cc = costCenters.find(c => c.id === invoice.cost_center_id);
@@ -497,19 +565,42 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
                 await refreshAccountBalances([saved.client_account_id]);
               }
 
-              // ترحيل المخزون تلقائياً
+              // ترحيل المخزون تلقائياً (استبعاد البنود الخدمية)
               let inventoryMsg = "";
+              const nonServiceItems = saved.items.filter(i => {
+                const p = products.find(pr => pr.id === i.product_id);
+                return !p?.is_service;
+              });
+              const savedForInventory = { ...saved, items: nonServiceItems };
               if (saved.pattern_type?.includes("مبيعات")) {
-                const { warnings } = await deductSalesInventory(saved);
-                inventoryMsg = " وخصم المخزون";
-                if (warnings.length) warnings.forEach(w => toast.warning(w));
+                if (nonServiceItems.length) {
+                  const { warnings } = await deductSalesInventory(savedForInventory);
+                  inventoryMsg = " وخصم المخزون";
+                  if (warnings.length) warnings.forEach(w => toast.warning(w));
+                }
               } else if (saved.pattern_type?.includes("مشتريات")) {
-                await addPurchaseInventory(saved);
-                inventoryMsg = " وإضافة المخزون";
+                if (nonServiceItems.length) {
+                  await addPurchaseInventory(savedForInventory);
+                  inventoryMsg = " وإضافة المخزون";
+                }
               }
+
+              // قيود يومية للبنود الخدمية
+              const serviceCount = await createServiceJournalEntries(saved, products);
+              const serviceMsg = serviceCount > 0 ? ` وترحيل ${serviceCount} قيد خدمة` : "";
 
               // قيد مركز التكلفة
               if (saved.cost_center_id) await createCostEntryFromInvoice(saved, costCenters);
+
+              // تحديث أرصدة حسابات الخدمة
+              if (serviceCount > 0) {
+                const serviceAccountIds = saved.items
+                  .map(i => products.find(p => p.id === i.product_id))
+                  .filter(p => p?.is_service)
+                  .flatMap(p => [p.service_revenue_account_id, p.service_cost_account_id])
+                  .filter(Boolean);
+                if (serviceAccountIds.length) await refreshAccountBalances(serviceAccountIds);
+              }
 
               // قيد فرق العملة (إن وُجد)
               let fxMsg = "";
@@ -533,7 +624,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
                 if (fxEntry) fxMsg = " وقيد فرق الصرف";
               }
 
-              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}${fxMsg}`);
+              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${serviceMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}${fxMsg}`);
             }}
             disabled={!form.invoice_number}
             className="gap-1.5"

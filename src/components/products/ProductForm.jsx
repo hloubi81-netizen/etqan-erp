@@ -6,9 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, Wrench } from "lucide-react";
+import { Plus, Trash2, Wrench, BookOpen } from "lucide-react";
+import AccountSearchInput from "@/components/shared/AccountSearchInput";
+import { useState as useStateAccounts, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 
 export default function ProductForm({ open, onClose, onSave, product, groups, warehouses, products, branches = [] }) {
+  const [accounts, setAccounts] = useStateAccounts([]);
+
+  useEffect(() => {
+    base44.entities.Account.list().then(setAccounts).catch(() => {});
+  }, []);
+
   const [form, setForm] = useState({
     item_code: product?.item_code || "",
     name: product?.name || "",
@@ -34,6 +43,10 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
     service_provider: product?.service_provider || "",
     service_description: product?.service_description || "",
     service_terms: product?.service_terms || "",
+    service_revenue_account_id: product?.service_revenue_account_id || "",
+    service_revenue_account_name: product?.service_revenue_account_name || "",
+    service_cost_account_id: product?.service_cost_account_id || "",
+    service_cost_account_name: product?.service_cost_account_name || "",
   });
 
   function updateField(key, value) {
@@ -400,6 +413,47 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
                     value={form.service_terms}
                     onChange={(e) => updateField("service_terms", e.target.value)}
                   />
+                </div>
+
+                {/* حسابات الخدمة */}
+                <div className="border rounded-xl p-4 space-y-3 bg-muted/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <p className="font-semibold text-sm">الحسابات المحاسبية للخدمة</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">تُستخدم عند ترحيل الفاتورة لإنشاء القيود المحاسبية تلقائياً</p>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label className="text-xs text-green-700 font-medium">حساب إيرادات الخدمة (عند البيع)</Label>
+                      <AccountSearchInput
+                        accounts={accounts}
+                        value={form.service_revenue_account_id}
+                        onChange={(id, name) => {
+                          updateField("service_revenue_account_id", id);
+                          updateField("service_revenue_account_name", name);
+                        }}
+                        placeholder="ابحث عن حساب الإيرادات..."
+                      />
+                      {form.service_revenue_account_name && (
+                        <p className="text-xs text-green-600 mt-1">✓ {form.service_revenue_account_name}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-xs text-red-700 font-medium">حساب تكلفة الخدمة (عند الشراء)</Label>
+                      <AccountSearchInput
+                        accounts={accounts}
+                        value={form.service_cost_account_id}
+                        onChange={(id, name) => {
+                          updateField("service_cost_account_id", id);
+                          updateField("service_cost_account_name", name);
+                        }}
+                        placeholder="ابحث عن حساب التكلفة..."
+                      />
+                      {form.service_cost_account_name && (
+                        <p className="text-xs text-red-600 mt-1">✓ {form.service_cost_account_name}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* تنبيه مخزون */}
