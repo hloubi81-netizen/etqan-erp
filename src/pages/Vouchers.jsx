@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -9,6 +9,7 @@ import DataTable from "../components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { logActivity } from "@/utils/activityLogger";
+import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
 
 const TYPE_MAP = {
   receipt: "سند قبض",
@@ -26,6 +27,21 @@ export default function Vouchers() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
+
+  const filteredVouchers = useMemo(() => {
+    return vouchers.filter((v) => {
+      const t = search.text?.toLowerCase();
+      if (t && !v.voucher_number?.toLowerCase().includes(t) &&
+          !v.account_name?.toLowerCase().includes(t) &&
+          !v.description?.toLowerCase().includes(t)) return false;
+      if (search.dateFrom && v.date < search.dateFrom) return false;
+      if (search.dateTo && v.date > search.dateTo) return false;
+      if (search.client && !v.account_name?.toLowerCase().includes(search.client.toLowerCase())) return false;
+      if (search.invoiceNumber && !v.voucher_number?.toLowerCase().includes(search.invoiceNumber.toLowerCase())) return false;
+      return true;
+    });
+  }, [vouchers, search]);
 
   useEffect(() => { loadData(); }, [voucherType]);
 
@@ -86,12 +102,19 @@ export default function Vouchers() {
     <PermissionGuard module="vouchers">
     <div>
       <PageHeader title={voucherType} subtitle={`إدارة ${voucherType}`} onAdd={canCreate("vouchers") ? openNew : null} addLabel={`${voucherType} جديد`} />
+      <AdvancedSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="بحث بالرقم أو الحساب أو الوصف..."
+        clientLabel="الحساب"
+        showInvoice={true}
+      />
       <DataTable
         columns={columns}
-        data={vouchers}
+        data={filteredVouchers}
         onEdit={canEdit("vouchers") ? openEdit : null}
         onDelete={canDelete("vouchers") ? handleDelete : null}
-        emptyMessage="لا توجد سندات"
+        emptyMessage="لا توجد سندات تطابق البحث"
       />
       
       {dialogOpen && (

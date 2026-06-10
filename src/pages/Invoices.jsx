@@ -21,6 +21,8 @@ import DocumentComments from "@/components/shared/DocumentComments";
 import InvoiceApprovalBadge from "../components/invoices/InvoiceApprovalBadge";
 import InvoiceApprovalDialog from "../components/invoices/InvoiceApprovalDialog";
 import InvoicePrintTemplate from "../components/invoices/InvoicePrintTemplate";
+import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
+import { useMemo } from "react";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -44,6 +46,21 @@ export default function Invoices() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [approvalTarget, setApprovalTarget] = useState(null);
   const [printTarget, setPrintTarget] = useState(null);
+  const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
+
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((inv) => {
+      const t = search.text?.toLowerCase();
+      if (t && !inv.invoice_number?.toLowerCase().includes(t) &&
+          !inv.client_name?.toLowerCase().includes(t) &&
+          !inv.notes?.toLowerCase().includes(t)) return false;
+      if (search.dateFrom && inv.date < search.dateFrom) return false;
+      if (search.dateTo && inv.date > search.dateTo) return false;
+      if (search.client && !inv.client_name?.toLowerCase().includes(search.client.toLowerCase())) return false;
+      if (search.invoiceNumber && !inv.invoice_number?.toLowerCase().includes(search.invoiceNumber.toLowerCase())) return false;
+      return true;
+    });
+  }, [invoices, search]);
 
   useEffect(() => {
     loadData();
@@ -205,6 +222,13 @@ export default function Invoices() {
         addLabel="فاتورة جديدة"
       />
       
+      <AdvancedSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="بحث بالرقم أو العميل أو البيان..."
+        clientLabel={invoiceType.includes("مبيعات") ? "العميل" : "المورد"}
+      />
+
       <div className="mb-4 flex justify-end">
         <Button variant="outline" size="sm" onClick={handleExportExcel} className="h-9 gap-1.5">
           <FileSpreadsheet className="h-4 w-4 text-green-600" />
@@ -247,10 +271,10 @@ export default function Invoices() {
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         columns={columns}
-        data={invoices}
+        data={filteredInvoices}
         onEdit={canEdit("invoices") ? openEdit : null}
         onDelete={canDelete("invoices") ? handleDelete : null}
-        emptyMessage="لا توجد فواتير"
+        emptyMessage="لا توجد فواتير تطابق البحث"
       />
 
       {/* Pattern Picker Dialog */}

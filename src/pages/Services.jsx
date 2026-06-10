@@ -3,12 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductForm from "../components/products/ProductForm";
 import {
-  Wrench, Plus, Search, Clock, User, Tag, DollarSign, Edit2, Trash2
+  Wrench, Plus, Clock, User, Tag, DollarSign, Edit2, Trash2
 } from "lucide-react";
+import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
 
 export default function Services() {
   const [services, setServices] = useState([]);
@@ -17,7 +17,7 @@ export default function Services() {
   const [branches, setBranches] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
 
@@ -60,15 +60,17 @@ export default function Services() {
     loadData();
   }
 
-  const filtered = useMemo(() =>
-    services.filter((s) =>
-      !search ||
-      s.name?.includes(search) ||
-      s.item_code?.includes(search) ||
-      s.service_provider?.includes(search)
-    ),
-    [services, search]
-  );
+  const filtered = useMemo(() => {
+    return services.filter((s) => {
+      const t = search.text?.toLowerCase();
+      if (t && !s.name?.toLowerCase().includes(t) &&
+          !s.item_code?.toLowerCase().includes(t) &&
+          !s.service_provider?.toLowerCase().includes(t)) return false;
+      if (search.client && !s.service_provider?.toLowerCase().includes(search.client.toLowerCase())) return false;
+      if (search.invoiceNumber && !s.item_code?.toLowerCase().includes(search.invoiceNumber.toLowerCase())) return false;
+      return true;
+    });
+  }, [services, search]);
 
   function openNew() {
     setEditingService(null);
@@ -119,24 +121,22 @@ export default function Services() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-5 max-w-sm">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          className="pr-9"
-          placeholder="ابحث بالاسم أو الرمز أو المزود..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <AdvancedSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="ابحث بالاسم أو الرمز أو المزود..."
+        clientLabel="المزود / المنفذ"
+        showInvoice={true}
+      />
 
       {/* Empty State */}
       {filtered.length === 0 && (
         <div className="text-center py-20 text-muted-foreground">
           <Wrench className="h-12 w-12 mx-auto mb-3 opacity-25" />
           <p className="font-medium text-base">
-            {search ? "لا توجد خدمات تطابق البحث" : "لا توجد خدمات بعد"}
+            {search.text || search.client || search.invoiceNumber ? "لا توجد خدمات تطابق البحث" : "لا توجد خدمات بعد"}
           </p>
-          {!search && (
+          {!search.text && !search.client && !search.invoiceNumber && (
             <Button onClick={openNew} className="mt-4 gap-2" variant="outline">
               <Plus className="h-4 w-4" /> إضافة أول خدمة
             </Button>
