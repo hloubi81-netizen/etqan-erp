@@ -11,9 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { CheckCircle, Trash2, ChevronDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { ChevronDown, Trash2, CheckCircle, FileSpreadsheet, ShieldCheck, Printer, Archive } from "lucide-react";
+import { FileSpreadsheet, ShieldCheck, Printer, Archive, ArchiveRestore } from "lucide-react";
 import ArchiveButton from "@/components/shared/ArchiveButton";
+import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -122,6 +124,34 @@ export default function Invoices() {
     toast.success(`تم تغيير حالة الفواتير إلى ${status}`);
     setSelectedIds([]);
     loadData();
+  }
+
+  async function handleBulkArchive() {
+    if (selectedIds.length === 0) return;
+    const now = new Date().toISOString();
+    await Promise.all(selectedIds.map(id => base44.entities.Invoice.update(id, { is_archived: true, archived_at: now })));
+    toast.success(`تم أرشفة ${selectedIds.length} فاتورة`);
+    setSelectedIds([]);
+    loadData();
+  }
+
+  function handleExportSelected() {
+    const selected = filteredInvoices.filter(inv => selectedIds.includes(inv.id));
+    const excelColumns = [
+      { key: "invoice_number", label: "رقم الفاتورة" },
+      { key: "date", label: "التاريخ" },
+      { key: "client_name", label: invoiceType.includes("مبيعات") ? "العميل" : "المورد" },
+      { key: "warehouse_name", label: "المستودع" },
+      { key: "payment_method", label: "طريقة الدفع" },
+      { key: "subtotal", label: "المجموع الفرعي" },
+      { key: "discount_value", label: "الخصم" },
+      { key: "total", label: "الإجمالي" },
+      { key: "paid_amount", label: "المدفوع" },
+      { key: "remaining_amount", label: "المتبقي" },
+      { key: "status", label: "الحالة" },
+      { key: "notes", label: "البيان" },
+    ];
+    exportToExcel(excelColumns, selected, `فواتير_محددة_${invoiceType}`, invoiceType);
   }
 
   async function handleSave(data) {
@@ -241,35 +271,20 @@ export default function Invoices() {
         </Button>
       </div>
 
-      {selectedIds.length > 0 && (
-        <div className="mb-4 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-9 gap-1">
-                إجراءات جماعية ({selectedIds.length})
-                <ChevronDown className="h-3.5 w-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleBulkStatus("مرحّلة")}>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                ترحيل المحدد
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkStatus("مسودة")}>
-                <CheckCircle className="mr-2 h-4 w-4 text-muted-foreground" />
-                تغيير إلى مسودة
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleBulkDelete} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
-                حذف المحدد
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+      <BulkActionsBar
+        selectedCount={selectedIds.length}
+        onClear={() => setSelectedIds([])}
+        actions={[
+          { label: "ترحيل المحدد", icon: CheckCircle, onClick: () => handleBulkStatus("مرحّلة") },
+          { label: "تحويل إلى مسودة", icon: CheckCircle, onClick: () => handleBulkStatus("مسودة") },
+          { separator: true },
+          { label: "تصدير المحدد (Excel)", icon: FileSpreadsheet, onClick: handleExportSelected },
+          { separator: true },
+          { label: "أرشفة المحدد", icon: Archive, onClick: handleBulkArchive },
+          { separator: true },
+          { label: "حذف المحدد", icon: Trash2, onClick: handleBulkDelete, destructive: true },
+        ]}
+      />
 
       <DataTable
         selectable={true}

@@ -11,6 +11,9 @@ import { toast } from "sonner";
 import { logActivity } from "@/utils/activityLogger";
 import AdvancedSearchBar from "../components/shared/AdvancedSearchBar";
 import ArchiveButton from "@/components/shared/ArchiveButton";
+import BulkActionsBar from "@/components/shared/BulkActionsBar";
+import { exportToExcel } from "@/utils/exportUtils";
+import { CheckCircle, Trash2, FileSpreadsheet, Archive } from "lucide-react";
 
 const TYPE_MAP = {
   receipt: "سند قبض",
@@ -28,6 +31,7 @@ export default function Vouchers() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState({ text: "", dateFrom: "", dateTo: "", client: "", invoiceNumber: "" });
 
   const filteredVouchers = useMemo(() => {
@@ -66,6 +70,54 @@ export default function Vouchers() {
     }
   }
 
+  async function handleBulkDelete() {
+    if (selectedIds.length === 0) return;
+    if (confirm(`هل أنت متأكد من حذف ${selectedIds.length} سندات؟`)) {
+      await Promise.all(selectedIds.map(id => base44.entities.Voucher.delete(id)));
+      toast.success(`تم حذف ${selectedIds.length} سند`);
+      setSelectedIds([]);
+      loadData();
+    }
+  }
+
+  async function handleBulkArchive() {
+    if (selectedIds.length === 0) return;
+    const now = new Date().toISOString();
+    await Promise.all(selectedIds.map(id => base44.entities.Voucher.update(id, { is_archived: true, archived_at: now })));
+    toast.success(`تم أرشفة ${selectedIds.length} سند`);
+    setSelectedIds([]);
+    loadData();
+  }
+
+  async function handleBulkStatus(status) {
+    if (selectedIds.length === 0) return;
+    await Promise.all(selectedIds.map(id => base44.entities.Voucher.update(id, { status })));
+    toast.success(`تم تغيير الحالة إلى ${status}`);
+    setSelectedIds([]);
+    loadData();
+  }
+
+  function handleExportSelected() {
+    const selected = filteredVouchers.filter(v => selectedIds.includes(v.id));
+    const cols = isJournal
+      ? [
+          { key: "voucher_number", label: "رقم السند" },
+          { key: "date", label: "التاريخ" },
+          { key: "total_debit", label: "إجمالي المدين" },
+          { key: "total_credit", label: "إجمالي الدائن" },
+          { key: "status", label: "الحالة" },
+        ]
+      : [
+          { key: "voucher_number", label: "رقم السند" },
+          { key: "date", label: "التاريخ" },
+          { key: "account_name", label: "الحساب" },
+          { key: "counter_account_name", label: "الحساب المقابل" },
+          { key: "amount", label: "المبلغ" },
+          { key: "status", label: "الحالة" },
+        ];
+    exportToExcel(cols, selected, `سندات_محددة_${voucherType}`, voucherType);
+  }
+
   async function handleSave(data) {
     if (editing) {
       await base44.entities.Voucher.update(editing.id, data);
@@ -83,6 +135,16 @@ export default function Vouchers() {
   }
 
   const isJournal = voucherType === "سند قيد" || voucherType === "سند قيد افتتاحي" || voucherType === "سند يومية";
+  const bulkActions = [
+    { label: "ترحيل المحدد", icon: CheckCircle, onClick: () => handleBulkStatus("مرحّل") },
+    { label: "تحويل إلى مسودة", icon: CheckCircle, onClick: () => handleBulkStatus("مسودة") },
+    { separator: true },
+    { label: "تصدير المحدد (Excel)", icon: FileSpreadsheet, onClick: handleExportSelected },
+    { separator: true },
+    { label: "أرشفة المحدد", icon: Archive, onClick: handleBulkArchive },
+    { separator: true },
+    { label: "حذف المحدد", icon: Trash2, onClick: handleBulkDelete, destructive: true },
+  ];
   
   const columns = [
     { key: "voucher_number", label: "رقم السند" },
@@ -114,7 +176,15 @@ export default function Vouchers() {
         clientLabel="الحساب"
         showInvoice={true}
       />
+      <BulkActionsBar
+        selectedCount={selectedIds.length}
+        onClear={() => setSelectedIds([])}
+        actions={bulkActions}
+      />
       <DataTable
+        selectable={true}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
         columns={columns}
         data={filteredVouchers}
         onEdit={canEdit("vouchers") ? openEdit : null}
