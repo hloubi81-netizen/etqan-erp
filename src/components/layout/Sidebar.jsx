@@ -126,7 +126,7 @@ function getMenuItems(lang) {
   { label: lang === 'ar' ? "الأصول الثابتة" : "Fixed Assets", icon: Landmark, path: "/assets" },
 
   // ── العهد المالية ──
-  { label: lang === 'ar' ? "العهد المالية" : "Financial Custody", icon: Wallet, path: "/custody" },
+  { label: lang === 'ar' ? "العهَد المالية" : "Custody Management", icon: Wallet, path: "/custody" },
 
   // ── التقارير ──
   {
