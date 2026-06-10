@@ -138,7 +138,7 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
     { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
     { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch },
-    { label: lang === 'ar' ? "تقرير الخدمات" : "Services Report", path: "/reports/services", icon: Wrench }]
+    { label: lang === 'ar' ? "ربحية الخدمات" : "Service Profitability", path: "/reports/service-profitability", icon: Wrench }]
 
   },
 
