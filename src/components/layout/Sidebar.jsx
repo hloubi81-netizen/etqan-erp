@@ -32,7 +32,8 @@ function getMenuItems(lang) {
     { label: l('transfers'), path: "/transfers", icon: ArrowRightLeft },
     { label: l('inventoryCount'), path: "/inventory-count", icon: ClipboardList },
     { label: lang === 'ar' ? "تنبيهات المخزون" : "Stock Alerts", path: "/inventory/stock-alerts", icon: Bell },
-    { label: lang === 'ar' ? "تتبع انتهاء الصلاحية" : "Expiry Tracking", path: "/inventory/expiry", icon: CalendarCheck }]
+    { label: lang === 'ar' ? "تتبع انتهاء الصلاحية" : "Expiry Tracking", path: "/inventory/expiry", icon: CalendarCheck },
+    { label: lang === 'ar' ? "الجرد الدوري" : "Periodic Inventory", path: "/inventory/periodic-count", icon: ClipboardList }]
 
   },
 
