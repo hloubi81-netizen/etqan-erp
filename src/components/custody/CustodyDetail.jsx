@@ -109,27 +109,30 @@ export default function CustodyDetail({ custody, expenses }) {
         </div>
       )}
 
-      {/* Signature Status */}
-      <div className={`rounded-xl p-3 text-sm flex items-center gap-3 ${custody.approval_signature ? "bg-green-50 border border-green-200" : "bg-orange-50 border border-orange-200"}`}>
+      {/* Digital Signature Section */}
+      <div className={`rounded-xl p-4 text-sm border ${custody.approval_signature ? "bg-green-50 border-green-200" : "bg-orange-50 border-orange-200 border-dashed"}`}>
         {custody.approval_signature ? (
-          <>
-            <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-green-700">معتمد ومُوقَّع رقمياً</p>
-              <p className="text-xs text-muted-foreground">
-                {custody.approved_by && `الموقِّع: ${custody.approved_by}`}
-                {custody.approved_at && ` — ${new Date(custody.approved_at).toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" })}`}
+          <div className="flex items-start gap-4 flex-wrap">
+            <div className="flex-1 space-y-1">
+              <p className="flex items-center gap-1.5 font-semibold text-green-700">
+                <ShieldCheck className="h-4 w-4" /> مُعتمد رسمياً بالتوقيع الرقمي
               </p>
+              <p className="text-muted-foreground">الموقِّع: <strong className="text-foreground">{custody.approved_by}</strong></p>
+              {custody.approval_note && <p className="text-muted-foreground">ملاحظة: {custody.approval_note}</p>}
+              {custody.approved_at && (
+                <p className="text-muted-foreground text-xs">
+                  {new Date(custody.approved_at).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" })}
+                </p>
+              )}
             </div>
-            <div className="border border-green-200 rounded bg-white p-1">
-              <img src={custody.approval_signature} alt="توقيع" className="h-8 w-auto" />
+            <div className="border border-green-300 rounded-lg bg-white p-2">
+              <img src={custody.approval_signature} alt="التوقيع الرقمي" className="max-h-16 w-auto" />
             </div>
-          </>
+          </div>
         ) : (
-          <>
-            <Clock className="h-5 w-5 text-orange-400 shrink-0" />
-            <p className="text-orange-600 font-medium">بانتظار الاعتماد والتوقيع الرقمي</p>
-          </>
+          <p className="flex items-center gap-1.5 text-orange-600">
+            <Clock className="h-4 w-4" /> بانتظار اعتماد المدير بالتوقيع الرقمي
+          </p>
         )}
       </div>
     </div>
