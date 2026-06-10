@@ -124,12 +124,14 @@
         {
           "user_condition": {
             "role": "admin"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         },
         {
           "user_condition": {
             "role": "hr_manager"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         }
       ]
     },
@@ -138,17 +140,20 @@
         {
           "user_condition": {
             "role": "admin"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         },
         {
           "user_condition": {
             "role": "hr_manager"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         },
         {
           "user_condition": {
             "role": "viewer"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         }
       ]
     },
@@ -157,19 +162,22 @@
         {
           "user_condition": {
             "role": "admin"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         },
         {
           "user_condition": {
             "role": "hr_manager"
-          }
+          },
+          "data.branch_id": "{{user.branch_id}}"
         }
       ]
     },
     "delete": {
       "user_condition": {
         "role": "admin"
-      }
+      },
+      "data.branch_id": "{{user.branch_id}}"
     }
   }
 }

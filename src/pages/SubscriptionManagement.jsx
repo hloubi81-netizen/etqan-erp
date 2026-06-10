@@ -10,7 +10,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles } from "lucide-react";
+import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
@@ -38,6 +39,7 @@ export default function SubscriptionManagement() {
   const [editId, setEditId] = useState(null);
   const [showFreeTrialModal, setShowFreeTrialModal] = useState(false);
   const [freeTrialName, setFreeTrialName] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -103,6 +105,14 @@ export default function SubscriptionManagement() {
       toast.success("تم إنشاء الاشتراك");
     }
     setOpen(false);
+    load();
+  }
+
+  async function handleDelete() {
+    if (!deleteTarget) return;
+    await base44.entities.Subscription.delete(deleteTarget.id);
+    toast.success("تم حذف الاشتراك");
+    setDeleteTarget(null);
     load();
   }
 
@@ -281,9 +291,14 @@ export default function SubscriptionManagement() {
                             <Switch checked={!!s.is_active} onCheckedChange={() => toggleActive(s)} />
                           </td>
                           <td className="px-4 py-3">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(s)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -297,6 +312,24 @@ export default function SubscriptionManagement() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>حذف الاشتراك</AlertDialogTitle>
+              <AlertDialogDescription>
+                هل أنت متأكد من حذف اشتراك "{deleteTarget?.client_name}"؟ لا يمكن التراجع عن هذا الإجراء.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                حذف نهائياً
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Free Trial Dialog */}
         <Dialog open={showFreeTrialModal} onOpenChange={setShowFreeTrialModal}>
