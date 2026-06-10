@@ -1,8 +1,94 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2, ChevronDown } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { MessageCircle, X, Send, Bot, User, Loader2, ChevronDown, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+
+const PAGE_GUIDES = {
+  "/": {
+    name: "لوحة التحكم",
+    guide: "تعرض ملخصاً شاملاً لأداء عملك: إجمالي المبيعات، المصروفات، الأرباح، وأبرز التنبيهات. يمكنك من هنا الوصول السريع لأي قسم."
+  },
+  "/invoices": {
+    name: "الفواتير",
+    guide: "هنا تُنشئ وتُدير فواتير المبيعات والمشتريات. اضغط 'فاتورة جديدة' لإنشاء فاتورة، وأضف العميل والمنتجات والكميات والأسعار."
+  },
+  "/orders": {
+    name: "أوامر الشراء",
+    guide: "إدارة طلبات الشراء من الموردين. أنشئ أمر شراء جديد وتابع حالته من 'معلق' إلى 'مكتمل'."
+  },
+  "/products": {
+    name: "المنتجات والمخزون",
+    guide: "إدارة كتالوج المنتجات والمخزون. أضف منتجات جديدة، حدد الأسعار، وتابع الكميات المتاحة في المستودعات."
+  },
+  "/warehouses": {
+    name: "المستودعات",
+    guide: "إدارة المستودعات وتتبع حركة البضاعة. يمكنك إنشاء تحويلات بين المستودعات وإجراء جرد دوري."
+  },
+  "/vouchers": {
+    name: "القيود المحاسبية",
+    guide: "تسجيل وعرض جميع القيود المحاسبية. كل معاملة مالية تُسجَّل هنا بقيد مدين ودائن."
+  },
+  "/accounts": {
+    name: "الحسابات",
+    guide: "دليل الحسابات (شجرة الحسابات). يمكنك إضافة حسابات جديدة وتصنيفها ضمن المجموعات المحاسبية."
+  },
+  "/hr/payroll": {
+    name: "الرواتب",
+    guide: "إعداد وصرف رواتب الموظفين. حدد الفترة واحسب الرواتب تلقائياً مع البدلات والخصومات."
+  },
+  "/hr/employees": {
+    name: "الموظفين",
+    guide: "إدارة ملفات الموظفين: البيانات الشخصية، الراتب، الإجازات، والحضور والغياب."
+  },
+  "/cost-centers": {
+    name: "مراكز التكلفة",
+    guide: "تتبع التكاليف حسب الإدارة أو المشروع أو الفرع. يساعدك في تحليل الربحية لكل مركز."
+  },
+  "/reports": {
+    name: "التقارير",
+    guide: "توليد التقارير المالية: الميزانية العمومية، قائمة الدخل، التدفقات النقدية، وتقارير مخصصة."
+  },
+  "/assets": {
+    name: "الأصول الثابتة",
+    guide: "إدارة أصول الشركة: السيارات، المعدات، الأجهزة. تتبع الاستهلاك والصيانة والتأمين."
+  },
+  "/crm": {
+    name: "CRM",
+    guide: "إدارة علاقات العملاء: جهات الاتصال، الفرص البيعية، والأنشطة. تابع كل صفقة من البداية حتى الإغلاق."
+  },
+  "/pos": {
+    name: "نقطة البيع (POS)",
+    guide: "واجهة البيع المباشر في نقطة الكاشير. أضف المنتجات، اختر طريقة الدفع، واطبع الفاتورة."
+  },
+  "/settings": {
+    name: "الإعدادات",
+    guide: "ضبط إعدادات التطبيق: الفروع، المستخدمين، الصلاحيات، العملات، وقواعد القيود."
+  },
+  "/custody": {
+    name: "العهد المالية",
+    guide: "إدارة العهد المالية الممنوحة للموظفين. تتبع المبالغ المصروفة، المصاريف، والتسويات."
+  },
+  "/financial/dashboard": {
+    name: "الملخص المالي",
+    guide: "لوحة مالية شاملة تعرض المؤشرات الرئيسية: الإيرادات، المصروفات، الأرباح، والتدفقات النقدية."
+  },
+  "/budget": {
+    name: "الموازنة التقديرية",
+    guide: "إعداد وإدارة الموازنات التقديرية لمراكز التكلفة. قارن الخطط بالأرقام الفعلية وتابع الانحرافات."
+  },
+};
+
+function getPageInfo(pathname) {
+  // Try exact match first
+  if (PAGE_GUIDES[pathname]) return PAGE_GUIDES[pathname];
+  // Try prefix match (e.g. /invoices/مبيعات)
+  for (const key of Object.keys(PAGE_GUIDES)) {
+    if (key !== "/" && pathname.startsWith(key)) return PAGE_GUIDES[key];
+  }
+  return null;
+}
 
 const SYSTEM_PROMPT = `أنت خبير محاسبي ومساعد ذكي متخصص في المحاسبة المالية وبرنامج ETQAN المحاسبي. تجيب حصراً بالعربية بإجابات دقيقة ومفصلة وواضحة.
 
@@ -120,6 +206,7 @@ const SYSTEM_PROMPT = `أنت خبير محاسبي ومساعد ذكي متخص
 - إذا كان السؤال يجمع الاثنين، اشرح المفهوم أولاً ثم كيفية تطبيقه في ETQAN`;
 
 export default function AIChatbot() {
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
@@ -129,14 +216,26 @@ export default function AIChatbot() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [guideDismissed, setGuideDismissed] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+
+  const pageInfo = getPageInfo(location.pathname);
+  const showGuidePrompt = open && pageInfo && !guideDismissed;
 
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
+      setGuideDismissed(false);
     }
-  }, [open]);
+  }, [open, location.pathname]);
+
+  const sendGuide = () => {
+    setGuideDismissed(true);
+    const guidMsg = `📍 **دليل صفحة "${pageInfo.name}"**\n\n${pageInfo.guide}`;
+    setMessages(prev => [...prev, { role: "assistant", content: guidMsg }]);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -200,6 +299,34 @@ export default function AIChatbot() {
               <ChevronDown className="h-5 w-5" />
             </button>
           </div>
+
+          {/* Page Guide Banner */}
+          {showGuidePrompt && (
+            <div className="px-3 pt-3 pb-1 bg-gray-50 border-b border-gray-200">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-blue-800 leading-relaxed">
+                    أنت الآن في صفحة <span className="font-bold">"{pageInfo.name}"</span> — هل تريد دليلاً سريعاً؟
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={sendGuide}
+                    className="flex-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-1.5 px-3 transition-colors font-medium"
+                  >
+                    نعم، أرشدني ✨
+                  </button>
+                  <button
+                    onClick={() => setGuideDismissed(true)}
+                    className="text-xs text-gray-500 hover:text-gray-700 rounded-lg py-1.5 px-3 border border-gray-200 hover:bg-gray-100 transition-colors"
+                  >
+                    تخطي
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
