@@ -63,6 +63,7 @@ import NotificationsCenter from './pages/notifications/NotificationsCenter';
 import CustomReports from './pages/reports/CustomReports';
 import SalesDashboard from './pages/reports/SalesDashboard';
 import CogsReport from './pages/reports/CogsReport';
+import PriceLists from './pages/PriceLists';
 import LoyaltyProgram from './pages/loyalty/LoyaltyProgram';
 import TaxReport from './pages/reports/TaxReport';
 import InventoryVarianceReport from './pages/reports/InventoryVarianceReport';
@@ -156,6 +157,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/custom" element={<CustomReports />} />
         <Route path="/reports/sales-dashboard" element={<SalesDashboard />} />
         <Route path="/reports/cogs" element={<CogsReport />} />
+        <Route path="/price-lists" element={<PriceLists />} />
         <Route path="/loyalty" element={<LoyaltyProgram />} />
         <Route path="/reports/tax" element={<TaxReport />} />
         <Route path="/reports/inventory-variance" element={<InventoryVarianceReport />} />

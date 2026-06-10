@@ -5,10 +5,43 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag } from "lucide-react";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { printPOSOrder } from "@/utils/posPrinter";
 import { toast } from "sonner";
+
+// حساب سعر الصنف بناءً على قائمة الأسعار المختارة
+function calcPriceFromList(product, priceList) {
+  if (!priceList) return product.retail_price || 0;
+
+  // هل يوجد سعر مخصص لهذا الصنف في القائمة؟
+  const override = (priceList.items || []).find(i => i.product_id === product.id);
+  if (override) {
+    const base = override.price || product.retail_price || 0;
+    const disc = override.discount_percent || 0;
+    return base * (1 - disc / 100);
+  }
+
+  // السعر الأساسي بحسب مستوى القائمة
+  let basePrice;
+  switch (priceList.price_level) {
+    case "سعر الجملة":
+      basePrice = product.wholesale_price || product.retail_price || 0;
+      break;
+    case "سعر التكلفة + هامش":
+      const cost = product.cost_price || product.avg_purchase_price || product.last_purchase_price || 0;
+      basePrice = cost * (1 + (priceList.margin_percent || 0) / 100);
+      break;
+    case "سعر التجزئة":
+    default:
+      basePrice = product.retail_price || 0;
+      break;
+  }
+
+  // تطبيق الخصم الإجمالي
+  const disc = priceList.discount_percent || 0;
+  return basePrice * (1 - disc / 100);
+}
 
 export default function POS() {
   const [products, setProducts] = useState([]);
@@ -26,12 +59,21 @@ export default function POS() {
   const [printers, setPrinters] = useState([]);
   const [groups, setGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState("all");
+  const [priceLists, setPriceLists] = useState([]);
+  const [selectedPriceList, setSelectedPriceList] = useState(null); // null = سعر التجزئة الافتراضي
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
     base44.entities.ProductGroup.list().then(setGroups);
     base44.entities.Printer.list().then(setPrinters);
-    // تركيز تلقائي على خانة البحث عند فتح الشاشة
+    base44.entities.PriceList.filter({ is_active: true }).catch(() => []).then(pl => {
+      // فلترة القوائم الصالحة حسب التاريخ
+      const today = new Date().toISOString().split("T")[0];
+      setPriceLists(pl.filter(l =>
+        (!l.valid_from || l.valid_from <= today) &&
+        (!l.valid_to || l.valid_to >= today)
+      ));
+    });
     setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
 
@@ -70,7 +112,8 @@ export default function POS() {
 
   function addToCart(product, selectedUnit = null) {
     const unit = selectedUnit || getBaseUnit(product.units || [{ name: "قطعة", conversion_factor: 1 }]);
-    const price = priceForUnit(product.retail_price || 0, unit);
+    const basePrice = calcPriceFromList(product, selectedPriceList);
+    const price = priceForUnit(basePrice, unit);
     setCart((prev) => {
       const key = `${product.id}_${unit.name}`;
       const existing = prev.find((i) => i.key === key);
@@ -344,6 +387,55 @@ export default function POS() {
 
         {/* Totals & Checkout */}
         <div className="p-4 border-t border-border space-y-3">
+          {/* قائمة الأسعار */}
+          {priceLists.length > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Tag className="h-3.5 w-3.5" />
+                <span>قائمة الأسعار</span>
+              </div>
+              <Select
+                value={selectedPriceList?.id || "__default__"}
+                onValueChange={v => {
+                  const pl = priceLists.find(l => l.id === v);
+                  setSelectedPriceList(pl || null);
+                  // إعادة حساب أسعار عناصر السلة الحالية
+                  if (cart.length > 0) {
+                    setCart(prev => prev.map(item => {
+                      const product = products.find(p => p.id === item.product_id);
+                      if (!product) return item;
+                      const newBase = calcPriceFromList(product, pl || null);
+                      const unit = (product.units || []).find(u => u.name === item.unit_name);
+                      const newPrice = priceForUnit(newBase, unit || { conversion_factor: 1 });
+                      return { ...item, price: newPrice, total: item.quantity * newPrice };
+                    }));
+                    toast.success("تم تحديث أسعار السلة");
+                  }
+                }}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__default__">سعر التجزئة (افتراضي)</SelectItem>
+                  {priceLists.map(pl => (
+                    <SelectItem key={pl.id} value={pl.id}>
+                      {pl.name} — {pl.customer_type}
+                      {pl.discount_percent > 0 ? ` (خصم ${pl.discount_percent}%)` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPriceList && (
+                <p className="text-[10px] text-primary flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  {selectedPriceList.price_level}
+                  {selectedPriceList.discount_percent > 0 && ` — خصم ${selectedPriceList.discount_percent}%`}
+                  {selectedPriceList.margin_percent > 0 && ` + ${selectedPriceList.margin_percent}% هامش`}
+                </p>
+              )}
+            </div>
+          )}
           <Input placeholder="اسم العميل (اختياري)" value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8 text-sm" />
           <div className="flex items-center gap-2">
             <Input type="number" placeholder="خصم" value={discount} onChange={(e) => setDiscount(e.target.value)} className="h-8 text-sm" />

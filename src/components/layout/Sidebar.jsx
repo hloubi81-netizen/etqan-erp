@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +45,7 @@ function getMenuItems(lang) {
     { label: l('salesReturn'), path: "/invoices/sales-return", icon: Receipt },
     { label: lang === 'ar' ? "شاشة البيع" : "POS Screen", path: "/pos", icon: ShoppingCart },
     { label: lang === 'ar' ? "سجل مبيعات نقطة البيع" : "POS History", path: "/pos/history", icon: Receipt },
+    { label: lang === 'ar' ? "قوائم الأسعار" : "Price Lists", path: "/price-lists", icon: Tag },
     { label: lang === 'ar' ? "عروض أسعار المبيعات" : "Sales Quotes", path: "/orders", icon: ShoppingBag },
     { label: lang === 'ar' ? "طلبات المتاجر الإلكترونية" : "E-com Orders", path: "/ecom-orders", icon: ShoppingCart }]
 
