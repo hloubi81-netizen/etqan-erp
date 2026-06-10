@@ -9,9 +9,12 @@ import {
 } from "recharts";
 import {
   Wrench, TrendingUp, TrendingDown, RefreshCw, Calendar,
-  DollarSign, Activity, Target, ArrowUpRight, ArrowDownRight
+  DollarSign, Activity, Target, ArrowUpRight, ArrowDownRight,
+  FileSpreadsheet, FileDown
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
 
 const COLORS = ["#2563eb", "#16a34a", "#f59e0b", "#dc2626", "#7c3aed", "#0891b2", "#f97316", "#84cc16"];
 
@@ -151,6 +154,122 @@ export default function ServiceProfitability() {
       month: d.month.replace(/(\d{4})-(\d{2})/, (_, y, m) => `${m}/${y}`),
     }));
 
+  function exportExcel() {
+    const periodLabel = PERIODS.find((p) => p.days === selectedPeriod)?.label || "";
+    const rows = filtered.map((s) => ({
+      "الخدمة": s.name,
+      "الإيرادات": s.revenue,
+      "التكاليف": s.cost,
+      "صافي الربح": s.profit,
+      "هامش الربح %": parseFloat(s.margin.toFixed(2)),
+      "مرات البيع": s.salesCount,
+      "الحالة": s.margin >= 50 ? "ممتاز" : s.margin >= 20 ? "مقبول" : "يحتاج مراجعة",
+    }));
+    // footer row
+    rows.push({
+      "الخدمة": "الإجمالي",
+      "الإيرادات": totalRevenue,
+      "التكاليف": totalCost,
+      "صافي الربح": totalProfit,
+      "هامش الربح %": parseFloat(avgMargin.toFixed(2)),
+      "مرات البيع": filtered.reduce((s, i) => s + i.salesCount, 0),
+      "الحالة": "",
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 28 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 16 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "ربحية الخدمات");
+    XLSX.writeFile(wb, `ربحية_الخدمات_${periodLabel}.xlsx`);
+  }
+
+  function exportPDF() {
+    const periodLabel = PERIODS.find((p) => p.days === selectedPeriod)?.label || "";
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+    // header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(37, 99, 235);
+    doc.text("Service Profitability Report", 148, 18, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Period: ${periodLabel}   |   Generated: ${new Date().toLocaleDateString("en-GB")}`, 148, 26, { align: "center" });
+
+    // KPI summary bar
+    const kpis = [
+      ["Total Revenue", fmt(totalRevenue)],
+      ["Total Cost", fmt(totalCost)],
+      ["Net Profit", fmt(totalProfit)],
+      ["Avg Margin", `${avgMargin.toFixed(1)}%`],
+    ];
+    let kx = 14;
+    kpis.forEach(([label, val]) => {
+      doc.setFillColor(245, 248, 255);
+      doc.roundedRect(kx, 30, 62, 16, 3, 3, "F");
+      doc.setFontSize(7);
+      doc.setTextColor(100);
+      doc.text(label, kx + 4, 36);
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 41, 59);
+      doc.text(val, kx + 4, 43);
+      doc.setFont("helvetica", "normal");
+      kx += 66;
+    });
+
+    // table header
+    const headers = ["Service", "Revenue", "Cost", "Net Profit", "Margin %", "Sales #", "Status"];
+    const colWidths = [70, 30, 30, 30, 22, 18, 26];
+    let y = 56;
+    doc.setFillColor(37, 99, 235);
+    doc.rect(14, y - 5, 269, 8, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255);
+    let hx = 16;
+    headers.forEach((h, i) => { doc.text(h, hx, y); hx += colWidths[i]; });
+
+    // rows
+    filtered.forEach((s, idx) => {
+      y += 9;
+      if (y > 190) { doc.addPage(); y = 20; }
+      if (idx % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(14, y - 5, 269, 8, "F"); }
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(30, 41, 59);
+      const vals = [
+        s.name.length > 32 ? s.name.substring(0, 32) + "…" : s.name,
+        fmt(s.revenue), fmt(s.cost),
+        (s.profit >= 0 ? "+" : "") + fmt(s.profit),
+        s.margin.toFixed(1) + "%",
+        String(s.salesCount),
+        s.margin >= 50 ? "Excellent" : s.margin >= 20 ? "Good" : "Review",
+      ];
+      let rx = 16;
+      vals.forEach((v, i) => {
+        if (i === 3) doc.setTextColor(s.profit >= 0 ? 22 : 220, s.profit >= 0 ? 163 : 38, s.profit >= 0 ? 74 : 38);
+        else doc.setTextColor(30, 41, 59);
+        doc.text(v, rx, y);
+        rx += colWidths[i];
+      });
+    });
+
+    // totals footer
+    y += 10;
+    doc.setFillColor(226, 232, 240);
+    doc.rect(14, y - 5, 269, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(30, 41, 59);
+    const totals = ["TOTAL", fmt(totalRevenue), fmt(totalCost), fmt(totalProfit), avgMargin.toFixed(1) + "%", String(filtered.reduce((s, i) => s + i.salesCount, 0)), ""];
+    let tx = 16;
+    totals.forEach((v, i) => { doc.text(v, tx, y); tx += colWidths[i]; });
+
+    doc.save(`service_profitability_${periodLabel}.pdf`);
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -168,10 +287,20 @@ export default function ServiceProfitability() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">مقارنة إيرادات الخدمات بتكاليفها التشغيلية</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-2">
-          <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-          تحديث
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportExcel} className="gap-1.5 text-green-700 border-green-300 hover:bg-green-50">
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1.5 text-red-700 border-red-300 hover:bg-red-50">
+            <FileDown className="h-4 w-4" />
+            PDF
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => loadData(true)} disabled={refreshing} className="gap-2">
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
