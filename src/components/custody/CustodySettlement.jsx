@@ -6,8 +6,82 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle2, AlertCircle, Clock, Printer } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Printer, BookOpen } from "lucide-react";
 import { toast } from "sonner";
+import { refreshAccountBalances } from "@/utils/journalEngine";
+
+async function postCustodyJournalEntries(custody, expenses, returnedAmount, diff) {
+  const today = new Date().toISOString().split("T")[0];
+  const entryBase = {
+    date: today,
+    source_type: "سند قيد",
+    source_number: custody.custody_number,
+    source_id: custody.id,
+    currency: custody.currency || "SAR",
+    subscription_id: custody.subscription_id || "",
+  };
+
+  const custodyAccountId   = custody.account_id   || "";
+  const custodyAccountName = custody.account_name || "حساب العهدة";
+  const accountIdsToRefresh = new Set();
+
+  // 1) قيد لكل مصروف: مدين حساب المصروف → دائن حساب العهدة
+  const expensePromises = expenses.map(exp => {
+    const expAccountId   = exp.account_id   || custodyAccountId;
+    const expAccountName = exp.account_name || exp.category || "مصروف عهدة";
+    if (expAccountId)   accountIdsToRefresh.add(expAccountId);
+    if (custodyAccountId) accountIdsToRefresh.add(custodyAccountId);
+    return base44.entities.JournalEntry.create({
+      ...entryBase,
+      notes: `مصروف عهدة ${custody.custody_number} — ${exp.description}`,
+      debit_account_id:    expAccountId,
+      debit_account_name:  expAccountName,
+      credit_account_id:   custodyAccountId,
+      credit_account_name: custodyAccountName,
+      amount: exp.amount,
+      cost_center_id: custody.cost_center_id || "",
+    });
+  });
+
+  // 2) إذا أُعيد مبلغ: مدين الصندوق/البنك → دائن حساب العهدة
+  if (returnedAmount > 0.01 && custodyAccountId) {
+    expensePromises.push(
+      base44.entities.JournalEntry.create({
+        ...entryBase,
+        notes: `مبلغ مُعاد لعهدة ${custody.custody_number}`,
+        debit_account_id:    custodyAccountId,
+        debit_account_name:  custodyAccountName,
+        credit_account_id:   custodyAccountId,
+        credit_account_name: "صندوق / بنك",
+        amount: returnedAmount,
+      })
+    );
+  }
+
+  // 3) إذا يوجد فرق صرف زائد: مدين الفرق → دائن حساب العهدة
+  if (diff < -0.01 && custodyAccountId) {
+    expensePromises.push(
+      base44.entities.JournalEntry.create({
+        ...entryBase,
+        notes: `فرق زيادة صرف عهدة ${custody.custody_number}`,
+        debit_account_id:    custodyAccountId,
+        debit_account_name:  "فروق عهد / مصاريف إضافية",
+        credit_account_id:   custodyAccountId,
+        credit_account_name: custodyAccountName,
+        amount: Math.abs(diff),
+      })
+    );
+  }
+
+  await Promise.all(expensePromises);
+
+  // تحديث أرصدة الحسابات
+  if (accountIdsToRefresh.size > 0) {
+    await refreshAccountBalances([...accountIdsToRefresh]);
+  }
+
+  return expensePromises.length;
+}
 
 export default function CustodySettlement({ custodies, expenses, onRefresh }) {
   const [selectedId, setSelectedId] = useState("");
@@ -15,6 +89,7 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
   const [returnedAmount, setReturnedAmount] = useState(0);
   const [settlementNotes, setSettlementNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [postToJournal, setPostToJournal] = useState(true);
 
   // العهد القابلة للتسوية (مفتوحة أو قيد التسوية)
   const settleable = custodies.filter(c => c.status === "مفتوحة" || c.status === "قيد التسوية");
@@ -49,7 +124,15 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
       expenses_total: expTotal,
       difference: Math.round(diff * 100) / 100,
     });
-    toast.success("تمت تسوية العهدة بنجاح");
+
+    // ترحيل القيود المحاسبية تلقائياً
+    if (postToJournal && selectedExpenses.length > 0) {
+      const count = await postCustodyJournalEntries(selected, selectedExpenses, returnedAmount, diff);
+      toast.success(`تمت تسوية العهدة بنجاح وتم ترحيل ${count} قيد محاسبي تلقائياً`);
+    } else {
+      toast.success("تمت تسوية العهدة بنجاح");
+    }
+
     setSaving(false);
     setOpen(false);
     setSelectedId("");
@@ -242,6 +325,25 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
                 <Label>ملاحظات التسوية</Label>
                 <Input value={settlementNotes} onChange={e => setSettlementNotes(e.target.value)} placeholder="أي ملاحظات على عملية التسوية..." />
               </div>
+              {/* Journal Posting Option */}
+              <div className={`flex items-start gap-3 rounded-xl p-3 border ${postToJournal ? "bg-blue-50 border-blue-200" : "bg-muted/30 border-muted"}`}>
+                <input
+                  type="checkbox"
+                  id="postJournal"
+                  checked={postToJournal}
+                  onChange={e => setPostToJournal(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-blue-600 cursor-pointer"
+                />
+                <div>
+                  <label htmlFor="postJournal" className="cursor-pointer font-medium text-sm flex items-center gap-1.5">
+                    <BookOpen className="h-4 w-4 text-blue-600" />
+                    ترحيل تلقائي إلى القيود المحاسبية
+                  </label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    سيتم إنشاء قيد محاسبي لكل مصروف (مدين: حساب المصروف / دائن: حساب العهدة) وتحديث الأرصدة فور التسوية
+                  </p>
+                </div>
+              </div>
               <div className="flex gap-3 flex-wrap">
                 <Button variant="outline" onClick={printSettlementReport} className="gap-1.5">
                   <Printer className="h-4 w-4" /> طباعة تقرير التسوية
@@ -261,6 +363,12 @@ export default function CustodySettlement({ custodies, expenses, onRefresh }) {
           <DialogHeader><DialogTitle>تأكيد التسوية النهائية</DialogTitle></DialogHeader>
           <div className="space-y-2 text-sm">
             <p>سيتم إغلاق العهدة <strong className="text-primary">{selected?.custody_number}</strong> نهائياً.</p>
+            {postToJournal && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-blue-700">
+                <BookOpen className="h-4 w-4 shrink-0" />
+                <span>سيتم ترحيل <strong>{selectedExpenses.length}</strong> قيد محاسبي تلقائياً وتحديث أرصدة الحسابات</span>
+              </div>
+            )}
             <div className="bg-muted/30 rounded-xl p-3 space-y-1">
               <div className="flex justify-between"><span>المبلغ المصروف:</span><strong>{amount.toLocaleString("ar-SA")}</strong></div>
               <div className="flex justify-between"><span>إجمالي المصاريف:</span><strong className="text-green-600">{expTotal.toLocaleString("ar-SA")}</strong></div>
