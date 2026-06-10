@@ -5,6 +5,7 @@ import DataTable from "../components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import InventoryCountForm from "@/components/inventory/InventoryCountForm";
+import DocumentComments from "@/components/shared/DocumentComments";
 
 export default function InventoryCount() {
   const [counts, setCounts] = useState([]);
@@ -64,6 +65,9 @@ export default function InventoryCount() {
       }
     },
     { key: "status", label: "الحالة", render: v => <Badge variant={v === "معتمد" ? "default" : "secondary"}>{v}</Badge> },
+    { key: "_comments", label: "تعليقات", render: (_, row) => (
+      <DocumentComments documentType="جرد" documentId={row.id} documentNumber={row.count_number} />
+    )},
   ];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;

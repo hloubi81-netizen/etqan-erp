@@ -1,0 +1,68 @@
+{
+  "name": "DocumentComment",
+  "type": "object",
+  "properties": {
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "\u062c\u0631\u062f",
+        "\u0641\u0627\u062a\u0648\u0631\u0629"
+      ],
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "document_id": {
+      "type": "string",
+      "title": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "document_number": {
+      "type": "string",
+      "title": "\u0631\u0642\u0645 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "comment": {
+      "type": "string",
+      "title": "\u0627\u0644\u062a\u0639\u0644\u064a\u0642",
+      "maxLength": 2000
+    },
+    "author_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0643\u0627\u062a\u0628"
+    },
+    "author_email": {
+      "type": "string",
+      "title": "\u0628\u0631\u064a\u062f \u0627\u0644\u0643\u0627\u062a\u0628"
+    }
+  },
+  "required": [
+    "document_type",
+    "document_id",
+    "comment"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

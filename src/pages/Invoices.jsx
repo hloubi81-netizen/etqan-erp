@@ -16,6 +16,7 @@ import { ChevronDown, Trash2, CheckCircle } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
+import DocumentComments from "@/components/shared/DocumentComments";
 
 const TYPE_MAP = {
   sales: "مبيعات",
@@ -129,6 +130,9 @@ export default function Invoices() {
     )},
     { key: "_whatsapp", label: "", render: (_, row) => (
       <WhatsAppSendButton invoice={row} phone={row.client_phone} size="sm" />
+    )},
+    { key: "_comments", label: "تعليقات", render: (_, row) => (
+      <DocumentComments documentType="فاتورة" documentId={row.id} documentNumber={row.invoice_number} />
     )},
   ];
 
