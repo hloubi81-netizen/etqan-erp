@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, TrendingDown, CheckCircle2, AlertTriangle,
-  Download, Filter, WarehouseIcon, Package
+  Download, Filter, WarehouseIcon, Package, DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +41,7 @@ function DiffBadge({ diff }) {
 export default function InventoryVarianceReport() {
   const [counts, setCounts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [filterWarehouse, setFilterWarehouse] = useState("all");
@@ -57,10 +58,14 @@ export default function InventoryVarianceReport() {
     Promise.all([
       base44.entities.InventoryCount.list("-date", 500),
       base44.entities.Warehouse.list(),
-    ]).then(([c, w]) => {
-      setCounts(c); setWarehouses(w); setLoading(false);
+      base44.entities.Product.list(),
+    ]).then(([c, w, p]) => {
+      setCounts(c); setWarehouses(w); setProducts(p); setLoading(false);
     });
   }, []);
+
+  // map productId -> product for cost lookup
+  const productMap = useMemo(() => Object.fromEntries(products.map(p => [p.id, p])), [products]);
 
   // Flatten all items from all counts with parent info
   const allItems = useMemo(() => {
@@ -69,19 +74,26 @@ export default function InventoryVarianceReport() {
       .filter(c => filterWarehouse === "all" || c.warehouse_id === filterWarehouse)
       .filter(c => filterStatus === "all" || c.status === filterStatus)
       .flatMap(count =>
-        (count.items || []).map(item => ({
-          ...item,
-          count_number: count.count_number,
-          count_date: count.date,
-          count_id: count.id,
-          warehouse_name: count.warehouse_name,
-          warehouse_id: count.warehouse_id,
-          count_status: count.status,
-          count_type: count.type,
-          diff: (item.actual_quantity ?? item.book_quantity ?? 0) - (item.book_quantity ?? 0),
-        }))
+        (count.items || []).map(item => {
+          const prod = productMap[item.product_id] || {};
+          const actualQty = item.actual_quantity ?? item.book_quantity ?? 0;
+          const avgCost = prod.avg_purchase_price || prod.cost_price || 0;
+          return {
+            ...item,
+            count_number: count.count_number,
+            count_date: count.date,
+            count_id: count.id,
+            warehouse_name: count.warehouse_name,
+            warehouse_id: count.warehouse_id,
+            count_status: count.status,
+            count_type: count.type,
+            diff: actualQty - (item.book_quantity ?? 0),
+            avg_cost: avgCost,
+            total_cost_value: avgCost > 0 ? parseFloat((actualQty * avgCost).toFixed(2)) : 0,
+          };
+        })
       );
-  }, [counts, filterWarehouse, filterStatus, dateFrom, dateTo]);
+  }, [counts, filterWarehouse, filterStatus, dateFrom, dateTo, productMap]);
 
   const filtered = useMemo(() => {
     return allItems
@@ -103,6 +115,7 @@ export default function InventoryVarianceReport() {
   const matchedItems = allItems.filter(i => i.diff === 0).length;
   const totalSurplusQty = allItems.filter(i => i.diff > 0).reduce((s, i) => s + i.diff, 0);
   const totalDeficitQty = allItems.filter(i => i.diff < 0).reduce((s, i) => s + Math.abs(i.diff), 0);
+  const totalInventoryValue = allItems.reduce((s, i) => s + (i.total_cost_value || 0), 0);
 
   // Chart: variance by warehouse
   const warehouseChart = useMemo(() => {
@@ -136,10 +149,11 @@ export default function InventoryVarianceReport() {
   ].filter(d => d.value > 0);
 
   function exportCSV() {
-    const headers = ["رقم المحضر", "التاريخ", "المستودع", "الصنف", "الكمية الدفترية", "الكمية الفعلية", "الفرق", "النوع", "الحالة"];
+    const headers = ["رقم المحضر", "التاريخ", "المستودع", "الصنف", "الكمية الدفترية", "الكمية الفعلية", "الفرق", "متوسط التكلفة", "إجمالي القيمة", "النوع", "الحالة"];
     const rows = filtered.map(i => [
       i.count_number, i.count_date, i.warehouse_name, i.product_name,
       i.book_quantity ?? 0, i.actual_quantity ?? 0, i.diff,
+      i.avg_cost ?? 0, i.total_cost_value ?? 0,
       i.diff > 0 ? "فائض" : i.diff < 0 ? "عجز" : "مطابق",
       i.count_status,
     ]);
@@ -210,11 +224,12 @@ export default function InventoryVarianceReport() {
       </Card>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard label="إجمالي الأصناف" value={totalItems} icon={Package} color="bg-slate-500" />
         <StatCard label="أصناف مطابقة" value={matchedItems} sub={`${totalItems > 0 ? ((matchedItems/totalItems)*100).toFixed(0) : 0}% من الإجمالي`} icon={CheckCircle2} color="bg-green-600" />
         <StatCard label="أصناف بفائض" value={surplusItems} sub={`+${totalSurplusQty.toFixed(2)} وحدة فائضة`} icon={TrendingUp} color="bg-blue-600" />
         <StatCard label="أصناف بعجز" value={deficitItems} sub={`${totalDeficitQty.toFixed(2)} وحدة عجز`} icon={TrendingDown} color="bg-red-500" />
+        <StatCard label="إجمالي قيمة المخزون" value={totalInventoryValue.toLocaleString(undefined, {maximumFractionDigits: 0})} sub="بمتوسط التكلفة المرجح" icon={DollarSign} color="bg-amber-500" />
       </div>
 
       {/* Charts Row */}
@@ -320,7 +335,7 @@ export default function InventoryVarianceReport() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50 border-b">
-                  {["رقم المحضر", "التاريخ", "المستودع", "الصنف", "الكمية الدفترية", "الكمية الفعلية", "الفرق", "النوع", "الحالة"].map(h => (
+                  {["رقم المحضر", "التاريخ", "المستودع", "الصنف", "الكمية الدفترية", "الكمية الفعلية", "الفرق", "متوسط التكلفة", "إجمالي القيمة", "النوع", "الحالة"].map(h => (
                     <th key={h} className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -347,6 +362,12 @@ export default function InventoryVarianceReport() {
                       )}>
                         {item.diff > 0 ? `+${item.diff}` : item.diff}
                       </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-center font-mono text-xs text-amber-700">
+                      {item.avg_cost > 0 ? item.avg_cost.toLocaleString(undefined, {maximumFractionDigits: 2}) : <span className="text-muted-foreground">—</span>}
+                    </td>
+                    <td className="px-4 py-2.5 text-center font-mono text-xs font-semibold text-amber-800">
+                      {item.total_cost_value > 0 ? item.total_cost_value.toLocaleString(undefined, {maximumFractionDigits: 2}) : <span className="text-muted-foreground font-normal">—</span>}
                     </td>
                     <td className="px-4 py-2.5"><DiffBadge diff={item.diff} /></td>
                     <td className="px-4 py-2.5">

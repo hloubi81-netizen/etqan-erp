@@ -67,6 +67,10 @@
       "type": "number",
       "title": "\u0633\u0639\u0631 \u0622\u062e\u0631 \u0634\u0631\u0627\u0621"
     },
+    "avg_purchase_price": {
+      "type": "number",
+      "title": "\u0645\u062a\u0648\u0633\u0637 \u0633\u0639\u0631 \u0627\u0644\u0634\u0631\u0627\u0621"
+    },
     "wholesale_price": {
       "type": "number",
       "title": "\u0633\u0639\u0631 \u0627\u0644\u062c\u0645\u0644\u0629"
@@ -75,13 +79,14 @@
       "type": "number",
       "title": "\u0633\u0639\u0631 \u0627\u0644\u0645\u0633\u062a\u0647\u0644\u0643"
     },
-    "avg_purchase_price": {
-      "type": "number",
-      "title": "\u0645\u062a\u0648\u0633\u0637 \u0633\u0639\u0631 \u0627\u0644\u0634\u0631\u0627\u0621"
-    },
     "available_qty": {
       "type": "number",
       "title": "\u0627\u0644\u0643\u0645\u064a\u0629 \u0627\u0644\u0645\u062a\u0627\u062d\u0629",
+      "default": 0
+    },
+    "total_cost_value": {
+      "type": "number",
+      "title": "\u0625\u062c\u0645\u0627\u0644\u064a \u0642\u064a\u0645\u0629 \u0627\u0644\u062a\u0643\u0644\u0641\u0629",
       "default": 0
     },
     "last_stock_update": {
