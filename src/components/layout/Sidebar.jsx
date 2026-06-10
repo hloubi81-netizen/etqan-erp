@@ -136,7 +136,8 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "فروقات الجرد" : "Inventory Variance", path: "/reports/inventory-variance", icon: ClipboardList },
     { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
     { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
-    { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList }]
+    { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
+    { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch }]
 
   },
 
