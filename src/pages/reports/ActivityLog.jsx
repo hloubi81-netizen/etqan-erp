@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { ClipboardList, Search, User, Clock, FileText, Receipt } from "lucide-react";
+import { ClipboardList, Search, User, Clock, FileText, Receipt, GitBranch } from "lucide-react";
 
 const ACTION_COLORS = {
   "إنشاء":  "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300",
@@ -31,15 +31,36 @@ export default function ActivityLogPage() {
   const [filterAction, setFilterAction] = useState("الكل");
   const [filterType, setFilterType] = useState("الكل");
   const [filterDate, setFilterDate] = useState("");
+  const [filterBranch, setFilterBranch] = useState("الكل");
+  const [branches, setBranches] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => { loadLogs(); }, []);
 
   async function loadLogs() {
     setLoading(true);
-    const data = await base44.entities.ActivityLog.list("-timestamp", 500).catch(() => []);
+    const [data, user] = await Promise.all([
+      base44.entities.ActivityLog.list("-timestamp", 500).catch(() => []),
+      base44.auth.me().catch(() => null),
+    ]);
+    setCurrentUser(user);
     setLogs(data);
+
+    // Load branches for admin filter
+    if (user?.role === "admin") {
+      const brs = await base44.entities.Branch.list().catch(() => []);
+      setBranches(brs);
+    }
+
+    // Auto-filter for branch_manager
+    if (user?.role === "branch_manager" && user?.branch_id) {
+      setFilterBranch(user.branch_id);
+    }
+
     setLoading(false);
   }
+
+  const isBranchManager = currentUser?.role === "branch_manager";
 
   const filtered = logs.filter(log => {
     const matchSearch = !search
@@ -50,7 +71,8 @@ export default function ActivityLogPage() {
     const matchAction = filterAction === "الكل" || log.action === filterAction;
     const matchType   = filterType === "الكل" || log.document_type === filterType;
     const matchDate   = !filterDate || log.timestamp?.startsWith(filterDate);
-    return matchSearch && matchAction && matchType && matchDate;
+    const matchBranch = filterBranch === "الكل" || log.branch_id === filterBranch;
+    return matchSearch && matchAction && matchType && matchDate && matchBranch;
   });
 
   // إحصاءات سريعة
@@ -114,6 +136,25 @@ export default function ActivityLogPage() {
           </SelectContent>
         </Select>
         <Input type="date" className="w-40 h-9" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+        {/* Branch filter: admin sees all branches, branch_manager locked to their branch */}
+        {currentUser?.role === "admin" && branches.length > 0 && (
+          <Select value={filterBranch} onValueChange={setFilterBranch}>
+            <SelectTrigger className="w-36 h-9">
+              <GitBranch className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+              <SelectValue placeholder="الفرع" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="الكل">كل الفروع</SelectItem>
+              {branches.map(b => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+        {isBranchManager && currentUser?.branch_name && (
+          <div className="flex items-center gap-1.5 px-3 h-9 rounded-md border bg-muted/50 text-sm text-muted-foreground">
+            <GitBranch className="h-3.5 w-3.5" />
+            {currentUser.branch_name}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -139,8 +180,9 @@ export default function ActivityLogPage() {
                     <th className="text-right px-4 py-3 text-xs font-semibold">المبلغ</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold">المستخدم</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold">التاريخ والوقت</th>
+                    <th className="text-right px-4 py-3 text-xs font-semibold">الفرع</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold">التفاصيل</th>
-                  </tr>
+                    </tr>
                 </thead>
                 <tbody>
                   {filtered.map((log, i) => (
@@ -187,6 +229,11 @@ export default function ActivityLogPage() {
                           <Clock className="h-3.5 w-3.5 shrink-0" />
                           <span className="text-xs">{formatDateTime(log.timestamp)}</span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {log.branch_name
+                          ? <Badge variant="outline" className="text-[10px] text-blue-700 border-blue-300">{log.branch_name}</Badge>
+                          : <span className="text-xs text-muted-foreground">-</span>}
                       </td>
                       <td className="px-4 py-3 text-xs text-muted-foreground max-w-48 truncate">
                         {log.details || "-"}
