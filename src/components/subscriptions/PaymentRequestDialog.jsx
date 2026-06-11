@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
-import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle, Users, Minus, Plus } from "lucide-react";
 
-const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
+const PLAN_PRICES = { basic: 500, advanced: 900, enterprise: 1500 };
 const PAYMENT_ICONS = {
   "فودافون كاش": Smartphone,
   "أخرى": CreditCard,
@@ -27,15 +27,17 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
     payment_method: "",
     transaction_reference: "",
     screenshot_url: "",
-    amount: PLAN_PRICES[planKey] || 0,
     notes: "",
   });
+  const [numUsers, setNumUsers] = useState(1);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const preset = PLAN_PRESETS[planKey];
   const account = form.payment_method ? PAYMENT_ACCOUNTS[form.payment_method] : null;
+  const monthlyPerUser = PLAN_PRICES[planKey] || 0;
+  const totalAmount = monthlyPerUser * numUsers * 12;
 
   async function handleFileUpload(e) {
     const file = e.target.files[0];
@@ -61,9 +63,9 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
       payment_method: form.payment_method,
       transaction_reference: form.transaction_reference.trim(),
       screenshot_url: form.screenshot_url,
-      amount: form.amount,
+      amount: totalAmount,
       status: "معلق",
-      notes: form.notes,
+      notes: `عدد المستخدمين: ${numUsers} | ${form.notes}`,
     });
     // إشعار للمسؤول
     await base44.entities.Notification.create({
@@ -110,9 +112,52 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
 
         <div className="space-y-4 py-2">
           {/* Plan Summary */}
-          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between">
-            <span className="text-sm font-medium">باقة {preset?.label}</span>
-            <span className="text-lg font-bold text-primary">{PLAN_PRICES[planKey]} جنيه / سنة</span>
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">باقة {preset?.label}</span>
+              <span className="text-sm text-muted-foreground">{monthlyPerUser} جنيه / مستخدم / شهر</span>
+            </div>
+
+            {/* Users Count */}
+            <div className="space-y-1.5">
+              <Label className="text-xs flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" />
+                عدد المستخدمين
+              </Label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNumUsers(n => Math.max(1, n - 1))}
+                  className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={numUsers}
+                  onChange={e => setNumUsers(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-16 text-center h-8 rounded-lg border border-input bg-background text-sm font-bold focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <button
+                  type="button"
+                  onClick={() => setNumUsers(n => n + 1)}
+                  className="h-8 w-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+                <span className="text-xs text-muted-foreground">مستخدم</span>
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="border-t border-primary/20 pt-3 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">{numUsers} مستخدم × {monthlyPerUser} × 12 شهر</span>
+              <div className="text-right">
+                <span className="text-xl font-bold text-primary">{totalAmount.toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground"> جنيه / سنة</span>
+              </div>
+            </div>
           </div>
 
           {/* Company Name */}
