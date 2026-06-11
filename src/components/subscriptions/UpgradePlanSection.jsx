@@ -6,7 +6,7 @@ import { PLAN_PRESETS, FEATURE_LABELS, useSubscription } from "@/hooks/useSubscr
 import PaymentRequestDialog from "@/components/subscriptions/PaymentRequestDialog";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
-const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
+const PLAN_PRICES = { basic: 500, advanced: 900, enterprise: 1500 };
 
 const PLAN_ORDER = ["free_trial", "basic", "advanced", "enterprise"];
 
@@ -80,7 +80,7 @@ export default function UpgradePlanSection({ user }) {
               {/* Price */}
               <div className="mb-3">
                 <span className="text-xl font-bold">{PLAN_PRICES[key]}</span>
-                <span className="text-xs text-muted-foreground"> جنيه / سنة</span>
+                <span className="text-xs text-muted-foreground"> جنيه / شهر / مستخدم</span>
               </div>
 
               {/* Features */}
