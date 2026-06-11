@@ -171,20 +171,48 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
 
           {/* Screenshot Upload */}
           <div className="space-y-1.5">
-            <Label className="text-xs">صورة إيصال الدفع (اختياري ولكن يُفضل)</Label>
-            <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
+            <Label className="text-xs font-semibold">صورة إيصال الدفع <span className="text-orange-500">*</span></Label>
+            <div className={`border-2 border-dashed rounded-xl transition-all ${form.screenshot_url ? "border-green-400 bg-green-50" : "border-border hover:border-primary/50 bg-muted/30"}`}>
               {form.screenshot_url ? (
-                <div className="flex items-center justify-center gap-2 text-green-600">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-sm">تم رفع الإيصال بنجاح</span>
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-sm font-medium">تم رفع الإيصال بنجاح</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, screenshot_url: "" }))}
+                      className="text-xs text-red-500 hover:underline"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                  <img
+                    src={form.screenshot_url}
+                    alt="إيصال الدفع"
+                    className="w-full max-h-48 object-contain rounded-lg border border-green-200"
+                  />
                 </div>
               ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    {uploading ? "جارٍ الرفع..." : "اضغط لرفع صورة الإيصال"}
-                  </span>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
+                <label className="cursor-pointer flex flex-col items-center gap-3 p-6">
+                  {uploading ? (
+                    <>
+                      <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">جارٍ رفع الصورة...</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Upload className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">اضغط لرفع صورة الإيصال</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">PNG, JPG, JPEG — حجم أقصى 10MB</p>
+                      </div>
+                    </>
+                  )}
+                  <input type="file" className="hidden" accept="image/png,image/jpg,image/jpeg,image/webp" onChange={handleFileUpload} disabled={uploading} />
                 </label>
               )}
             </div>
