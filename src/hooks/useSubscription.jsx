@@ -35,6 +35,7 @@ export const PLAN_PRESETS = {
   basic: {
     label: "أساسي",
     max_users: 2,
+    extra_user_price_monthly: 10,
     color: "bg-blue-100 text-blue-700",
     features: {
       accounting: true,
@@ -51,6 +52,7 @@ export const PLAN_PRESETS = {
   advanced: {
     label: "متقدم",
     max_users: 10,
+    extra_user_price_monthly: 8,
     color: "bg-purple-100 text-purple-700",
     features: {
       accounting: true,
@@ -67,6 +69,7 @@ export const PLAN_PRESETS = {
   enterprise: {
     label: "شامل",
     max_users: 999,
+    extra_user_price_monthly: 6,
     color: "bg-emerald-100 text-emerald-700",
     features: {
       accounting: true,
