@@ -19,11 +19,13 @@ export default function InventoryCount() {
 
   async function loadData() {
     const [c, w, p] = await Promise.all([
-      base44.entities.InventoryCount.list("-created_date"),
-      base44.entities.Warehouse.list(),
-      base44.entities.Product.list(),
+      base44.entities.InventoryCount.list("-created_date", 200),
+      base44.entities.Warehouse.list("name", 200),
+      base44.entities.Product.list("name", 500),
     ]);
-    setCounts(c); setWarehouses(w); setProducts(p);
+    setCounts(c);
+    setWarehouses((w || []).filter(x => x.id));
+    setProducts((p || []).filter(x => x.id));
     setLoading(false);
   }
 

@@ -34,7 +34,7 @@ export default function InventoryCountForm({ open, onClose, onSaved, editing, wa
   const [productSearch, setProductSearch] = useState("");
 
   const selectWarehouse = async (warehouseId) => {
-    const w = warehouses.find(x => x.id === warehouseId);
+    const w = warehouses.find(x => String(x.id) === String(warehouseId));
     setForm(f => ({ ...f, warehouse_id: warehouseId, warehouse_name: w?.name || "", items: [] }));
   };
 
@@ -157,7 +157,7 @@ export default function InventoryCountForm({ open, onClose, onSaved, editing, wa
               <Label className="text-xs">المستودع *</Label>
               <Select value={form.warehouse_id} onValueChange={selectWarehouse}>
                 <SelectTrigger><SelectValue placeholder="اختر المستودع" /></SelectTrigger>
-                <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{(warehouses || []).filter(w => w.id).map(w => <SelectItem key={w.id} value={String(w.id)}>{w.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
