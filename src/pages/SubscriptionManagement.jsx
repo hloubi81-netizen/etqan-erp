@@ -10,12 +10,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles, Trash2 } from "lucide-react";
+import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles, Trash2, CreditCard } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
 import SubscriptionDashboard from "@/components/subscriptions/SubscriptionDashboard";
+import PaymentRequestsPanel from "@/components/subscriptions/PaymentRequestsPanel";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_COLORS = { free_trial: "bg-amber-50 border-amber-300", basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
@@ -161,11 +162,16 @@ export default function SubscriptionManagement() {
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-4">
             <TabsTrigger value="dashboard" className="gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" />لوحة المتابعة</TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" />طلبات الدفع</TabsTrigger>
             <TabsTrigger value="manage" className="gap-1.5"><List className="h-3.5 w-3.5" />الإدارة والخطط</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <SubscriptionDashboard subscriptions={subscriptions} onRefresh={load} />
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <PaymentRequestsPanel />
           </TabsContent>
 
           <TabsContent value="manage">

@@ -10,6 +10,7 @@ import { CheckCircle2, XCircle, Crown, Zap, Building2, Gift, Sparkles, ArrowLeft
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import PaymentRequestDialog from "@/components/subscriptions/PaymentRequestDialog";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_COLORS = {
@@ -29,12 +30,20 @@ export default function SelectPlan() {
   const [selected, setSelected] = useState(null);
   const [clientName, setClientName] = useState("");
   const [showDialog, setShowDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   function choosePlan(planKey) {
     setSelected(planKey);
-    setShowDialog(true);
+    if (planKey === "free_trial") {
+      setShowDialog(true);
+    } else {
+      // الباقات المدفوعة — نموذج الدفع اليدوي
+      base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+      setShowPaymentDialog(true);
+    }
   }
 
   async function confirmSubscription() {
@@ -144,7 +153,17 @@ export default function SelectPlan() {
         </p>
       </div>
 
-      {/* Confirmation Dialog */}
+      {/* Payment Request Dialog for paid plans */}
+      {selected && selected !== "free_trial" && (
+        <PaymentRequestDialog
+          open={showPaymentDialog}
+          onOpenChange={setShowPaymentDialog}
+          planKey={selected}
+          user={currentUser}
+        />
+      )}
+
+      {/* Confirmation Dialog - free trial only */}
       {selected && (
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-md" dir="rtl">
