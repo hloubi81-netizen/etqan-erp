@@ -30,6 +30,7 @@ const PACKAGES = [
   { label: "الفروع فقط",   sections: ["dashboard","branches","reports"], actions: ["view","create","edit"] },
   { label: "محاسبة + مخازن", sections: ["dashboard","accounting","invoices","vouchers","warehouses","reports","financial"], actions: ["view","create","edit"] },
   { label: "نسخة كاملة (بدون مستخدمين)", sections: Object.keys(SECTION_LABELS).filter(s => s !== "users"), actions: ["view","create","edit","delete"] },
+  { label: "نسخة كاملة (مع مستخدمين)", sections: Object.keys(SECTION_LABELS), actions: ["view","create","edit","delete"] },
 ];
 
 function buildPermissionsFromPackage(pkg) {
