@@ -11,11 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch, Briefcase } from "lucide-react";
+import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch, Briefcase, Crown, Users as UsersIcon, Calendar } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import PageAccessEditor from "../components/users/PageAccessEditor";
 import RoleTemplatesDialog from "../components/users/RoleTemplates";
 import { MODULES, SECTIONS, ACTIONS, SECTION_LABELS, ACTION_LABELS, ROLE_LABELS } from "@/hooks/usePermissions";
+import { useSubscription, PLAN_PRESETS } from "@/hooks/useSubscription";
 
 const ROLE_COLORS = {
   admin: "destructive", accountant: "default", inventory: "secondary",
@@ -50,6 +51,7 @@ export default function Users() {
   const [showInvite, setShowInvite] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const { isAdmin } = useBranchFilter();
+  const { subscription } = useSubscription();
 
   useEffect(() => { loadData(); }, []);
 
@@ -187,6 +189,60 @@ export default function Users() {
           onAdd={() => setShowInvite(true)}
           addLabel="دعوة مستخدم جديد"
         />
+
+        {/* بطاقة معلومات الاشتراك */}
+        {subscription && (() => {
+          const plan = PLAN_PRESETS[subscription.plan] || {};
+          const maxUsers = subscription.max_users || plan.max_users || 0;
+          const currentCount = users.length;
+          const expiryDate = subscription.expiry_date ? new Date(subscription.expiry_date).toLocaleDateString('ar-EG') : null;
+          const usagePercent = maxUsers > 0 && maxUsers < 999 ? Math.min(100, Math.round((currentCount / maxUsers) * 100)) : null;
+
+          return (
+            <div className="mb-5 p-4 rounded-xl border bg-gradient-to-r from-primary/5 to-blue-50 dark:from-primary/10 dark:to-blue-950/20 flex flex-wrap gap-6 items-center">
+              <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">الباقة الحالية</p>
+                  <p className="font-bold text-sm text-primary">{plan.label || subscription.plan}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <UsersIcon className="h-5 w-5 text-blue-500" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">المستخدمون</p>
+                  <p className="font-bold text-sm">
+                    {currentCount} / {maxUsers >= 999 ? "غير محدود" : maxUsers}
+                  </p>
+                  {usagePercent !== null && (
+                    <div className="w-24 h-1.5 bg-gray-200 rounded-full mt-1">
+                      <div
+                        className={`h-1.5 rounded-full ${usagePercent >= 90 ? "bg-red-500" : usagePercent >= 70 ? "bg-amber-500" : "bg-green-500"}`}
+                        style={{ width: `${usagePercent}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+              {expiryDate && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-amber-500" />
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">تاريخ الانتهاء</p>
+                    <p className="font-bold text-sm">{expiryDate}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <div>
+                  <p className="text-[11px] text-muted-foreground">الحالة</p>
+                  <p className="font-bold text-sm text-green-600">{subscription.is_active ? "نشط" : "غير نشط"}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {users.map((u) => (
