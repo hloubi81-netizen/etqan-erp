@@ -12,13 +12,14 @@ import {
   Settings as SettingsIcon, Palette, Globe, Building2, Bell, Shield,
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
   UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle,
-  Printer
+  Printer, Crown
 } from "lucide-react";
 import PrintTemplateDesigner from "@/components/print/PrintTemplateDesigner";
 import BackupPanel from "@/components/settings/BackupPanel";
 import PrintersManager from "@/components/pos/PrintersManager";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
 import AccessControlSettings from "@/components/settings/AccessControlSettings";
+import UpgradePlanSection from "@/components/subscriptions/UpgradePlanSection";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -38,6 +39,7 @@ const TABS = [
   { id: "security",      label: "الأمان",            icon: Shield },
   { id: "einvoice",      label: "الفاتورة الإلكترونية", icon: FileCode2 },
   { id: "backup",        label: "النسخ الاحتياطي",   icon: Database },
+  { id: "upgrade",       label: "الاشتراك والترقية", icon: Crown },
 ];
 
 const THEMES = [
@@ -110,6 +112,11 @@ export default function Settings() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
   const [showPrintDesigner, setShowPrintDesigner] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     try {
@@ -513,6 +520,14 @@ export default function Settings() {
           </div>
         );
 
+      case "upgrade":
+        return (
+          <div className="space-y-4">
+            <SectionHeader title="الاشتراك والترقية" desc="اعرض باقتك الحالية وقم بالترقية أو تغيير الخطة" />
+            <UpgradePlanSection user={currentUser} />
+          </div>
+        );
+
       default: return null;
     }
   };
@@ -527,7 +542,7 @@ export default function Settings() {
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
-        {!["general","appearance","language","security","access","backup","print_design"].includes(activeTab) && (
+        {!["general","appearance","language","security","access","backup","print_design","upgrade"].includes(activeTab) && (
           <Button onClick={saveSettings} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
