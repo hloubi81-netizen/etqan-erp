@@ -11,9 +11,6 @@ import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
 import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 
 const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
-function calcTotal(planKey, extraUsers = 0) {
-  return (PLAN_PRICES[planKey] || 0) + extraUsers * 12;
-}
 const PAYMENT_ICONS = {
   "فودافون كاش": Smartphone,
   "أخرى": CreditCard,
@@ -24,14 +21,13 @@ const PAYMENT_ACCOUNTS = {
   "أخرى": { label: "مرجع الدفع", value: "تواصل معنا للحصول على بيانات الدفع", hint: "تواصل مع الدعم لمعرفة طرق الدفع الأخرى" },
 };
 
-export default function PaymentRequestDialog({ open, onOpenChange, planKey, extraUsers = 0, user }) {
-  const totalAmount = calcTotal(planKey, extraUsers);
+export default function PaymentRequestDialog({ open, onOpenChange, planKey, user }) {
   const [form, setForm] = useState({
     client_name: "",
     payment_method: "",
     transaction_reference: "",
     screenshot_url: "",
-    amount: totalAmount,
+    amount: PLAN_PRICES[planKey] || 0,
     notes: "",
   });
   const [uploading, setUploading] = useState(false);
@@ -114,21 +110,9 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, extr
 
         <div className="space-y-4 py-2">
           {/* Plan Summary */}
-          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">باقة {preset?.label}</span>
-              <span className="text-sm text-muted-foreground">{PLAN_PRICES[planKey]} جنيه</span>
-            </div>
-            {extraUsers > 0 && (
-              <div className="flex items-center justify-between text-xs text-blue-600">
-                <span>مستخدمون إضافيون ({extraUsers} × 12 جنيه)</span>
-                <span>+ {extraUsers * 12} جنيه</span>
-              </div>
-            )}
-            <div className="flex items-center justify-between border-t pt-1 mt-1">
-              <span className="text-sm font-semibold">الإجمالي السنوي</span>
-              <span className="text-lg font-bold text-primary">{totalAmount} جنيه</span>
-            </div>
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 flex items-center justify-between">
+            <span className="text-sm font-medium">باقة {preset?.label}</span>
+            <span className="text-lg font-bold text-primary">{PLAN_PRICES[planKey]} جنيه / سنة</span>
           </div>
 
           {/* Company Name */}
