@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CheckCircle, Building2, Rocket, Gift, Users, BarChart3, Package, FileText } from "lucide-react";
+import { CheckCircle, Building2, Rocket, Gift, Users, BarChart3, Package, FileText, ArrowLeft } from "lucide-react";
 
 const FEATURES = [
   { icon: FileText, label: "فواتير المبيعات والمشتريات" },
@@ -38,7 +38,7 @@ export default function Onboarding({ onComplete }) {
       endDate.setMonth(endDate.getMonth() + 3);
 
       const sub = await base44.entities.Subscription.create({
-        company_name: company.company_name,
+        client_name: company.company_name,
         plan: "free_trial",
         is_active: true,
         start_date: new Date().toISOString().split("T")[0],
@@ -49,10 +49,7 @@ export default function Onboarding({ onComplete }) {
           warehouses: true, costs: true, branches: true,
           reports: true, financial: true, users: true,
         },
-        company_phone: company.company_phone,
-        company_email: company.company_email,
-        company_address: company.company_address,
-        tax_number: company.tax_number,
+        notes: "تجربة مجانية 3 أشهر",
       });
 
       // Link subscription to user
@@ -65,7 +62,6 @@ export default function Onboarding({ onComplete }) {
 
       toast.success("تم تفعيل الباقة المجانية بنجاح! 🎉");
       setStep(3);
-      setTimeout(() => onComplete?.(), 2000);
     } catch (e) {
       toast.error("حدث خطأ أثناء التفعيل، يرجى المحاولة مرة أخرى");
     }
@@ -212,12 +208,12 @@ export default function Onboarding({ onComplete }) {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-800">تم التفعيل بنجاح! 🎉</h2>
-                <p className="text-gray-500 text-sm mt-1">باقتك المجانية نشطة لمدة 3 أشهر</p>
-                <p className="text-gray-400 text-xs mt-3">جارٍ تحميل النظام...</p>
+                <p className="text-gray-500 text-sm mt-1">باقتك المجانية نشطة لمدة 3 أشهر كاملة</p>
               </div>
-              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full animate-[progress_2s_ease-in-out_forwards]" style={{ width: "100%", animation: "none", transition: "width 2s ease" }} />
-              </div>
+              <Button className="w-full gap-2 bg-green-600 hover:bg-green-700" onClick={() => onComplete?.()}>
+                <ArrowLeft className="h-4 w-4" />
+                الانتقال إلى النظام
+              </Button>
             </div>
           )}
         </div>

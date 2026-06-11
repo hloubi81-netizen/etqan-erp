@@ -24,8 +24,13 @@ export default function AppLayout() {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Show onboarding if subscription is loaded but missing
-  const needsOnboarding = subscriptionLoaded && !subscription && !onboardingDone;
+  // Show onboarding only if:
+  // 1. Subscription data is loaded
+  // 2. No subscription found
+  // 3. User is loaded and is admin (non-admins are invited users who join an existing subscription)
+  // 4. Onboarding not yet completed this session
+  const isAdmin = user?.role === "admin";
+  const needsOnboarding = subscriptionLoaded && !subscription && !onboardingDone && !!user && isAdmin;
 
   if (needsOnboarding) {
     return <Onboarding onComplete={() => { setOnboardingDone(true); window.location.reload(); }} />;
