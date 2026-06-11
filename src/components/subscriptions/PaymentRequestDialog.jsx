@@ -8,21 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
-import { Smartphone, Building, CreditCard, Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 
 const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
 const PAYMENT_ICONS = {
   "فودافون كاش": Smartphone,
-  "إنستاباي": CreditCard,
-  "تحويل بنكي": Building,
   "أخرى": CreditCard,
 };
 
-// بيانات الدفع — يمكنك تعديلها حسب بياناتك الفعلية
 const PAYMENT_ACCOUNTS = {
-  "فودافون كاش": { label: "رقم فودافون كاش", value: "010XXXXXXXX", hint: "أرسل المبلغ على هذا الرقم ثم أدخل رقم العملية" },
-  "إنستاباي": { label: "رقم إنستاباي", value: "010XXXXXXXX@instapay", hint: "أرسل المبلغ على هذا الرقم ثم أدخل رقم العملية" },
-  "تحويل بنكي": { label: "رقم حساب البنك (IBAN)", value: "EG00 0000 0000 0000 0000 0000 0000", hint: "حوّل المبلغ ثم أدخل رقم المرجع" },
+  "فودافون كاش": { label: "رقم فودافون كاش", value: "01127311382", hint: "أرسل المبلغ على هذا الرقم ثم أدخل رقم العملية" },
   "أخرى": { label: "مرجع الدفع", value: "تواصل معنا للحصول على بيانات الدفع", hint: "تواصل مع الدعم لمعرفة طرق الدفع الأخرى" },
 };
 
