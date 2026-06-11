@@ -122,6 +122,7 @@ export default function POS() {
         key,
         product_id: product.id,
         product_name: product.name,
+        print_department: product.print_department || "",
         unit_name: unit.name,
         conversion_factor: parseFloat(unit.conversion_factor) || 1,
         quantity: 1,

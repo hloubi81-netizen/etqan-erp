@@ -37,6 +37,7 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
     barcode: product?.barcode || "",
     is_composite: product?.is_composite || false,
     raw_materials: product?.raw_materials || [],
+    print_department: product?.print_department || "",
     is_service: product?.is_service || false,
     service_duration: product?.service_duration || "",
     service_unit: product?.service_unit || "",
@@ -186,6 +187,11 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
               <div>
                 <Label>الباركود</Label>
                 <Input value={form.barcode} onChange={(e) => updateField("barcode", e.target.value)} />
+              </div>
+              <div>
+                <Label>قسم الطباعة (للمطاعم)</Label>
+                <Input value={form.print_department} onChange={(e) => updateField("print_department", e.target.value)} placeholder="مثال: المطبخ، البار، المشويات..." />
+                <p className="text-[10px] text-muted-foreground mt-0.5">يُستخدم لإرسال الطلب للطابعة المخصصة لهذا القسم عند البيع</p>
               </div>
             </div>
           </TabsContent>
