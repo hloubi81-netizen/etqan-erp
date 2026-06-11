@@ -12,9 +12,7 @@ import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle } from "lucid
 
 const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
 function calcTotal(planKey, extraUsers = 0) {
-  const base = PLAN_PRICES[planKey] || 0;
-  const perMonth = PLAN_PRESETS[planKey]?.extra_user_price_monthly || 0;
-  return base + extraUsers * perMonth * 12;
+  return (PLAN_PRICES[planKey] || 0) + extraUsers * 12;
 }
 const PAYMENT_ICONS = {
   "فودافون كاش": Smartphone,
@@ -123,8 +121,8 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, extr
             </div>
             {extraUsers > 0 && (
               <div className="flex items-center justify-between text-xs text-blue-600">
-                <span>مستخدمون إضافيون ({extraUsers} × {PLAN_PRESETS[planKey]?.extra_user_price_monthly} جنيه × 12 شهر)</span>
-                <span>+ {extraUsers * (PLAN_PRESETS[planKey]?.extra_user_price_monthly || 0) * 12} جنيه</span>
+                <span>مستخدمون إضافيون ({extraUsers} × 12 جنيه)</span>
+                <span>+ {extraUsers * 12} جنيه</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t pt-1 mt-1">

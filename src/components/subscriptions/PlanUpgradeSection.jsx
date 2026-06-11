@@ -9,11 +9,10 @@ const PLAN_PRICES = { basic: 299, advanced: 599, enterprise: 999 };
 const PLAN_ICONS = { basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_ORDER = ["basic", "advanced", "enterprise"];
 
-// السعر = سعر الباقة + (عدد المستخدمين الإضافيين × سعر المستخدم الشهري × 12 شهر)
+// السعر = سعر الباقة + (عدد المستخدمين الإضافيين × 12) شهرياً
 function calcPrice(planKey, extraUsers = 0) {
   const base = PLAN_PRICES[planKey] || 0;
-  const perMonth = PLAN_PRESETS[planKey]?.extra_user_price_monthly || 0;
-  return base + extraUsers * perMonth * 12;
+  return base + extraUsers * 12;
 }
 
 function PlanCard({ planKey, preset, currentPlan, user, extraUsers, onExtraUsersChange }) {
@@ -74,7 +73,7 @@ function PlanCard({ planKey, preset, currentPlan, user, extraUsers, onExtraUsers
       {/* Extra Users input (only for upgrade or current) */}
       {(isCurrentPlan || isUpgrade) && preset.max_users < 999 && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-1.5">
-          <p className="text-xs font-semibold text-blue-700">مستخدمون إضافيون ({preset.extra_user_price_monthly} جنيه / مستخدم / شهر)</p>
+          <p className="text-xs font-semibold text-blue-700">مستخدمون إضافيون (12 جنيه / مستخدم)</p>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -93,7 +92,7 @@ function PlanCard({ planKey, preset, currentPlan, user, extraUsers, onExtraUsers
           </div>
           {extraUsers > 0 && (
             <p className="text-xs text-blue-500">
-              {PLAN_PRICES[planKey]} + ({extraUsers} × {preset.extra_user_price_monthly} × 12) = <strong>{price} جنيه</strong>
+              {PLAN_PRICES[planKey]} + ({extraUsers} × 12) = <strong>{price} جنيه</strong>
             </p>
           )}
         </div>
@@ -146,7 +145,7 @@ export default function PlanUpgradeSection({ currentPlan, user }) {
         </h2>
       </div>
       <p className="text-sm text-muted-foreground">
-        يمكنك إضافة مستخدمين إضافيين بتكلفة تُحتسب بضرب سعر المستخدم الشهري × 12 شهراً تُضاف إلى سعر الباقة السنوي.
+        يمكنك إضافة مستخدمين إضافيين بتكلفة 12 جنيه لكل مستخدم تُضاف إلى سعر الباقة السنوي.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {PLAN_ORDER.map(key => (
