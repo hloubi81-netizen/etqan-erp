@@ -10,15 +10,26 @@ import GlobalSearch from "./GlobalSearch";
 import PageAccessGuard from "@/components/shared/PageAccessGuard";
 import { cn } from "@/lib/utils";
 import OnboardingGuide from "@/components/assistant/OnboardingGuide";
+import Onboarding from "@/pages/Onboarding";
+import { useSubscription } from "@/hooks/useSubscription.jsx";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { lang, toggle } = useLang();
   const [user, setUser] = useState(null);
+  const [onboardingDone, setOnboardingDone] = useState(false);
+  const { subscription, subscriptionLoaded } = useSubscription() || {};
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
+
+  // Show onboarding if subscription is loaded but missing
+  const needsOnboarding = subscriptionLoaded && !subscription && !onboardingDone;
+
+  if (needsOnboarding) {
+    return <Onboarding onComplete={() => { setOnboardingDone(true); window.location.reload(); }} />;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
