@@ -17,6 +17,9 @@ import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
 import SubscriptionDashboard from "@/components/subscriptions/SubscriptionDashboard";
 import PaymentRequestsPanel from "@/components/subscriptions/PaymentRequestsPanel";
+import PlanUpgradeSection from "@/components/subscriptions/PlanUpgradeSection";
+import { useSubscription } from "@/hooks/useSubscription.jsx";
+import { useAuth } from "@/lib/AuthContext";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_COLORS = { free_trial: "bg-amber-50 border-amber-300", basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
@@ -33,6 +36,8 @@ const emptyForm = {
 };
 
 export default function SubscriptionManagement() {
+  const { subscription } = useSubscription();
+  const { user } = useAuth();
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -162,12 +167,17 @@ export default function SubscriptionManagement() {
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-4">
             <TabsTrigger value="dashboard" className="gap-1.5"><LayoutDashboard className="h-3.5 w-3.5" />لوحة المتابعة</TabsTrigger>
+            <TabsTrigger value="upgrade" className="gap-1.5"><Sparkles className="h-3.5 w-3.5" />الباقات والترقية</TabsTrigger>
             <TabsTrigger value="payments" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" />طلبات الدفع</TabsTrigger>
             <TabsTrigger value="manage" className="gap-1.5"><List className="h-3.5 w-3.5" />الإدارة والخطط</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard">
             <SubscriptionDashboard subscriptions={subscriptions} onRefresh={load} />
+          </TabsContent>
+
+          <TabsContent value="upgrade">
+            <PlanUpgradeSection currentPlan={subscription?.plan} user={user} />
           </TabsContent>
 
           <TabsContent value="payments">
