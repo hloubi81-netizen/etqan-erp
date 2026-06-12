@@ -6,6 +6,25 @@ import { SECTION_LABELS } from "@/hooks/usePermissions";
 
 export const ROLE_TEMPLATES = [
   {
+    id: "general_manager",
+    label: "مدير عام",
+    color: "bg-indigo-100 text-indigo-700 border-indigo-200",
+    icon: "🏛️",
+    description: "صلاحيات كاملة على جميع الأقسام ما عدا إدارة المستخدمين",
+    permissions: {
+      "dashboard.view": true,
+      "accounting.view": true, "accounting.create": true, "accounting.edit": true, "accounting.delete": true,
+      "invoices.view": true, "invoices.create": true, "invoices.edit": true, "invoices.delete": true,
+      "vouchers.view": true, "vouchers.create": true, "vouchers.edit": true, "vouchers.delete": true,
+      "warehouses.view": true, "warehouses.create": true, "warehouses.edit": true, "warehouses.delete": true,
+      "costs.view": true, "costs.create": true, "costs.edit": true, "costs.delete": true,
+      "branches.view": true, "branches.create": true, "branches.edit": true,
+      "reports.view": true,
+      "financial.view": true,
+      "settings.view": true, "settings.edit": true,
+    },
+  },
+  {
     id: "accountant_full",
     label: "محاسب - صلاحيات كاملة",
     color: "bg-blue-100 text-blue-700 border-blue-200",
