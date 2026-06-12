@@ -181,7 +181,7 @@ const ITEM_FEATURES = {
   "/invoices/purchases-return": "invoices", "/invoices/opening-balance": "invoices", "/ecom-orders": "invoices",
   "/orders": "invoices", "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
   "/price-lists": "invoices", "/pos": "invoices", "/pos/history": "invoices",
-  "/loyalty": "invoices", "/crm": "invoices",
+  "/loyalty": "invoices",
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/groups": "warehouses", "/products": "warehouses", "/services": "warehouses",
