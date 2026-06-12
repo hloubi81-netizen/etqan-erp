@@ -282,6 +282,8 @@ function SidebarItem({ item, onNavigate }) {
 
   }
 
+  const feat = ITEM_FEATURES[item.path];
+  if (feat && !hasFeature(feat)) return null;
   if (!isAdmin() && !canViewPage(item.path)) return null;
 
   const isActive = location.pathname === item.path;
