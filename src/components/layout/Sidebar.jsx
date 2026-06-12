@@ -204,7 +204,7 @@ const ITEM_FEATURES = {
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
   "/hr/employees": "users", "/hr/attendance": "users", "/hr/payroll": "users", "/hr/leaves": "users",
-  "/users": "users", "/subscriptions": "users"
+  "/users": "users"
 };
 
 const ITEM_PERMISSIONS = {
