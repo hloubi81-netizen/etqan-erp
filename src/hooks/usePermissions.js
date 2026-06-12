@@ -92,9 +92,16 @@ export const ROLE_DEFAULTS = {
   },
   user: {
     "dashboard.view": true,
-    "users.view": true,
-    "users.create": true,
-    "users.edit": true,
+    "accounting.view": true, "accounting.create": true, "accounting.edit": true,
+    "invoices.view": true, "invoices.create": true, "invoices.edit": true,
+    "vouchers.view": true, "vouchers.create": true, "vouchers.edit": true,
+    "warehouses.view": true, "warehouses.create": true, "warehouses.edit": true,
+    "costs.view": true, "costs.create": true, "costs.edit": true,
+    "branches.view": true,
+    "reports.view": true,
+    "financial.view": true,
+    "users.view": true, "users.create": true, "users.edit": true,
+    "settings.view": true,
   }
 };
 
