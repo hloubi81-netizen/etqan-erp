@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import OnboardingGuide from "@/components/assistant/OnboardingGuide";
 import Onboarding from "@/pages/Onboarding";
 import { useSubscription } from "@/hooks/useSubscription.jsx";
+import SubscriptionExpiryBanner from "@/components/subscriptions/SubscriptionExpiryBanner";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -99,6 +100,9 @@ export default function AppLayout() {
             </div>
           </div>
         </header>
+
+        {/* Subscription Expiry Banner */}
+        <SubscriptionExpiryBanner />
 
         {/* Main content */}
         <main className="flex-1 p-4 md:p-6 overflow-auto">
