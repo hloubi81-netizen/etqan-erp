@@ -200,6 +200,95 @@ export function getBackupLogs() {
 }
 
 /**
+ * استيراد من Excel (XLSX) — كل ورقة = كيان باسمه العربي أو الإنجليزي
+ */
+export async function importBackupExcel(file, entityKey, onProgress) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+        const results = {};
+
+        // إذا حُدِّد كيان معين، استورد من الورقة الأولى فقط
+        if (entityKey) {
+          const sheetName = wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+          results[entityKey] = await importRowsToEntity(entityKey, rows);
+          onProgress && onProgress(100, entityKey);
+        } else {
+          // استيراد كل الأوراق — مطابقة بالاسم العربي أو الإنجليزي
+          const sheetNames = wb.SheetNames;
+          let done = 0;
+          for (const sheetName of sheetNames) {
+            const matched = ENTITIES.find(
+              e => e.label === sheetName.trim() || e.key === sheetName.trim()
+            );
+            if (!matched) { done++; continue; }
+            const ws = wb.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+            results[matched.key] = await importRowsToEntity(matched.key, rows);
+            done++;
+            onProgress && onProgress(Math.round((done / sheetNames.length) * 100), matched.label);
+          }
+        }
+        resolve(results);
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/**
+ * استيراد من CSV — يُستورد إلى كيان محدد
+ */
+export async function importBackupCSV(file, entityKey, onProgress) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: "string" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+        onProgress && onProgress(50, entityKey);
+        const count = await importRowsToEntity(entityKey, rows);
+        onProgress && onProgress(100, entityKey);
+        resolve({ [entityKey]: count });
+      } catch (err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsText(file, "UTF-8");
+  });
+}
+
+/**
+ * مساعد: استيراد صفوف إلى كيان (إضافة فقط بدون حذف)
+ */
+export async function importRowsToEntity(entityKey, rows, clearFirst = false) {
+  if (!rows?.length) return 0;
+  if (clearFirst) {
+    const existing = await base44.entities[entityKey]?.list().catch(() => []);
+    await Promise.all(existing.map(r => base44.entities[entityKey].delete(r.id).catch(() => {})));
+  }
+  const clean = rows.map(r => {
+    const { id, created_date, updated_date, created_by, created_by_id, ...rest } = r;
+    // تحويل الحقول الفارغة وتنظيف القيم
+    const cleaned = {};
+    for (const [k, v] of Object.entries(rest)) {
+      if (v !== "" && v !== null && v !== undefined) cleaned[k] = v;
+    }
+    return cleaned;
+  }).filter(r => Object.keys(r).length > 0);
+  const chunks = chunkArray(clean, 20);
+  for (const chunk of chunks) {
+    await base44.entities[entityKey]?.bulkCreate(chunk).catch(() => {});
+  }
+  return clean.length;
+}
+
+/**
  * استيراد نسخة احتياطية من JSON
  */
 export async function importBackupJSON(file, onProgress) {
