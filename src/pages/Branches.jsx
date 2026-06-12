@@ -6,25 +6,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, GitBranch, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, GitBranch, Building2, Package, BookOpen, Link } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const empty = { name: "", code: "", location: "", manager_name: "", phone: "", is_main: false, notes: "" };
 
 export default function Branches() {
   const [branches, setBranches] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
   const [editId, setEditId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-    const data = await base44.entities.Branch.list();
+    const [data, prods, accs] = await Promise.all([
+      base44.entities.Branch.list(),
+      base44.entities.Product.list(),
+      base44.entities.Account.list(),
+    ]);
     setBranches(data);
+    setProducts(prods);
+    setAccounts(accs);
     setLoading(false);
+  }
+
+  function getBranchStats(branchId) {
+    const productCount = products.filter(p => p.branch_id === branchId).length;
+    const accountCount = accounts.filter(a => a.branch_id === branchId).length;
+    return { productCount, accountCount };
   }
 
   function openNew() { setForm(empty); setEditId(null); setOpen(true); }
@@ -92,7 +108,39 @@ export default function Branches() {
                 {b.manager_name && <p className="text-muted-foreground">👤 {b.manager_name}</p>}
                 {b.phone && <p className="text-muted-foreground">📞 {b.phone}</p>}
                 {b.notes && <p className="text-muted-foreground text-xs mt-2">{b.notes}</p>}
-                <div className="flex gap-2 pt-3 border-t mt-3">
+
+                {/* Branch Stats */}
+                <div className="grid grid-cols-2 gap-2 pt-3 mt-2">
+                  {(() => {
+                    const { productCount, accountCount } = getBranchStats(b.id);
+                    return (
+                      <>
+                        <button
+                          onClick={() => navigate(`/products?branch=${b.id}`)}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors text-right"
+                        >
+                          <Package className="h-4 w-4 text-blue-600 shrink-0" />
+                          <div>
+                            <p className="text-xs text-blue-600 font-semibold">{productCount}</p>
+                            <p className="text-[10px] text-blue-500">منتج</p>
+                          </div>
+                        </button>
+                        <button
+                          onClick={() => navigate(`/accounts?branch=${b.id}`)}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors text-right"
+                        >
+                          <BookOpen className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <div>
+                            <p className="text-xs text-emerald-600 font-semibold">{accountCount}</p>
+                            <p className="text-[10px] text-emerald-500">حساب</p>
+                          </div>
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex gap-2 pt-3 border-t mt-1">
                   <Button size="sm" variant="outline" className="flex-1 gap-1" onClick={() => openEdit(b)}>
                     <Pencil className="h-3 w-3"/>تعديل
                   </Button>

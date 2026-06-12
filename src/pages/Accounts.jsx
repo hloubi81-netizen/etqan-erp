@@ -86,7 +86,8 @@ export default function Accounts() {
   const [accounts, setAccounts] = useState([]);
   const [currencies, setCurrencies] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [branchFilter, setBranchFilter] = useState("all");
+  const urlParams = new URLSearchParams(window.location.search);
+  const [branchFilter, setBranchFilter] = useState(urlParams.get("branch") || "all");
   const { filterByBranch, isAdmin } = useBranchFilter();
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);

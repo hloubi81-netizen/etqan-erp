@@ -18,7 +18,8 @@ export default function Products() {
   const [groups, setGroups] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [branchFilter, setBranchFilter] = useState("all");
+  const urlParams = new URLSearchParams(window.location.search);
+  const [branchFilter, setBranchFilter] = useState(urlParams.get("branch") || "all");
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
