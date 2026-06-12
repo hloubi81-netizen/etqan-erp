@@ -175,14 +175,13 @@ function getMenuItems(lang) {
 
 const ITEM_FEATURES = {
   "/accounts": "accounting", "/currencies": "accounting", "/invoice-patterns": "accounting",
-  "/accounting/bank-reconciliation": "accounting", "/tax-rates": "accounting",
-  "/assets": "accounting", "/custody": "accounting", "/custody/budget-report": "accounting",
-  "/custody/calendar": "accounting",
+  "/accounting/bank-reconciliation": "accounting", "/tax-rates": "accounting", "/assets": "accounting",
+  "/custody": "accounting", "/custody/budget-report": "accounting", "/custody/calendar": "accounting",
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices", "/invoices/sales-return": "invoices",
   "/invoices/purchases-return": "invoices", "/invoices/opening-balance": "invoices", "/ecom-orders": "invoices",
-  "/pos": "invoices", "/pos/history": "invoices", "/orders": "invoices",
-  "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
-  "/price-lists": "invoices", "/loyalty": "invoices", "/crm": "invoices",
+  "/orders": "invoices", "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
+  "/price-lists": "invoices", "/pos": "invoices", "/pos/history": "invoices",
+  "/loyalty": "invoices", "/crm": "invoices",
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/groups": "warehouses", "/products": "warehouses", "/services": "warehouses",
@@ -204,6 +203,7 @@ const ITEM_FEATURES = {
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
+  "/hr/employees": "users", "/hr/attendance": "users", "/hr/payroll": "users", "/hr/leaves": "users",
   "/users": "users", "/subscriptions": "users"
 };
 

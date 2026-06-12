@@ -88,10 +88,10 @@ export const PAGE_GROUPS = [
   {
     label: "الموارد البشرية",
     pages: [
-      { path: "/hr/employees", label: "الموظفون" },
-      { path: "/hr/attendance", label: "الحضور والغياب" },
-      { path: "/hr/payroll", label: "الرواتب" },
-      { path: "/hr/leaves", label: "طلبات الإجازات" },
+      { path: "/hr/employees", label: "الموظفون", section: "users" },
+      { path: "/hr/attendance", label: "الحضور والغياب", section: "users" },
+      { path: "/hr/payroll", label: "الرواتب", section: "users" },
+      { path: "/hr/leaves", label: "طلبات الإجازات", section: "users" },
     ],
   },
   {
