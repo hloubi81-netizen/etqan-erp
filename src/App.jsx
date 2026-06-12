@@ -84,6 +84,7 @@ import CustodyBudgetReport from './pages/custody/CustodyBudgetReport';
 import CustodyCalendar from './pages/custody/CustodyCalendar';
 import BudgetVsActualDashboard from './pages/reports/BudgetVsActualDashboard';
 import AIChatbot from './components/assistant/AIChatbot';
+import InventorySheetsSync from './pages/inventory/InventorySheetsSync';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -183,6 +184,7 @@ const AuthenticatedApp = () => {
         <Route path="/custody/budget-report" element={<CustodyBudgetReport />} />
         <Route path="/custody/calendar" element={<CustodyCalendar />} />
         <Route path="/reports/budget-vs-actual" element={<BudgetVsActualDashboard />} />
+        <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
