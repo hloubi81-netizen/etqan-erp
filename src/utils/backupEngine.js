@@ -101,6 +101,105 @@ export async function exportEntityCSV(entityKey, entityLabel) {
 }
 
 /**
+ * تصدير نسخة احتياطية شاملة بصيغة CSV واحدة (كل جدول في قسم منفصل)
+ */
+export async function exportBackupCSV(onProgress) {
+  const data = await fetchAllData(onProgress);
+  let csvContent = "\uFEFF";
+  for (const ent of ENTITIES) {
+    const rows = data[ent.key] || [];
+    if (!rows.length) continue;
+    csvContent += `\n=== ${ent.label} ===\n`;
+    const flat = rows.map(r => flattenObject(r));
+    const ws = XLSX.utils.json_to_sheet(flat);
+    csvContent += XLSX.utils.sheet_to_csv(ws) + "\n";
+  }
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  downloadBlob(blob, `backup_full_${dateTag()}.csv`);
+  return Object.values(data).reduce((s, arr) => s + arr.length, 0);
+}
+
+/**
+ * تصدير نسخة احتياطية بصيغة HTML (تقرير قابل للطباعة / PDF)
+ */
+export async function exportBackupHTML(onProgress) {
+  const data = await fetchAllData(onProgress);
+  const exportedAt = new Date().toLocaleString("ar-EG");
+  const totalRecords = Object.values(data).reduce((s, arr) => s + arr.length, 0);
+
+  let tablesHTML = "";
+  for (const ent of ENTITIES) {
+    const rows = data[ent.key] || [];
+    if (!rows.length) continue;
+    const flat = rows.map(r => flattenObject(r));
+    const headers = Object.keys(flat[0] || {});
+    tablesHTML += `
+      <div class="section">
+        <h2>${ent.label} <span class="count">(${rows.length} سجل)</span></h2>
+        <table>
+          <thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${flat.map(row => `<tr>${headers.map(h => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>نسخة احتياطية - ${exportedAt}</title>
+<style>
+  body { font-family: Arial, sans-serif; direction: rtl; font-size: 11px; color: #222; }
+  h1 { background: #1e40af; color: white; padding: 12px 16px; border-radius: 6px; }
+  .meta { background: #f1f5f9; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; }
+  .section { margin-bottom: 32px; page-break-inside: avoid; }
+  h2 { background: #e2e8f0; padding: 6px 12px; border-radius: 4px; font-size: 13px; color: #1e3a8a; }
+  .count { color: #64748b; font-weight: normal; font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  th { background: #1e40af; color: white; padding: 5px 8px; text-align: right; }
+  td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) { background: #f8fafc; }
+  @media print { .section { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<h1>📦 نسخة احتياطية شاملة — ETQAN ERP</h1>
+<div class="meta">
+  <strong>تاريخ التصدير:</strong> ${exportedAt} &nbsp;|&nbsp;
+  <strong>إجمالي السجلات:</strong> ${totalRecords.toLocaleString()} سجل &nbsp;|&nbsp;
+  <strong>عدد الجداول:</strong> ${ENTITIES.filter(e => (data[e.key] || []).length > 0).length}
+</div>
+${tablesHTML}
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+  downloadBlob(blob, `backup_report_${dateTag()}.html`);
+  return totalRecords;
+}
+
+/**
+ * حفظ سجل النسخة الاحتياطية في localStorage
+ */
+export function saveBackupLog(format, recordCount) {
+  const logs = getBackupLogs();
+  logs.unshift({
+    id: Date.now(),
+    format,
+    recordCount,
+    date: new Date().toISOString(),
+  });
+  localStorage.setItem("itqan_backup_logs", JSON.stringify(logs.slice(0, 20)));
+}
+
+export function getBackupLogs() {
+  try { return JSON.parse(localStorage.getItem("itqan_backup_logs") || "[]"); }
+  catch { return []; }
+}
+
+/**
  * استيراد نسخة احتياطية من JSON
  */
 export async function importBackupJSON(file, onProgress) {
