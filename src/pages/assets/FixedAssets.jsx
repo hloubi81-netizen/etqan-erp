@@ -36,7 +36,12 @@ export default function FixedAssets() {
   const [filterCategory, setFilterCategory] = useState("الكل");
   const [filterStatus, setFilterStatus]   = useState("الكل");
 
-  useEffect(() => { loadData(); }, []);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+    loadData();
+  }, []);
 
   async function loadData() {
     setLoading(true);
@@ -56,7 +61,7 @@ export default function FixedAssets() {
       setAssets(p => p.map(a => a.id === editing.id ? { ...a, ...data } : a));
       toast.success("تم تحديث بيانات الأصل");
     } else {
-      const created = await base44.entities.FixedAsset.create(data);
+      const created = await base44.entities.FixedAsset.create({ ...data, subscription_id: user?.subscription_id });
       setAssets(p => [created, ...p]);
       toast.success("تم تسجيل الأصل بنجاح ✅");
     }
@@ -95,6 +100,7 @@ export default function FixedAssets() {
       credit_account_name: depAsset.accumulated_account_name,
       amount,
       notes: depNotes || `إهلاك: ${depAsset.name}`,
+      subscription_id: user?.subscription_id,
     });
 
     const newAccumulated = (depAsset.accumulated_depreciation || 0) + amount;
