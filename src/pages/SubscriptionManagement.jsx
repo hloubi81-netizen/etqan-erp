@@ -41,24 +41,11 @@ export default function SubscriptionManagement() {
   const [showFreeTrialModal, setShowFreeTrialModal] = useState(false);
   const [freeTrialName, setFreeTrialName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => { load(); }, []);
 
   async function load() {
-    const currentUser = await base44.auth.me();
-    // Super admin: admin without subscription_id sees all subscriptions
-    const superAdmin = currentUser?.role === "admin" && !currentUser?.subscription_id;
-    setIsSuperAdmin(superAdmin);
-
-    let list;
-    if (superAdmin) {
-      list = await base44.entities.Subscription.list("-created_date");
-    } else if (currentUser?.subscription_id) {
-      list = await base44.entities.Subscription.filter({ id: currentUser.subscription_id });
-    } else {
-      list = [];
-    }
+    const list = await base44.entities.Subscription.list("-created_date");
     setSubscriptions(list);
     setLoading(false);
   }
@@ -169,7 +156,7 @@ export default function SubscriptionManagement() {
             <h1 className="text-2xl font-bold">إدارة الاشتراكات</h1>
             <p className="text-muted-foreground text-sm mt-1">متابعة حالة الاشتراكات والتنبيهات التلقائية قبل انتهاء الصلاحية</p>
           </div>
-          {isSuperAdmin && <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" />اشتراك جديد</Button>}
+          <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4" />اشتراك جديد</Button>
         </div>
 
         <Tabs defaultValue="dashboard">
@@ -190,8 +177,7 @@ export default function SubscriptionManagement() {
           <TabsContent value="manage">
             <div className="space-y-6">
 
-        {/* Free Trial Banner - super admin only */}
-        {isSuperAdmin && (
+        {/* Free Trial Banner */}
         <div className="relative overflow-hidden rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 p-6 shadow-md">
           <div className="absolute -top-4 -right-4 w-28 h-28 rounded-full bg-amber-200/30 blur-2xl" />
           <div className="absolute -bottom-4 -left-4 w-32 h-32 rounded-full bg-orange-200/30 blur-2xl" />
@@ -228,10 +214,8 @@ export default function SubscriptionManagement() {
             </Button>
           </div>
         </div>
-        )}
 
-        {/* Plan comparison cards - super admin only */}
-        {isSuperAdmin && (
+        {/* Plan comparison cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
             const Icon = PLAN_ICONS[key];
@@ -260,7 +244,6 @@ export default function SubscriptionManagement() {
             );
           })}
         </div>
-        )}
 
         {/* Subscriptions list */}
         <Card>
@@ -314,16 +297,14 @@ export default function SubscriptionManagement() {
                             <Switch checked={!!s.is_active} onCheckedChange={() => toggleActive(s)} />
                           </td>
                           <td className="px-4 py-3">
-                            {isSuperAdmin && (
-                              <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)}>
-                                  <Pencil className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(s)}>
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteTarget(s)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       );
