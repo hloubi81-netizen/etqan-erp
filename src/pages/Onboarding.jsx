@@ -70,10 +70,10 @@ export default function Onboarding({ onComplete }) {
     if (planKey === "free_trial") {
       activateFreeTrial();
     } else {
-      // Pre-select all allowed modules for this plan
-      const preset = PLAN_PRESETS[planKey];
-      setSelectedModules({ ...preset.features });
-      setStep(3); // Go to module selection step
+      // All modules enabled for all plans
+      const allModules = Object.fromEntries(Object.keys(FEATURE_LABELS).map(k => [k, true]));
+      setSelectedModules(allModules);
+      setStep(3);
     }
   }
 
@@ -309,21 +309,18 @@ export default function Onboarding({ onComplete }) {
                     <button
                       key={key}
                       type="button"
-                      disabled={!allowed}
-                      onClick={() => allowed && toggleModule(key)}
+                      onClick={() => toggleModule(key)}
                       className={`flex items-center gap-3 p-3 rounded-xl border-2 text-right transition-all duration-150
-                        ${!allowed ? "opacity-40 cursor-not-allowed border-gray-200 bg-gray-50" :
-                          active ? `border-primary bg-primary/5 shadow-sm` :
-                          "border-border bg-white hover:border-primary/40"}`}
+                        ${active ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-white hover:border-primary/40"}`}
                     >
                       <span className="text-2xl">{meta.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-semibold ${active && allowed ? "text-primary" : "text-foreground"}`}>{label}</p>
+                        <p className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>{label}</p>
                         <p className="text-xs text-muted-foreground truncate">{meta.desc}</p>
                       </div>
                       <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors
-                        ${active && allowed ? "border-primary bg-primary" : "border-gray-300 bg-white"}`}>
-                        {active && allowed && <CheckCircle className="h-3 w-3 text-white" />}
+                        ${active ? "border-primary bg-primary" : "border-gray-300 bg-white"}`}>
+                        {active && <CheckCircle className="h-3 w-3 text-white" />}
                       </div>
                     </button>
                   );
