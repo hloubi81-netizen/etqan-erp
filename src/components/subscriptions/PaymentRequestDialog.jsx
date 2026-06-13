@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
-import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle, Users, Minus, Plus } from "lucide-react";
+import { Smartphone, CreditCard, Upload, CheckCircle2, AlertCircle, Users, Minus, Plus, LayoutGrid } from "lucide-react";
+import { FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 
 const PLAN_PRICES = { basic: 500, advanced: 900, enterprise: 1500 };
 const PAYMENT_ICONS = {
@@ -21,9 +22,9 @@ const PAYMENT_ACCOUNTS = {
   "أخرى": { label: "مرجع الدفع", value: "تواصل معنا للحصول على بيانات الدفع", hint: "تواصل مع الدعم لمعرفة طرق الدفع الأخرى" },
 };
 
-export default function PaymentRequestDialog({ open, onOpenChange, planKey, user }) {
+export default function PaymentRequestDialog({ open, onOpenChange, planKey, user, selectedModules, clientName }) {
   const [form, setForm] = useState({
-    client_name: "",
+    client_name: clientName || "",
     payment_method: "",
     transaction_reference: "",
     screenshot_url: "",
@@ -65,7 +66,7 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
       screenshot_url: form.screenshot_url,
       amount: totalAmount,
       status: "معلق",
-      notes: `عدد المستخدمين: ${numUsers} | ${form.notes}`,
+      notes: `عدد المستخدمين: ${numUsers} | الموديولات: ${selectedModules ? Object.entries(selectedModules).filter(([,v])=>v).map(([k])=>FEATURE_LABELS[k]||k).join('، ') : 'الكل'} | ${form.notes}`,
     });
     // إشعار للمسؤول
     await base44.entities.Notification.create({
@@ -149,6 +150,24 @@ export default function PaymentRequestDialog({ open, onOpenChange, planKey, user
                 <span className="text-xs text-muted-foreground">مستخدم</span>
               </div>
             </div>
+
+            {/* Selected Modules */}
+            {selectedModules && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground">
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  الموديولات المختارة
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(selectedModules).filter(([, v]) => v).map(([key]) => (
+                    <span key={key} className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {FEATURE_LABELS[key] || key}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Total */}
             <div className="border-t border-primary/20 pt-3 flex items-center justify-between">
