@@ -12,14 +12,15 @@ export default function AlertsPanel({ lang = "ar" }) {
   const [showAll, setShowAll] = useState({ overdue: false, stock: false });
 
   useEffect(() => {
-    loadAlerts();
+    const timer = setTimeout(() => loadAlerts(), 300);
+    return () => clearTimeout(timer);
   }, []);
 
   async function loadAlerts() {
     const today = new Date().toISOString().split("T")[0];
     const [invoices, inventoryCounts] = await Promise.all([
-      base44.entities.Invoice.filter({ pattern_type: "مبيعات", status: "مرحّلة" }),
-      base44.entities.InventoryCount.filter({ status: "معتمد" }),
+      base44.entities.Invoice.filter({ pattern_type: "مبيعات", status: "مرحّلة" }, "-date", 50),
+      base44.entities.InventoryCount.filter({ status: "معتمد" }, "-created_date", 20),
     ]);
 
     // Overdue: sales invoices with remaining amount > 0 and date is past
