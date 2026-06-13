@@ -2,10 +2,12 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Crown, Zap, Building2, AlertTriangle, CheckCircle2, XCircle, Clock, Users, Bell, TrendingUp, RefreshCw, Gift } from "lucide-react";
+import { Crown, Zap, Building2, AlertTriangle, CheckCircle2, XCircle, Clock, Users, Bell, TrendingUp, RefreshCw, Gift, ArrowUpCircle } from "lucide-react";
 import { PLAN_PRESETS } from "@/hooks/useSubscription.jsx";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { useState } from "react";
+import PaymentRequestDialog from "@/components/subscriptions/PaymentRequestDialog";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 
@@ -24,8 +26,17 @@ function ExpiryBadge({ daysLeft }) {
   return <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">{daysLeft} يوم</Badge>;
 }
 
+const PLAN_ORDER = { free_trial: 0, basic: 1, advanced: 2, enterprise: 3 };
+const UPGRADE_OPTIONS = {
+  free_trial: ["basic", "advanced", "enterprise"],
+  basic: ["advanced", "enterprise"],
+  advanced: ["enterprise"],
+  enterprise: [],
+};
+
 export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
   const today = new Date();
+  const [upgradeDialog, setUpgradeDialog] = useState({ open: false, planKey: null, sub: null });
 
   const stats = useMemo(() => {
     const active = subscriptions.filter(s => s.is_active);
@@ -245,11 +256,12 @@ export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
               <thead>
                 <tr className="bg-muted/50 border-b">
                   <th className="text-right px-4 py-3 text-xs font-semibold">العميل</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold">الخطة</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold">الخطة الحالية</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold">البداية</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold">الانتهاء</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold">المتبقي</th>
                   <th className="text-right px-4 py-3 text-xs font-semibold">الحالة</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold">الترقية / الاشتراك</th>
                 </tr>
               </thead>
               <tbody>
@@ -257,6 +269,8 @@ export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
                   const Icon = PLAN_ICONS[s.plan] || Zap;
                   const preset = PLAN_PRESETS[s.plan];
                   const daysLeft = getDaysLeft(s.end_date);
+                  const upgradeOptions = UPGRADE_OPTIONS[s.plan] || [];
+                  const isExpiredOrSoon = daysLeft !== null && daysLeft <= 30;
                   return (
                     <tr key={s.id} className={i % 2 === 0 ? "" : "bg-muted/20"}>
                       <td className="px-4 py-3 font-medium">{s.client_name}</td>
@@ -273,6 +287,41 @@ export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
                           ? <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">نشط</Badge>
                           : <Badge variant="secondary" className="text-xs">متوقف</Badge>}
                       </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {/* زر تجديد نفس الباقة إذا كانت قريبة الانتهاء أو منتهية */}
+                          {isExpiredOrSoon && s.plan !== "free_trial" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs gap-1 border-orange-300 text-orange-700 hover:bg-orange-50"
+                              onClick={() => setUpgradeDialog({ open: true, planKey: s.plan, sub: s })}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              تجديد
+                            </Button>
+                          )}
+                          {/* أزرار الترقية للباقات الأعلى */}
+                          {upgradeOptions.map(planKey => (
+                            <Button
+                              key={planKey}
+                              size="sm"
+                              className={`h-7 text-xs gap-1 text-white ${
+                                planKey === "basic" ? "bg-blue-600 hover:bg-blue-700" :
+                                planKey === "advanced" ? "bg-purple-600 hover:bg-purple-700" :
+                                "bg-emerald-600 hover:bg-emerald-700"
+                              }`}
+                              onClick={() => setUpgradeDialog({ open: true, planKey, sub: s })}
+                            >
+                              <ArrowUpCircle className="h-3 w-3" />
+                              {PLAN_PRESETS[planKey]?.label}
+                            </Button>
+                          ))}
+                          {upgradeOptions.length === 0 && !isExpiredOrSoon && (
+                            <span className="text-xs text-muted-foreground">أعلى باقة</span>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -281,6 +330,16 @@ export default function SubscriptionDashboard({ subscriptions, onRefresh }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment/Upgrade Dialog */}
+      {upgradeDialog.open && upgradeDialog.planKey && (
+        <PaymentRequestDialog
+          open={upgradeDialog.open}
+          onOpenChange={(v) => setUpgradeDialog(d => ({ ...d, open: v }))}
+          planKey={upgradeDialog.planKey}
+          user={{ full_name: upgradeDialog.sub?.client_name, email: "", id: "" }}
+        />
+      )}
     </div>
   );
 }
