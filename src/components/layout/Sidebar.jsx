@@ -237,7 +237,7 @@ function SidebarItem({ item, onNavigate }) {
   if (item.children) {
     const visibleChildren = item.children.filter((c) => {
       const feat = ITEM_FEATURES[c.path];
-      if (feat && !hasFeature(feat)) return false;
+      if (feat && !isAdmin() && !hasFeature(feat)) return false;
       return isAdmin() || canViewPage(c.path);
     });
     if (visibleChildren.length === 0) return null;
@@ -283,7 +283,7 @@ function SidebarItem({ item, onNavigate }) {
   }
 
   const feat = ITEM_FEATURES[item.path];
-  if (feat && !hasFeature(feat)) return null;
+  if (feat && !isAdmin() && !hasFeature(feat)) return null;
   if (!isAdmin() && !canViewPage(item.path)) return null;
 
   const isActive = location.pathname === item.path;
