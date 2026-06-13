@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Package, FolderTree, GitBranch, Calculator, Crown,
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
-  ChevronDown, Building2, Users, Truck, ShoppingCart, UserCog,
+  ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
   ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet } from
 "lucide-react";
@@ -165,9 +165,13 @@ function getMenuItems(lang) {
   // ── أرشيف المستندات ──
   { label: lang === 'ar' ? "أرشيف المستندات" : "Document Archive", icon: Archive, path: "/archive" },
 
+  // ── إدارة الفريق ──
+  { label: lang === 'ar' ? "إدارة الفريق" : "Team Management", icon: UsersIcon, path: "/team" },
+
   // ── الإدارة والإعدادات ──
   { label: l('users'), icon: Users, path: "/users" },
   { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
+  { label: lang === 'ar' ? "لوحة تحكم المدير" : "Admin Control Panel", icon: Crown, path: "/admin/control-panel" },
   { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
   { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" }];
 
