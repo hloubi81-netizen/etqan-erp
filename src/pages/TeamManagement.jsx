@@ -39,15 +39,18 @@ export default function TeamManagement() {
   const canInvite = maxUsers >= 999 || usedSeats < maxUsers;
   const usagePct = maxUsers > 0 && maxUsers < 999 ? Math.min(100, Math.round((usedSeats / maxUsers) * 100)) : null;
 
-  useEffect(() => { loadTeam(); }, [user?.subscription_id]);
+  // The effective subscription_id: if user is subscription owner, use subscription.id; if team member, use user.subscription_id
+  const effectiveSubId = user?.subscription_id || subscription?.id;
+
+  useEffect(() => { if (subscription || user?.subscription_id) loadTeam(); }, [subscription?.id, user?.subscription_id]);
 
   async function loadTeam() {
-    if (!user?.subscription_id) { setLoading(false); return; }
+    if (!effectiveSubId) { setLoading(false); return; }
     setLoading(true);
     try {
       const res = await base44.functions.invoke('getAllUsers', {});
       const all = res.data?.users || [];
-      const myTeam = all.filter(u => u.subscription_id === user.subscription_id && u.id !== user.id);
+      const myTeam = all.filter(u => u.subscription_id === effectiveSubId && u.id !== user.id);
       setTeamUsers(myTeam);
     } catch {
       toast.error("حدث خطأ أثناء تحميل الفريق");
@@ -65,7 +68,7 @@ export default function TeamManagement() {
       // Save pending invite with our subscription_id so claimInvite can link the user
       await base44.entities.PendingInvite.create({
         email: inviteEmail.toLowerCase(),
-        subscription_id: user.subscription_id,
+        subscription_id: effectiveSubId,
         role: inviteRole,
         description: inviteJob,
       });

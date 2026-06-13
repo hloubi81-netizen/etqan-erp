@@ -19,7 +19,20 @@ Deno.serve(async (req) => {
     
     if (invites && invites.length > 0) {
       const invite = invites[0];
-      
+
+      // Validate seat limit before accepting the invite
+      const subscription = await base44.asServiceRole.entities.Subscription.filter({ id: invite.subscription_id });
+      if (subscription && subscription.length > 0) {
+        const sub = subscription[0];
+        const maxUsers = sub.max_users || 999;
+        // Count current users in this subscription
+        const allUsers = await base44.asServiceRole.entities.User.filter({ subscription_id: invite.subscription_id });
+        const currentCount = allUsers ? allUsers.length : 0;
+        if (currentCount >= maxUsers) {
+          return Response.json({ error: 'تم الوصول إلى الحد الأقصى لعدد المستخدمين في هذا الاشتراك' }, { status: 403 });
+        }
+      }
+
       // Use service role to update user so we can change the role
       await base44.asServiceRole.entities.User.update(currentUser.id, {
         subscription_id: invite.subscription_id,

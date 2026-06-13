@@ -91,9 +91,19 @@ export function SubscriptionProvider({ children }) {
 
   useEffect(() => {
     if (!user) return;
-    const filter = user.subscription_id
-      ? { id: user.subscription_id, is_active: true }
-      : { is_active: true, created_by_id: user.id };
+
+    let filter;
+    if (user.role === 'admin' && !user.subscription_id) {
+      // Platform admin with no subscription — full access, no subscription needed
+      setSubscriptionLoaded(true);
+      return;
+    } else if (user.subscription_id) {
+      // User invited under a subscription (team member) OR subscription owner with subscription_id set
+      filter = { id: user.subscription_id };
+    } else {
+      // Subscription owner: find subscription they created
+      filter = { created_by_id: user.id };
+    }
 
     base44.entities.Subscription.filter(filter, "-created_date", 1)
       .then(list => {
