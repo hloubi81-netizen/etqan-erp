@@ -54,7 +54,7 @@ export default function SelectPlan() {
     const endDate = new Date();
 
     if (selected === "free_trial") {
-      endDate.setMonth(endDate.getMonth() + 3);
+      endDate.setDate(endDate.getDate() + 15);
     } else {
       endDate.setFullYear(endDate.getFullYear() + 1);
     }
@@ -67,7 +67,7 @@ export default function SelectPlan() {
       start_date: startDate.toISOString().split("T")[0],
       end_date: endDate.toISOString().split("T")[0],
       is_active: true,
-      notes: selected === "free_trial" ? "تجربة مجانية 3 أشهر" : `اشتراك ${preset.label}`,
+      notes: selected === "free_trial" ? "تجربة مجانية 15 يوم" : `اشتراك ${preset.label}`,
     });
 
     try {
@@ -96,31 +96,45 @@ export default function SelectPlan() {
           <p className="text-muted-foreground">اختر الباقة التي تناسب احتياجات عملك. يمكنك الترقية في أي وقت.</p>
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
+        {/* Free Trial Banner */}
+        <div className="mb-6 rounded-2xl bg-amber-50 border-2 border-amber-300 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <Gift className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-bold text-amber-800">جرّب النظام مجاناً لمدة 15 يوماً</p>
+              <p className="text-xs text-amber-700">وصول كامل لجميع الميزات — بدون بطاقة ائتمان</p>
+            </div>
+          </div>
+          <Button
+            className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+            onClick={() => choosePlan("free_trial")}
+          >
+            <Sparkles className="h-4 w-4 ml-1" />
+            ابدأ التجربة المجانية
+          </Button>
+        </div>
+
+        {/* Plans Grid - paid plans only */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {Object.entries(PLAN_PRESETS).filter(([key]) => key !== "free_trial").map(([key, preset]) => {
             const Icon = PLAN_ICONS[key];
-            const isFreeTrial = key === "free_trial";
             return (
               <Card
                 key={key}
-                className={`cursor-pointer border-2 transition-all duration-200 ${PLAN_COLORS[key]} ${isFreeTrial ? "ring-2 ring-amber-300 ring-offset-2" : ""}`}
+                className={`cursor-pointer border-2 transition-all duration-200 ${PLAN_COLORS[key]}`}
                 onClick={() => choosePlan(key)}
               >
-                {isFreeTrial && (
-                  <div className="bg-amber-500 text-white text-xs font-bold text-center py-1 rounded-t-lg">
-                    ⭐ مجاني 3 أشهر كاملة
-                  </div>
-                )}
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className={`p-2 rounded-lg ${isFreeTrial ? "bg-amber-100" : "bg-white/70"}`}>
-                      <Icon className={`h-5 w-5 ${isFreeTrial ? "text-amber-600" : "text-foreground"}`} />
+                    <div className="p-2 rounded-lg bg-white/70">
+                      <Icon className="h-5 w-5 text-foreground" />
                     </div>
                     <div>
                       <h3 className="font-bold text-sm">{preset.label}</h3>
                       <p className="text-xs text-muted-foreground">
-                        {isFreeTrial ? "3 أشهر مجاناً" : `حتى ${preset.max_users === 999 ? "غير محدود" : preset.max_users} مستخدم`}
+                        حتى {preset.max_users === 999 ? "غير محدود" : preset.max_users} مستخدم
                       </p>
                     </div>
                   </div>
@@ -140,7 +154,7 @@ export default function SelectPlan() {
                     className={`w-full text-xs h-8 text-white ${PLAN_BUTTON_COLORS[key]}`}
                     onClick={(e) => { e.stopPropagation(); choosePlan(key); }}
                   >
-                    {isFreeTrial ? "ابدأ مجاناً" : "اختر هذه الباقة"}
+                    اشترك الآن
                   </Button>
                 </CardContent>
               </Card>

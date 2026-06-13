@@ -18,7 +18,7 @@ export const PLAN_PRESETS = {
   free_trial: {
     label: "تجريبي مجاني",
     max_users: 999,
-    duration_months: 3,
+    duration_days: 15,
     color: "bg-amber-100 text-amber-700",
     features: {
       accounting: true,
