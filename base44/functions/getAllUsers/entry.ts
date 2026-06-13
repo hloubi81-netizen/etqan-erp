@@ -9,17 +9,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'ممنوع: غير مصرح' }, { status: 401 });
     }
 
-    // Admins see all users in the app
-    if (user.role === 'admin') {
+    // Super admin: admin WITHOUT a subscription_id sees everyone
+    if (user.role === 'admin' && !user.subscription_id) {
       const users = await base44.asServiceRole.entities.User.list();
       return Response.json({ users });
     }
 
-    // Non-admin: see themselves + users they invited (via PendingInvite) within their subscription
+    // Admin WITH subscription_id: sees only users within their own subscription
+    if (user.role === 'admin' && user.subscription_id) {
+      const subUsers = await base44.asServiceRole.entities.User.filter({
+        subscription_id: user.subscription_id,
+      });
+      return Response.json({ users: subUsers });
+    }
+
+    // Non-admin: see themselves + users they invited within their subscription
     let users = [user];
 
     if (user.subscription_id) {
-      // Get invites created by this user within their subscription
       const myInvites = await base44.asServiceRole.entities.PendingInvite.filter({
         subscription_id: user.subscription_id,
         created_by_id: user.id,
@@ -28,7 +35,6 @@ Deno.serve(async (req) => {
       const invitedEmails = myInvites.map(inv => inv.email);
 
       if (invitedEmails.length > 0) {
-        // Get users whose emails match the invited list
         const allSubUsers = await base44.asServiceRole.entities.User.filter({
           subscription_id: user.subscription_id,
         });
