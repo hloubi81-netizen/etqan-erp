@@ -109,6 +109,10 @@
       ],
       "title": "\u0627\u0644\u062d\u0627\u0644\u0629"
     },
+    "subscription_id": {
+      "type": "string",
+      "title": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+    },
     "notes": {
       "type": "string",
       "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
@@ -120,64 +124,25 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "admin"
-          },
-          "data.branch_id": "{{user.branch_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "hr_manager"
-          },
-          "data.branch_id": "{{user.branch_id}}"
-        }
-      ]
+      "data.subscription_id": "{{user.subscription_id}}"
     },
     "read": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "admin"
-          },
-          "data.branch_id": "{{user.branch_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "hr_manager"
-          },
-          "data.branch_id": "{{user.branch_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "viewer"
-          },
-          "data.branch_id": "{{user.branch_id}}"
-        }
-      ]
+      "data.subscription_id": "{{user.subscription_id}}"
     },
     "update": {
-      "$or": [
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "delete": {
+      "$and": [
         {
-          "user_condition": {
-            "role": "admin"
-          },
-          "data.branch_id": "{{user.branch_id}}"
+          "data.subscription_id": "{{user.subscription_id}}"
         },
         {
           "user_condition": {
-            "role": "hr_manager"
-          },
-          "data.branch_id": "{{user.branch_id}}"
+            "role": "admin"
+          }
         }
       ]
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      },
-      "data.branch_id": "{{user.branch_id}}"
     }
   }
 }
