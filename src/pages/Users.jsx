@@ -57,8 +57,16 @@ export default function Users() {
 
   async function loadData() {
     try {
-      const usersRes = await base44.functions.invoke('getAllUsers', {});
-      setUsers(usersRes.data?.users || []);
+      const currentUser = await base44.auth.me();
+      const isOwner = currentUser?.email === 'hloubi81@gmail.com';
+
+      if (isOwner) {
+        const usersRes = await base44.functions.invoke('getAllUsers', {});
+        setUsers(usersRes.data?.users || []);
+      } else {
+        const selfUser = await base44.entities.User.filter({ id: currentUser.id });
+        setUsers(selfUser || []);
+      }
     } catch (error) {
       console.error(error);
       toast.error("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.");
