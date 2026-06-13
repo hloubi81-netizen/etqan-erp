@@ -229,47 +229,62 @@ export default function SubscriptionManagement() {
           </div>
         </div>
 
-        {/* Plan comparison cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {Object.entries(PLAN_PRESETS).map(([key, preset]) => {
-            const Icon = PLAN_ICONS[key];
-            const count = subscriptions.filter(s => s.plan === key && s.is_active).length;
-            return (
-              <div key={key} className={`rounded-xl border-2 p-4 ${PLAN_COLORS[key]}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-5 w-5" />
-                    <span className="font-bold">{preset.label}</span>
-                  </div>
-                  <Badge variant="secondary">{count} عميل</Badge>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(FEATURE_LABELS).map(([fk, fl]) => (
-                    <div key={fk} className="flex items-center gap-1.5 text-xs">
-                      {preset.features[fk]
-                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
-                        : <XCircle className="h-3.5 w-3.5 text-gray-300 shrink-0" />}
-                      <span className={preset.features[fk] ? "" : "text-muted-foreground/50"}>{fl}</span>
+        {/* Per-subscription plan cards */}
+        {subscriptions.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {subscriptions.map((s) => {
+              const key = s.plan;
+              const preset = PLAN_PRESETS[key];
+              if (!preset) return null;
+              const Icon = PLAN_ICONS[key] || Zap;
+              return (
+                <div key={s.id} className={`rounded-xl border-2 p-4 ${PLAN_COLORS[key]}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-5 w-5" />
+                      <span className="font-bold text-sm">{s.client_name}</span>
                     </div>
-                  ))}
+                    <Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? "نشط" : "موقوف"}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${preset.color}`}>
+                      <Icon className="h-3 w-3" />{preset.label}
+                    </span>
+                    {s.end_date && <span className="text-xs text-muted-foreground">ينتهي: {s.end_date}</span>}
+                  </div>
+                  <div className="space-y-1 mb-3">
+                    {Object.entries(FEATURE_LABELS).map(([fk, fl]) => (
+                      <div key={fk} className="flex items-center gap-1.5 text-xs">
+                        {(s.features?.[fk] ?? preset.features[fk])
+                          ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
+                          : <XCircle className="h-3.5 w-3.5 text-gray-300 shrink-0" />}
+                        <span className={(s.features?.[fk] ?? preset.features[fk]) ? "" : "text-muted-foreground/50"}>{fl}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">حتى {s.max_users || preset.max_users} مستخدم</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1 text-xs gap-1" onClick={() => openEdit(s)}>
+                      <Pencil className="h-3 w-3" />تعديل
+                    </Button>
+                    <Button
+                      size="sm"
+                      className={`flex-1 text-xs gap-1 text-white ${
+                        key === "free_trial" ? "bg-amber-500 hover:bg-amber-600" :
+                        key === "basic" ? "bg-blue-600 hover:bg-blue-700" :
+                        key === "advanced" ? "bg-purple-600 hover:bg-purple-700" :
+                        "bg-emerald-600 hover:bg-emerald-700"
+                      }`}
+                      onClick={() => handleSubscribePlan(key)}
+                    >
+                      <ArrowUpCircle className="h-3 w-3" />ترقية
+                    </Button>
+                  </div>
                 </div>
-                <p className="text-xs mt-3 text-muted-foreground">حتى {preset.max_users} مستخدم</p>
-                <Button
-                  size="sm"
-                  className={`w-full mt-3 text-xs gap-1.5 text-white ${
-                    key === "free_trial" ? "bg-amber-500 hover:bg-amber-600" :
-                    key === "basic" ? "bg-blue-600 hover:bg-blue-700" :
-                    key === "advanced" ? "bg-purple-600 hover:bg-purple-700" :
-                    "bg-emerald-600 hover:bg-emerald-700"
-                  }`}
-                  onClick={() => handleSubscribePlan(key)}
-                >
-                  {key === "free_trial" ? <><Gift className="h-3.5 w-3.5" />ابدأ مجاناً</> : <><ArrowUpCircle className="h-3.5 w-3.5" />اشترك الآن</>}
-                </Button>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Subscriptions list */}
         <Card>
