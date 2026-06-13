@@ -10,13 +10,14 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles, Trash2, CreditCard } from "lucide-react";
+import { Crown, Zap, Building2, CheckCircle2, XCircle, Pencil, Plus, LayoutDashboard, List, Gift, Sparkles, Trash2, CreditCard, ArrowUpCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PLAN_PRESETS, FEATURE_LABELS } from "@/hooks/useSubscription.jsx";
 import PermissionGuard from "@/components/shared/PermissionGuard";
 import { MODULES } from "@/hooks/usePermissions";
 import SubscriptionDashboard from "@/components/subscriptions/SubscriptionDashboard";
 import PaymentRequestsPanel from "@/components/subscriptions/PaymentRequestsPanel";
+import PaymentRequestDialog from "@/components/subscriptions/PaymentRequestDialog";
 
 const PLAN_ICONS = { free_trial: Gift, basic: Zap, advanced: Crown, enterprise: Building2 };
 const PLAN_COLORS = { free_trial: "bg-amber-50 border-amber-300", basic: "bg-blue-50 border-blue-200", advanced: "bg-purple-50 border-purple-200", enterprise: "bg-emerald-50 border-emerald-200" };
@@ -41,6 +42,9 @@ export default function SubscriptionManagement() {
   const [showFreeTrialModal, setShowFreeTrialModal] = useState(false);
   const [freeTrialName, setFreeTrialName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [upgradeTarget, setUpgradeTarget] = useState(null); // { planKey }
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showUpgradePayment, setShowUpgradePayment] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -144,6 +148,16 @@ export default function SubscriptionManagement() {
     load();
   }
 
+  function handleSubscribePlan(planKey) {
+    if (planKey === "free_trial") {
+      setShowFreeTrialModal(true);
+    } else {
+      base44.auth.me().then(setCurrentUser).catch(() => {});
+      setUpgradeTarget({ planKey });
+      setShowUpgradePayment(true);
+    }
+  }
+
   const activeCount = subscriptions.filter(s => s.is_active).length;
 
   if (loading) return <div className="flex justify-center p-12"><div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
@@ -240,6 +254,18 @@ export default function SubscriptionManagement() {
                   ))}
                 </div>
                 <p className="text-xs mt-3 text-muted-foreground">حتى {preset.max_users} مستخدم</p>
+                <Button
+                  size="sm"
+                  className={`w-full mt-3 text-xs gap-1.5 text-white ${
+                    key === "free_trial" ? "bg-amber-500 hover:bg-amber-600" :
+                    key === "basic" ? "bg-blue-600 hover:bg-blue-700" :
+                    key === "advanced" ? "bg-purple-600 hover:bg-purple-700" :
+                    "bg-emerald-600 hover:bg-emerald-700"
+                  }`}
+                  onClick={() => handleSubscribePlan(key)}
+                >
+                  {key === "free_trial" ? <><Gift className="h-3.5 w-3.5" />ابدأ مجاناً</> : <><ArrowUpCircle className="h-3.5 w-3.5" />اشترك الآن</>}
+                </Button>
               </div>
             );
           })}
@@ -378,6 +404,16 @@ export default function SubscriptionManagement() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Upgrade/Subscribe Payment Dialog */}
+        {upgradeTarget && (
+          <PaymentRequestDialog
+            open={showUpgradePayment}
+            onOpenChange={(v) => { setShowUpgradePayment(v); if (!v) setUpgradeTarget(null); }}
+            planKey={upgradeTarget.planKey}
+            user={currentUser}
+          />
+        )}
 
         {/* Dialog */}
         <Dialog open={open} onOpenChange={setOpen}>
