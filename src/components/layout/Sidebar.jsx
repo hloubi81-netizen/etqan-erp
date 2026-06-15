@@ -9,7 +9,7 @@ import {
   Warehouse as WarehouseIcon, CircleDollarSign, FileText, Receipt,
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
-  CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
+  CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
   ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign } from
 "lucide-react";
 import { cn } from "@/lib/utils";
@@ -152,7 +152,8 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "لوحة الخدمات والأصول" : "Services & Assets Dashboard", path: "/reports/services-dashboard", icon: Activity },
     { label: lang === 'ar' ? "الميزانية مقابل الفعلي" : "Budget vs Actual", path: "/reports/budget-vs-actual", icon: PieChart },
     { label: lang === 'ar' ? "ملخص أداء العمل" : "Business Performance", path: "/reports/business-performance", icon: DollarSign },
-    { label: lang === 'ar' ? "تقرير أداء الفريق" : "Team Performance", path: "/reports/branch-attendance", icon: Users }]
+    { label: lang === 'ar' ? "تقرير أداء الفريق" : "Team Performance", path: "/reports/branch-attendance", icon: Users },
+    { label: lang === 'ar' ? "تكامل تقويم جوجل" : "Google Calendar", path: "/settings/google-calendar", icon: Calendar }]
 
   },
 
@@ -208,6 +209,7 @@ const ITEM_FEATURES = {
   "/reports/services-dashboard": "reports", "/reports/budget-vs-actual": "reports",
   "/reports/business-performance": "reports",
   "/reports/branch-attendance": "reports",
+  "/settings/google-calendar": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",

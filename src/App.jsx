@@ -86,6 +86,7 @@ import BudgetVsActualDashboard from './pages/reports/BudgetVsActualDashboard';
 import AIChatbot from './components/assistant/AIChatbot';
 import InventorySheetsSync from './pages/inventory/InventorySheetsSync';
 import AdminControlPanel from './pages/AdminControlPanel';
+import GoogleCalendarIntegration from './pages/settings/GoogleCalendarIntegration';
 import TeamManagement from './pages/TeamManagement';
 import BusinessPerformance from './pages/reports/BusinessPerformance';
 import BranchAttendance from './pages/reports/BranchAttendance';
@@ -192,6 +193,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/branch-attendance" element={<BranchAttendance />} />
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
+        <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
         <Route path="/team" element={<TeamManagement />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
