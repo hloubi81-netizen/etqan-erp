@@ -25,6 +25,7 @@ function getMenuItems(lang) {
   {
     label: lang === 'ar' ? "المخزون والمنتجات" : "Inventory & Products", icon: Package,
     children: [
+    { label: lang === 'ar' ? "لوحة المخزون" : "Inventory Dashboard", path: "/inventory/dashboard", icon: WarehouseIcon },
     { label: l('groups'), path: "/groups", icon: FolderTree },
     { label: l('products'), path: "/products", icon: Package },
     { label: lang === 'ar' ? "الخدمات" : "Services", path: "/services", icon: Wrench },
@@ -192,6 +193,7 @@ const ITEM_FEATURES = {
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/groups": "warehouses", "/products": "warehouses", "/services": "warehouses",
+  "/inventory/dashboard": "warehouses",
   "/warehouses": "warehouses", "/transfers": "warehouses", "/inventory-count": "warehouses",
   "/inventory/stock-alerts": "warehouses", "/inventory/expiry": "warehouses",
   "/inventory/barcode": "warehouses", "/inventory/periodic-count": "warehouses",
@@ -219,6 +221,7 @@ const ITEM_FEATURES = {
 
 const ITEM_PERMISSIONS = {
   "/": "dashboard", "/groups": "warehouses", "/products": "warehouses",
+  "/inventory/dashboard": "warehouses",
   "/warehouses": "warehouses", "/cost-centers": "costs", "/accounts": "accounting",
   "/currencies": "accounting", "/invoice-patterns": "accounting",
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices",
