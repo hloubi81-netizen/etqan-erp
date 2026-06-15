@@ -40,7 +40,16 @@ export default function Messages() {
       base44.entities.Message.list("-created_date", 300).catch(() => []),
     ]);
     setUser(me);
-    setUsers(allUsers);
+
+    // Filter to only show team members (same subscription_id)
+    const subId = me?.subscription_id;
+    if (subId) {
+      setUsers(allUsers.filter(u => u.subscription_id === subId || u.id === me.id));
+    } else {
+      // If no subscription_id (e.g. admin), show all
+      setUsers(allUsers);
+    }
+
     setMessages(msgs);
     setLoading(false);
   };
@@ -57,7 +66,8 @@ export default function Messages() {
     });
   }, [selectedConv]);
 
-  // Group messages into conversations
+  // Group messages into conversations (only with team members)
+  const teamEmails = new Set(users.map(u => u.email).filter(Boolean));
   const conversations = useMemo(() => {
     const convMap = new Map();
     const myMsgs = messages.filter(
@@ -65,10 +75,13 @@ export default function Messages() {
     );
 
     myMsgs.forEach(msg => {
-      // Create a unique key for the conversation pair
-      const pair = [msg.sender_email, msg.recipient_email].sort().join("||");
       const otherEmail = msg.sender_email === user.email ? msg.recipient_email : msg.sender_email;
       const otherName = msg.sender_email === user.email ? msg.recipient_name : msg.sender_name;
+
+      // Only include conversations with team members
+      if (!teamEmails.has(otherEmail) && otherEmail !== user?.email) return;
+
+      const pair = [msg.sender_email, msg.recipient_email].sort().join("||");
 
       if (!convMap.has(pair)) {
         convMap.set(pair, {
@@ -78,28 +91,20 @@ export default function Messages() {
           messages: [],
           lastDate: "",
           unread: 0,
-          isTeamMember: false,
+          isTeamMember: true,
         });
       }
       const conv = convMap.get(pair);
       conv.messages.push(msg);
       if (msg.created_date > conv.lastDate) conv.lastDate = msg.created_date;
       if (msg.recipient_email === user.email && !msg.is_read) conv.unread++;
-      // Sort messages by date
       conv.messages.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     });
 
-    // Mark team members
     const allConv = Array.from(convMap.values());
-    allConv.forEach(c => {
-      const u = users.find(u => u.email === c.otherEmail);
-      if (u) c.isTeamMember = true;
-    });
-
-    // Sort by last message date
     allConv.sort((a, b) => new Date(b.lastDate) - new Date(a.lastDate));
     return allConv;
-  }, [messages, user]);
+  }, [messages, user, users]);
 
   const inboxConvs = conversations.filter(c =>
     c.messages.some(m => m.recipient_email === user?.email) || c.unread > 0
@@ -192,7 +197,7 @@ export default function Messages() {
               <Badge className="bg-red-500 hover:bg-red-600 text-white text-xs">{totalUnread}</Badge>
             )}
           </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">محادثات الفريق والتواصل الداخلي</p>
+          <p className="text-xs text-muted-foreground mt-0.5">محادثات مع أعضاء فريقك - {users.length > 1 ? `${users.length - 1} عضو` : "لا يوجد أعضاء بعد"}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
@@ -259,7 +264,11 @@ export default function Messages() {
               <div className="text-center py-12 text-muted-foreground">
                 <MessageSquare className="h-10 w-10 mx-auto mb-2 opacity-20" />
                 <p className="text-sm">لا توجد محادثات</p>
-                <p className="text-xs mt-1">ابدأ محادثة جديدة مع فريقك</p>
+                {users.length <= 1 ? (
+                  <p className="text-xs mt-1">قم بدعوة أعضاء لفريقك للتواصل معهم</p>
+                ) : (
+                  <p className="text-xs mt-1">ابدأ محادثة جديدة مع أعضاء فريقك</p>
+                )}
               </div>
             ) : (
               filtered.map(conv => (
@@ -314,7 +323,11 @@ export default function Messages() {
                 <MailOpen className="h-10 w-10 opacity-20" />
               </div>
               <p className="text-sm font-medium">اختر محادثة لعرضها</p>
-              <p className="text-xs">أو ابدأ رسالة جديدة مع أحد أعضاء الفريق</p>
+              {users.length <= 1 ? (
+                <p className="text-xs">قم بدعوة أعضاء لفريقك للبدء بالتواصل</p>
+              ) : (
+                <p className="text-xs">أو ابدأ رسالة جديدة مع أحد أعضاء فريقك</p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col h-full">
