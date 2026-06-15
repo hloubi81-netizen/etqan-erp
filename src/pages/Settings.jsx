@@ -123,7 +123,11 @@ export default function Settings() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(SETTINGS_KEY);
-      if (stored) setSettings(JSON.parse(stored));
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Merge with defaults so new sections always exist
+        setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+      }
     } catch {}
   }, []);
 
