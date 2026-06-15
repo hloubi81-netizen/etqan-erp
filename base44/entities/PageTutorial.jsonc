@@ -1,0 +1,45 @@
+{
+  "name": "PageTutorial",
+  "type": "object",
+  "properties": {
+    "page_path": {
+      "type": "string",
+      "title": "\u0645\u0633\u0627\u0631 \u0627\u0644\u0635\u0641\u062d\u0629"
+    },
+    "youtube_url": {
+      "type": "string",
+      "title": "\u0631\u0627\u0628\u0637 \u0641\u064a\u062f\u064a\u0648 \u064a\u0648\u062a\u064a\u0648\u0628"
+    },
+    "title": {
+      "type": "string",
+      "title": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0634\u0631\u062d"
+    },
+    "description": {
+      "type": "string",
+      "title": "\u0648\u0635\u0641 \u0627\u0644\u0634\u0631\u062d",
+      "maxLength": 500
+    }
+  },
+  "required": [
+    "page_path",
+    "youtube_url"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {},
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

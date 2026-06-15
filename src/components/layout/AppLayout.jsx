@@ -7,6 +7,7 @@ import { useLang } from "@/hooks/useLang.jsx";
 import ThemePicker from "./ThemePicker";
 import { base44 } from "@/api/base44Client";
 import GlobalSearch from "./GlobalSearch";
+import TutorialButton from "@/components/shared/TutorialButton";
 import PageAccessGuard from "@/components/shared/PageAccessGuard";
 import { cn } from "@/lib/utils";
 import OnboardingGuide from "@/components/assistant/OnboardingGuide";
@@ -111,6 +112,9 @@ export default function AppLayout() {
           </PageAccessGuard>
         </main>
       </div>
+
+      {/* Tutorial Button - appears on all pages */}
+      <TutorialButton />
 
       {/* Onboarding */}
       <OnboardingGuide />
