@@ -13,13 +13,12 @@ import {
 import {
   Plus, Search, Eye, CheckCircle2, XCircle, Truck,
   Package, Calendar, User, Building2, AlertCircle, Clock,
-  ClipboardList, Filter, FileText, Send, Trash2, History,
-  Timer
+  ClipboardList, Filter, FileText, Send, Trash2, History, Timer
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const STATUS_CONFIG = {
   "قيد الانتظار": { color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock, label: "قيد الانتظار" },
@@ -228,12 +227,12 @@ export default function PurchaseRequests() {
           <h1 className="text-2xl font-bold text-gray-900">طلبات الشراء</h1>
           <p className="text-sm text-gray-500 mt-1">إدارة طلبات الشراء الداخلية ونظام الموافقات</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild className="gap-2">
-            <Link to="/reports/purchase-request-timeline">
-              <Timer className="h-4 w-4" /> تقرير زمن الطلبات
-            </Link>
-          </Button>
+        <div className="flex items-center gap-2">
+          <Link to="/reports/purchase-request-timeline">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Timer className="h-4 w-4" /> تحليل زمن الطلبات
+            </Button>
+          </Link>
           <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
             <Plus className="h-4 w-4" /> طلب شراء جديد
           </Button>
