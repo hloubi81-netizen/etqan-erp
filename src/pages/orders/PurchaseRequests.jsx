@@ -13,7 +13,7 @@ import {
 import {
   Plus, Search, Eye, CheckCircle2, XCircle, Truck,
   Package, Calendar, User, Building2, AlertCircle, Clock,
-  ClipboardList, Filter, FileText
+  ClipboardList, Filter, FileText, Send, Trash2, History
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -52,12 +52,16 @@ export default function PurchaseRequests() {
 
   const [form, setForm] = useState({
     date: format(new Date(), "yyyy-MM-dd"),
+    delivery_date: "",
     department: "",
     branch_id: "",
     branch_name: "",
+    warehouse_id: "",
+    warehouse_name: "",
     items: [],
     notes: "",
   });
+  const [quickItem, setQuickItem] = useState({ product_id: "", quantity: 1 });
 
   const [approvalNote, setApprovalNote] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
@@ -110,11 +114,29 @@ export default function PurchaseRequests() {
 
   const isAdmin = user?.role === "admin";
 
-  const addItem = () => {
-    setForm({ ...form, items: [...form.items, { product_id: "", product_name: "", quantity: 1, unit: "", warehouse_id: "", warehouse_name: "", notes: "" }] });
+  const quickAddItem = () => {
+    if (!quickItem.product_id || !quickItem.quantity) return;
+    const prod = products.find((p) => p.id === quickItem.product_id);
+    setForm({
+      ...form,
+      items: [...form.items, {
+        product_id: quickItem.product_id,
+        product_name: prod?.name || "",
+        quantity: quickItem.quantity,
+        unit: prod?.units?.[0]?.name || "",
+        warehouse_id: form.warehouse_id,
+        warehouse_name: form.warehouse_name,
+        notes: "",
+      }],
+    });
+    setQuickItem({ product_id: "", quantity: 1 });
   };
 
-  const updateItem = (idx, field, value) => {
+  const removeItem = (idx) => {
+    setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
+  };
+
+  const updateItemRow = (idx, field, value) => {
     const items = [...form.items];
     items[idx] = { ...items[idx], [field]: value };
     if (field === "product_id") {
@@ -122,15 +144,7 @@ export default function PurchaseRequests() {
       items[idx].product_name = prod?.name || "";
       items[idx].unit = prod?.units?.[0]?.name || "";
     }
-    if (field === "warehouse_id") {
-      const wh = warehouses.find((w) => w.id === value);
-      items[idx].warehouse_name = wh?.name || "";
-    }
     setForm({ ...form, items });
-  };
-
-  const removeItem = (idx) => {
-    setForm({ ...form, items: form.items.filter((_, i) => i !== idx) });
   };
 
   const handleSubmit = async () => {
@@ -139,6 +153,7 @@ export default function PurchaseRequests() {
       await base44.entities.PurchaseRequest.create({
         request_number: generateRequestNumber(),
         date: form.date,
+        delivery_date: form.delivery_date || null,
         employee_id: user?.id,
         employee_name: user?.full_name || user?.email,
         department: form.department,
@@ -156,7 +171,8 @@ export default function PurchaseRequests() {
   };
 
   const resetForm = () => {
-    setForm({ date: format(new Date(), "yyyy-MM-dd"), department: "", branch_id: "", branch_name: "", items: [], notes: "" });
+    setForm({ date: format(new Date(), "yyyy-MM-dd"), delivery_date: "", department: "", branch_id: "", branch_name: "", warehouse_id: "", warehouse_name: "", items: [], notes: "" });
+    setQuickItem({ product_id: "", quantity: 1 });
   };
 
   const handleApprove = async () => {
@@ -292,6 +308,7 @@ export default function PurchaseRequests() {
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
                         <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {req.date}</span>
+                        {req.delivery_date && <span className="flex items-center gap-1"><History className="h-3.5 w-3.5 text-purple-500" /> {req.delivery_date}</span>}
                         <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {req.employee_name}</span>
                         {req.department && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {req.department}</span>}
                         <span className="flex items-center gap-1"><Package className="h-3.5 w-3.5" /> {req.items?.length || 0} صنف</span>
@@ -336,93 +353,100 @@ export default function PurchaseRequests() {
         </div>
       )}
 
-      {/* New Request Dialog */}
+      {/* New Request Dialog - Simplified & Fast */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-lg" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-blue-600" /> طلب شراء جديد
+              <Send className="h-5 w-5 text-blue-600" /> طلب شراء سريع
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Row 1: Branch + Date */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>التاريخ</Label>
-                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                <Label className="text-xs text-gray-500">الفرع</Label>
+                <Select value={form.branch_id} onValueChange={(v) => { const b = branches.find((x) => x.id === v); setForm({ ...form, branch_id: v, branch_name: b?.name || "" }); }}>
+                  <SelectTrigger className="h-10"><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
+                  <SelectContent>{branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>القسم</Label>
-                <Input placeholder="القسم" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
-              </div>
-              <div className="space-y-1.5 col-span-2">
-                <Label>الفرع</Label>
-                <Select value={form.branch_id} onValueChange={(v) => { const b = branches.find((x) => x.id === v); setForm({ ...form, branch_id: v, branch_name: b?.name || "" }); }}>
-                  <SelectTrigger><SelectValue placeholder="اختر الفرع" /></SelectTrigger>
-                  <SelectContent>
-                    {branches.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-                  </SelectContent>
+                <Label className="text-xs text-gray-500">المستودع</Label>
+                <Select value={form.warehouse_id} onValueChange={(v) => { const wh = warehouses.find((x) => x.id === v); setForm({ ...form, warehouse_id: v, warehouse_name: wh?.name || "" }); }}>
+                  <SelectTrigger className="h-10"><SelectValue placeholder="اختر المستودع" /></SelectTrigger>
+                  <SelectContent>{warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Items */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="font-semibold">الأصناف المطلوبة</Label>
-                <Button variant="outline" size="sm" onClick={addItem} className="gap-1"><Plus className="h-3.5 w-3.5" /> إضافة صنف</Button>
+            {/* Row 2: Date + Delivery Date */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-500">تاريخ الطلب</Label>
+                <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="h-10" />
               </div>
-              {form.items.length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-4">لم تتم إضافة أي أصناف بعد</p>
-              )}
-              {form.items.map((item, idx) => (
-                <Card key={idx} className="border">
-                  <CardContent className="p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-gray-600">صنف #{idx + 1}</span>
-                      <Button variant="ghost" size="sm" className="text-red-500 h-7" onClick={() => removeItem(idx)}>حذف</Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="col-span-2">
-                        <Select value={item.product_id} onValueChange={(v) => updateItem(idx, "product_id", v)}>
-                          <SelectTrigger><SelectValue placeholder="اختر الصنف" /></SelectTrigger>
-                          <SelectContent className="max-h-60">
-                            {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.item_code})</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label className="text-xs">الكمية</Label>
-                        <Input type="number" min="1" value={item.quantity} onChange={(e) => updateItem(idx, "quantity", Number(e.target.value))} />
-                      </div>
-                      <div>
-                        <Label className="text-xs">الوحدة</Label>
-                        <Input value={item.unit} readOnly />
-                      </div>
-                      <div className="col-span-2">
-                        <Select value={item.warehouse_id} onValueChange={(v) => updateItem(idx, "warehouse_id", v)}>
-                          <SelectTrigger><SelectValue placeholder="اختر المستودع" /></SelectTrigger>
-                          <SelectContent>
-                            {warehouses.map((w) => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="col-span-2">
-                        <Input placeholder="ملاحظات على الصنف" value={item.notes || ""} onChange={(e) => updateItem(idx, "notes", e.target.value)} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-500">تاريخ التسليم المرجو</Label>
+                <Input type="date" value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} className="h-10" />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>ملاحظات عامة</Label>
-              <Textarea placeholder="ملاحظات إضافية..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} />
+            {/* Quick Add Item Bar */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+              <Label className="text-xs text-blue-700 font-semibold">إضافة صنف سريع</Label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select value={quickItem.product_id} onValueChange={(v) => setQuickItem({ ...quickItem, product_id: v })}>
+                    <SelectTrigger className="h-10 bg-white"><SelectValue placeholder="اختر الصنف من المخزن..." /></SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.item_code})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Input type="number" min="1" value={quickItem.quantity} onChange={(e) => setQuickItem({ ...quickItem, quantity: Number(e.target.value) || 1 })} className="w-20 h-10 bg-white text-center" placeholder="الكمية" />
+                <Button onClick={quickAddItem} disabled={!quickItem.product_id} size="sm" className="h-10 px-3 gap-1">
+                  <Plus className="h-4 w-4" /> إضافة
+                </Button>
+              </div>
             </div>
 
-            <div className="flex gap-2 justify-end pt-2">
-              <Button variant="outline" onClick={() => setShowForm(false)}>إلغاء</Button>
-              <Button onClick={handleSubmit} disabled={!form.items.length}>إرسال الطلب</Button>
+            {/* Added Items List */}
+            {form.items.length > 0 && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-500">الأصناف المضافة ({form.items.length})</Label>
+                <div className="max-h-40 overflow-y-auto space-y-1 border rounded-lg">
+                  {form.items.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-gray-50 border-b last:border-0">
+                      <Badge variant="outline" className="text-xs shrink-0">{idx + 1}</Badge>
+                      <span className="flex-1 text-sm truncate">{item.product_name}</span>
+                      <Badge variant="secondary" className="text-xs shrink-0">{item.quantity} {item.unit}</Badge>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-red-400 hover:text-red-600" onClick={() => removeItem(idx)}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Optional fields */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-500">القسم (اختياري)</Label>
+                <Input placeholder="القسم" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="h-10" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-gray-500">ملاحظات (اختياري)</Label>
+                <Input placeholder="ملاحظات..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="h-10" />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-1">
+              <Button variant="outline" onClick={() => setShowForm(false)} className="h-10">إلغاء</Button>
+              <Button onClick={handleSubmit} disabled={!form.items.length} className="h-10 gap-2 bg-blue-600 hover:bg-blue-700">
+                <Send className="h-4 w-4" /> إرسال الطلب
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -442,6 +466,7 @@ export default function PurchaseRequests() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div><span className="text-gray-500">التاريخ:</span> <span className="font-medium">{showDetail.date}</span></div>
                 <div><span className="text-gray-500">الحالة:</span> <Badge className={cn("gap-1", STATUS_CONFIG[showDetail.status]?.color)} variant="outline">{showDetail.status}</Badge></div>
+                {showDetail.delivery_date && <div><span className="text-gray-500">تاريخ التسليم:</span> <span className="font-medium text-purple-700">{showDetail.delivery_date}</span></div>}
                 <div><span className="text-gray-500">الموظف:</span> <span className="font-medium">{showDetail.employee_name}</span></div>
                 <div><span className="text-gray-500">القسم:</span> <span className="font-medium">{showDetail.department || "-"}</span></div>
                 <div><span className="text-gray-500">الفرع:</span> <span className="font-medium">{showDetail.branch_name || "-"}</span></div>
