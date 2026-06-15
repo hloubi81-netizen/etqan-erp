@@ -36,7 +36,25 @@ export default function Attendance() {
 
   function selectEmployee(id) {
     const emp = employees.find((e) => e.id === id);
-    setForm((p) => ({ ...p, employee_id: id, employee_name: emp?.name || "" }));
+    setForm((p) => ({ ...p, employee_id: id, employee_name: emp?.name || "", branch_id: emp?.branch_id || "", branch_name: emp?.branch_name || "" }));
+  }
+
+  function calcHours(checkIn, checkOut) {
+    if (!checkIn || !checkOut) return 0;
+    const [h1, m1] = checkIn.split(":").map(Number);
+    const [h2, m2] = checkOut.split(":").map(Number);
+    const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
+    return mins > 0 ? Math.round((mins / 60) * 100) / 100 : 0;
+  }
+
+  function updateCheckInOut(field, value) {
+    setForm((p) => {
+      const updated = { ...p, [field]: value };
+      if (updated.check_in && updated.check_out) {
+        updated.hours = calcHours(updated.check_in, updated.check_out);
+      }
+      return updated;
+    });
   }
 
   async function save() {
@@ -167,8 +185,13 @@ export default function Attendance() {
                 <SelectContent>{["حضور","غياب","إجازة","إجازة مرضية","تأخير"].map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label className="text-xs">وقت الدخول</Label><Input type="time" value={form.check_in || ""} onChange={(e) => setForm((p) => ({ ...p, check_in: e.target.value }))} className="mt-1 h-8" /></div>
-            <div><Label className="text-xs">وقت الخروج</Label><Input type="time" value={form.check_out || ""} onChange={(e) => setForm((p) => ({ ...p, check_out: e.target.value }))} className="mt-1 h-8" /></div>
+            <div><Label className="text-xs">وقت الدخول</Label><Input type="time" value={form.check_in || ""} onChange={(e) => updateCheckInOut("check_in", e.target.value)} className="mt-1 h-8" /></div>
+            <div><Label className="text-xs">وقت الخروج</Label><Input type="time" value={form.check_out || ""} onChange={(e) => updateCheckInOut("check_out", e.target.value)} className="mt-1 h-8" /></div>
+            {form.check_in && form.check_out && (
+              <div className="col-span-2 flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700">
+                <span>ساعات العمل المحسوبة: <strong>{calcHours(form.check_in, form.check_out)} ساعة</strong></span>
+              </div>
+            )}
             <div className="col-span-2"><Label className="text-xs">ملاحظات</Label><Input value={form.notes || ""} onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))} className="mt-1 h-8" /></div>
           </div>
           <div className="flex gap-2 mt-4">

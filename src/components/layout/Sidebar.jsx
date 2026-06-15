@@ -151,7 +151,8 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "ربحية الخدمات" : "Service Profitability", path: "/reports/service-profitability", icon: Wrench },
     { label: lang === 'ar' ? "لوحة الخدمات والأصول" : "Services & Assets Dashboard", path: "/reports/services-dashboard", icon: Activity },
     { label: lang === 'ar' ? "الميزانية مقابل الفعلي" : "Budget vs Actual", path: "/reports/budget-vs-actual", icon: PieChart },
-    { label: lang === 'ar' ? "ملخص أداء العمل" : "Business Performance", path: "/reports/business-performance", icon: DollarSign }]
+    { label: lang === 'ar' ? "ملخص أداء العمل" : "Business Performance", path: "/reports/business-performance", icon: DollarSign },
+    { label: lang === 'ar' ? "تقرير أداء الفريق" : "Team Performance", path: "/reports/branch-attendance", icon: Users }]
 
   },
 
@@ -206,6 +207,7 @@ const ITEM_FEATURES = {
   "/reports/branch-performance": "reports", "/reports/service-profitability": "reports",
   "/reports/services-dashboard": "reports", "/reports/budget-vs-actual": "reports",
   "/reports/business-performance": "reports",
+  "/reports/branch-attendance": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
