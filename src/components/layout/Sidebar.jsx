@@ -153,6 +153,7 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "ربحية الخدمات" : "Service Profitability", path: "/reports/service-profitability", icon: Wrench },
     { label: lang === 'ar' ? "لوحة الخدمات والأصول" : "Services & Assets Dashboard", path: "/reports/services-dashboard", icon: Activity },
     { label: lang === 'ar' ? "الميزانية مقابل الفعلي" : "Budget vs Actual", path: "/reports/budget-vs-actual", icon: PieChart },
+    { label: lang === 'ar' ? "تحليل حركة المخزون والقيم" : "Inventory Value & Movement", path: "/reports/inventory-movement-analysis", icon: BarChart3 },
     { label: lang === 'ar' ? "ملخص أداء العمل" : "Business Performance", path: "/reports/business-performance", icon: DollarSign },
     { label: lang === 'ar' ? "تقرير أداء الفريق" : "Team Performance", path: "/reports/branch-attendance", icon: Users },
     { label: lang === 'ar' ? "تكامل تقويم جوجل" : "Google Calendar", path: "/settings/google-calendar", icon: Calendar }]
@@ -211,6 +212,7 @@ const ITEM_FEATURES = {
   "/reports/branch-performance": "reports", "/reports/service-profitability": "reports",
   "/reports/services-dashboard": "reports", "/reports/budget-vs-actual": "reports",
   "/reports/business-performance": "reports",
+  "/reports/inventory-movement-analysis": "reports",
   "/reports/branch-attendance": "reports",
   "/settings/google-calendar": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
