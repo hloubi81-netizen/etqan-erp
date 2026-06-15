@@ -13,11 +13,13 @@ import {
 import {
   Plus, Search, Eye, CheckCircle2, XCircle, Truck,
   Package, Calendar, User, Building2, AlertCircle, Clock,
-  ClipboardList, Filter, FileText, Send, Trash2, History
+  ClipboardList, Filter, FileText, Send, Trash2, History,
+  Timer
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 const STATUS_CONFIG = {
   "قيد الانتظار": { color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock, label: "قيد الانتظار" },
@@ -154,6 +156,7 @@ export default function PurchaseRequests() {
         request_number: generateRequestNumber(),
         date: form.date,
         delivery_date: form.delivery_date || null,
+        submitted_at: new Date().toISOString(),
         employee_id: user?.id,
         employee_name: user?.full_name || user?.email,
         department: form.department,
@@ -211,7 +214,7 @@ export default function PurchaseRequests() {
 
   const handleMarkDispensed = async (req) => {
     try {
-      await base44.entities.PurchaseRequest.update(req.id, { status: "تم الصرف" });
+      await base44.entities.PurchaseRequest.update(req.id, { status: "تم الصرف", received_at: new Date().toISOString() });
       toast.success("تم تحديث الحالة إلى 'تم الصرف'");
       loadData();
     } catch (e) { toast.error("حدث خطأ"); }
@@ -225,9 +228,16 @@ export default function PurchaseRequests() {
           <h1 className="text-2xl font-bold text-gray-900">طلبات الشراء</h1>
           <p className="text-sm text-gray-500 mt-1">إدارة طلبات الشراء الداخلية ونظام الموافقات</p>
         </div>
-        <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
-          <Plus className="h-4 w-4" /> طلب شراء جديد
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild className="gap-2">
+            <Link to="/reports/purchase-request-timeline">
+              <Timer className="h-4 w-4" /> تقرير زمن الطلبات
+            </Link>
+          </Button>
+          <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
+            <Plus className="h-4 w-4" /> طلب شراء جديد
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

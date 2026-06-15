@@ -94,6 +94,7 @@ import BusinessPerformance from './pages/reports/BusinessPerformance';
 import BranchAttendance from './pages/reports/BranchAttendance';
 import InventoryMovementAnalysis from './pages/reports/InventoryMovementAnalysis';
 import BranchExpensesAverage from './pages/reports/BranchExpensesAverage';
+import PurchaseRequestTimeline from './pages/reports/PurchaseRequestTimeline';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -197,6 +198,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/business-performance" element={<BusinessPerformance />} />
         <Route path="/reports/branch-attendance" element={<BranchAttendance />} />
         <Route path="/reports/branch-expenses-average" element={<BranchExpensesAverage />} />
+        <Route path="/reports/purchase-request-timeline" element={<PurchaseRequestTimeline />} />
         <Route path="/reports/inventory-movement-analysis" element={<InventoryMovementAnalysis />} />
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
         <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
