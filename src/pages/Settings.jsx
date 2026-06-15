@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,7 @@ const DEFAULT_SETTINGS = {
   pos: { cashierName: "", enableDiscount: true, maxDiscountPercent: 20, enableTax: true, taxRate: 15, printReceipt: true, receiptNote: "" },
   hr: { workDaysPerWeek: 5, workHoursPerDay: 8, overtimeRate: 1.5, currency: "SAR", payrollDay: 25 },
   assets: { defaultDepreciationMethod: "القسط الثابت", defaultUsefulLife: 5, fiscalYearEnd: "12-31" },
+  security: { twoFactorAuth: false, sessionTimeout: false, sessionTimeoutMinutes: 30, activityLogEnabled: true },
 };
 
 function ToggleRow({ label, desc, value, onChange }) {
@@ -334,20 +336,87 @@ export default function Settings() {
         return (
           <div className="space-y-4">
             <SectionHeader title="الأمان والخصوصية" desc="إعدادات الحماية والوصول" />
-            <div className="space-y-3">
-              {[
-                { label: "المصادقة الثنائية", desc: "طبقة حماية إضافية عند تسجيل الدخول" },
-                { label: "سجل النشاط", desc: "تتبع جميع العمليات المُنفَّذة في النظام" },
-                { label: "انتهاء صلاحية الجلسة", desc: "تسجيل الخروج التلقائي بعد فترة خمول" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border bg-muted/30">
-                  <div>
-                    <p className="font-medium text-sm">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.desc}</p>
-                  </div>
-                  <Badge variant="outline">قريباً</Badge>
+            
+            {/* Two-Factor Auth */}
+            <ToggleRow
+              label="المصادقة الثنائية"
+              desc="طبقة حماية إضافية عند تسجيل الدخول - سيُطلب رمز تحقق إضافي"
+              value={s.security.twoFactorAuth}
+              onChange={v => update("security","twoFactorAuth",v)}
+            />
+
+            {/* Activity Log */}
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/20">
+              <div>
+                <p className="font-medium text-sm">سجل النشاط</p>
+                <p className="text-xs text-muted-foreground">تتبع جميع العمليات المُنفَّذة في النظام</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link to="/reports/activity-log">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                    <FileCode2 className="h-3.5 w-3.5" />
+                    عرض السجل
+                  </Button>
+                </Link>
+                <ToggleRow
+                  label=""
+                  desc=""
+                  value={s.security.activityLogEnabled}
+                  onChange={v => update("security","activityLogEnabled",v)}
+                />
+              </div>
+            </div>
+
+            {/* Session Timeout */}
+            <div className="rounded-xl border bg-muted/20">
+              <ToggleRow
+                label="انتهاء صلاحية الجلسة"
+                desc="تسجيل الخروج التلقائي بعد فترة خمول"
+                value={s.security.sessionTimeout}
+                onChange={v => update("security","sessionTimeout",v)}
+              />
+              {s.security.sessionTimeout && (
+                <div className="px-3 pb-3">
+                  <FieldRow label="مدة الخمول قبل تسجيل الخروج (دقيقة)">
+                    <Input
+                      type="number"
+                      min={5}
+                      max={480}
+                      value={s.security.sessionTimeoutMinutes}
+                      onChange={e => update("security","sessionTimeoutMinutes",+e.target.value)}
+                    />
+                  </FieldRow>
                 </div>
-              ))}
+              )}
+            </div>
+
+            {/* Security Status */}
+            <div className="p-4 rounded-xl border bg-muted/10">
+              <h4 className="font-semibold text-sm mb-3">حالة الأمان</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  {s.security.twoFactorAuth
+                    ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    : <XCircle className="h-4 w-4 text-red-400" />}
+                  <span className="text-sm">المصادقة الثنائية: {s.security.twoFactorAuth ? "مفعلة" : "غير مفعلة"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {s.security.activityLogEnabled
+                    ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    : <XCircle className="h-4 w-4 text-red-400" />}
+                  <span className="text-sm">تسجيل النشاط: {s.security.activityLogEnabled ? "مفعل" : "غير مفعل"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {s.security.sessionTimeout
+                    ? <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    : <XCircle className="h-4 w-4 text-red-400" />}
+                  <span className="text-sm">
+                    انتهاء الجلسة: {s.security.sessionTimeout
+                      ? `مفعل - ${s.security.sessionTimeoutMinutes} دقيقة`
+                      : "غير مفعل"}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -542,7 +611,7 @@ export default function Settings() {
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
-        {!["general","appearance","language","security","access","backup","print_design","upgrade"].includes(activeTab) && (
+        {!["general","appearance","language","access","backup","print_design","upgrade"].includes(activeTab) && (
           <Button onClick={saveSettings} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
