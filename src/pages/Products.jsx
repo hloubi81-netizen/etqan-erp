@@ -5,13 +5,14 @@ import ProductForm from "../components/products/ProductForm";
 import ExcelImport from "../components/shared/ExcelImport";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Plus, GitBranch, ChevronDown, Trash2, FileSpreadsheet } from "lucide-react";
+import { Plus, GitBranch, ChevronDown, Trash2, FileSpreadsheet, Layers } from "lucide-react";
 import { exportToExcel } from "@/utils/exportUtils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
 import ProductAdvancedSearch from "../components/products/ProductAdvancedSearch";
+import VariantBatchCreator from "../components/products/VariantBatchCreator";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -26,6 +27,7 @@ export default function Products() {
   const [selectedIds, setSelectedIds] = useState([]);
   const { filterByBranch, getDefaultBranchValues, isAdmin } = useBranchFilter();
   const [advSearch, setAdvSearch] = useState({ text: "", groupId: "", branch: "", priceMin: "", priceMax: "" });
+  const [batchCreatorOpen, setBatchCreatorOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -230,6 +232,11 @@ export default function Products() {
             </DropdownMenu>
           )}
 
+          <Button variant="outline" size="sm" onClick={() => setBatchCreatorOpen(true)} className="h-9 gap-1.5">
+            <Layers className="h-4 w-4" />
+            تصنيفات متعددة
+          </Button>
+
           <button
             onClick={openNew}
             className="inline-flex items-center gap-2 h-9 px-4 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -270,6 +277,16 @@ export default function Products() {
           branches={branches}
         />
       )}
+
+      <VariantBatchCreator
+        open={batchCreatorOpen}
+        onClose={() => setBatchCreatorOpen(false)}
+        onSuccess={loadData}
+        groups={groups}
+        warehouses={warehouses}
+        branches={branches}
+        products={products}
+      />
     </div>
   );
 }
