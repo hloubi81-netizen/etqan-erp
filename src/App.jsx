@@ -90,6 +90,7 @@ import GoogleCalendarIntegration from './pages/settings/GoogleCalendarIntegratio
 import TeamManagement from './pages/TeamManagement';
 import BusinessPerformance from './pages/reports/BusinessPerformance';
 import BranchAttendance from './pages/reports/BranchAttendance';
+import BranchExpensesAverage from './pages/reports/BranchExpensesAverage';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -191,6 +192,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/budget-vs-actual" element={<BudgetVsActualDashboard />} />
         <Route path="/reports/business-performance" element={<BusinessPerformance />} />
         <Route path="/reports/branch-attendance" element={<BranchAttendance />} />
+        <Route path="/reports/branch-expenses-average" element={<BranchExpensesAverage />} />
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
