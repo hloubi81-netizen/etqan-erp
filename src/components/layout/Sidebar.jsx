@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -150,7 +150,8 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch },
     { label: lang === 'ar' ? "ربحية الخدمات" : "Service Profitability", path: "/reports/service-profitability", icon: Wrench },
     { label: lang === 'ar' ? "لوحة الخدمات والأصول" : "Services & Assets Dashboard", path: "/reports/services-dashboard", icon: Activity },
-    { label: lang === 'ar' ? "الميزانية مقابل الفعلي" : "Budget vs Actual", path: "/reports/budget-vs-actual", icon: PieChart }]
+    { label: lang === 'ar' ? "الميزانية مقابل الفعلي" : "Budget vs Actual", path: "/reports/budget-vs-actual", icon: PieChart },
+    { label: lang === 'ar' ? "ملخص أداء العمل" : "Business Performance", path: "/reports/business-performance", icon: DollarSign }]
 
   },
 
@@ -204,6 +205,7 @@ const ITEM_FEATURES = {
   "/reports/tax": "reports", "/reports/custom": "reports", "/reports/activity-log": "reports",
   "/reports/branch-performance": "reports", "/reports/service-profitability": "reports",
   "/reports/services-dashboard": "reports", "/reports/budget-vs-actual": "reports",
+  "/reports/business-performance": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
