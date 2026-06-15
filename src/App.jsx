@@ -55,6 +55,7 @@ import ExpiryTracking from './pages/inventory/ExpiryTracking';
 import BarcodeManagement from './pages/inventory/BarcodeManagement';
 import ActivityLogPage from './pages/reports/ActivityLog';
 import PurchaseOrders from './pages/orders/PurchaseOrders';
+import PurchaseRequests from './pages/orders/PurchaseRequests';
 import EcomOrders from './pages/orders/EcomOrders';
 import StoreConnections from './pages/orders/StoreConnections';
 import EcomProductMappings from './pages/orders/EcomProductMappings';
@@ -164,6 +165,7 @@ const AuthenticatedApp = () => {
         <Route path="/inventory/barcode" element={<BarcodeManagement />} />
         <Route path="/reports/activity-log" element={<ActivityLogPage />} />
         <Route path="/orders" element={<PurchaseOrders />} />
+        <Route path="/purchase-requests" element={<PurchaseRequests />} />
         <Route path="/ecom-orders" element={<EcomOrders />} />
         <Route path="/store-connections" element={<StoreConnections />} />
         <Route path="/ecom-product-mappings" element={<EcomProductMappings />} />

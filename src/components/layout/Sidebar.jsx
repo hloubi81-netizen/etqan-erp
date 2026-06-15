@@ -58,7 +58,8 @@ function getMenuItems(lang) {
     children: [
     { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
     { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
-    { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag }]
+    { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag },
+    { label: lang === 'ar' ? "طلبات الشراء" : "Purchase Requests", path: "/purchase-requests", icon: ClipboardList }]
 
   },
 
@@ -187,7 +188,7 @@ const ITEM_FEATURES = {
   "/custody": "accounting", "/custody/budget-report": "accounting", "/custody/calendar": "accounting",
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices", "/invoices/sales-return": "invoices",
   "/invoices/purchases-return": "invoices", "/invoices/opening-balance": "invoices", "/ecom-orders": "invoices",
-  "/orders": "invoices", "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
+  "/orders": "invoices", "/purchase-requests": "invoices", "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
   "/price-lists": "invoices", "/pos": "invoices", "/pos/history": "invoices",
   "/loyalty": "invoices",
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
@@ -227,7 +228,7 @@ const ITEM_PERMISSIONS = {
   "/invoices/sales": "invoices", "/invoices/purchases": "invoices",
   "/invoices/sales-return": "invoices", "/invoices/purchases-return": "invoices",
   "/ecom-orders": "invoices",
-  "/invoices/opening-balance": "invoices", "/vouchers/receipt": "vouchers",
+  "/invoices/opening-balance": "invoices", "/purchase-requests": "invoices", "/vouchers/receipt": "vouchers",
   "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/transfers": "warehouses", "/inventory-count": "warehouses",
