@@ -12,9 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   Users, UserPlus, Mail, CheckCircle, XCircle, Crown,
-  Shield, Calendar, AlertTriangle, User, Briefcase
+  Shield, Calendar, AlertTriangle, User, Briefcase, Send, MessageSquare
 } from "lucide-react";
 import { ROLE_LABELS } from "@/hooks/usePermissions";
+import { useNavigate } from "react-router-dom";
+import QuickMessageDialog from "@/components/messages/QuickMessageDialog";
 
 const ROLE_COLORS = {
   admin: "destructive", accountant: "default", inventory: "secondary",
@@ -31,6 +33,8 @@ export default function TeamManagement() {
   const [inviteRole, setInviteRole] = useState("user");
   const [inviteJob, setInviteJob] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [msgDialog, setMsgDialog] = useState({ open: false, member: null });
+  const navigate = useNavigate();
 
   const plan = subscription ? PLAN_PRESETS[subscription.plan] || {} : {};
   const maxUsers = subscription?.max_users || plan.max_users || 0;
@@ -254,7 +258,7 @@ export default function TeamManagement() {
                     </Badge>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
                     <span className="flex items-center gap-1">
                       {member.is_active !== false
                         ? <><CheckCircle className="h-3.5 w-3.5 text-green-500" />نشط</>
@@ -266,12 +270,32 @@ export default function TeamManagement() {
                       </span>
                     )}
                   </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-1.5 text-xs h-8"
+                      onClick={() => setMsgDialog({ open: true, member })}
+                    >
+                      <Send className="h-3 w-3" />
+                      مراسلة
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {/* Quick Message Dialog */}
+      <QuickMessageDialog
+        open={msgDialog.open}
+        onClose={() => setMsgDialog({ open: false, member: null })}
+        recipient={msgDialog.member}
+        sender={user}
+      />
 
       {/* Invite Dialog */}
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
