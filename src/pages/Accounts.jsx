@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle, GitBranch } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle, GitBranch, FileSpreadsheet } from "lucide-react";
 import ExcelImport from "../components/shared/ExcelImport";
+import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -210,6 +211,27 @@ export default function Accounts() {
 
   const rootAccounts = filteredAccounts.filter((a) => !a.parent_account_id);
 
+  function handleExportAccounts() {
+    const exportColumns = [
+      { key: "account_number", label: "رقم الحساب" },
+      { key: "name", label: "اسم الحساب" },
+      { key: "parent_account_name", label: "الحساب الرئيسي" },
+      { key: "branch_name", label: "الفرع" },
+      { key: "final_account", label: "الحساب الختامي" },
+      { key: "account_nature", label: "طبيعة الحساب" },
+      { key: "financial_statement", label: "القائمة المالية" },
+      { key: "currency", label: "العملة" },
+      { key: "balance", label: "الرصيد" },
+      { key: "phone", label: "الهاتف" },
+    ];
+
+    const branchLabel = branchFilter === "all" ? "كل_الفروع" : (branches.find(b => b.id === branchFilter)?.name || "فرع");
+    const filename = `شجرة_الحسابات_${branchLabel}_${new Date().toISOString().slice(0, 10)}`;
+
+    exportToExcel(exportColumns, filteredAccounts, filename, "الحسابات");
+    toast.success("تم تصدير الحسابات بنجاح");
+  }
+
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
@@ -253,6 +275,9 @@ export default function Accounts() {
               { key: "currency", label: "العملة" },
             ]}
           />
+          <Button variant="outline" onClick={handleExportAccounts} disabled={filteredAccounts.length === 0} className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />تصدير Excel
+          </Button>
           <Button onClick={openNew} className="gap-2"><Plus className="h-4 w-4"/>حساب جديد</Button>
         </div>
       </div>
