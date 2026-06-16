@@ -96,6 +96,7 @@ import BranchAttendance from './pages/reports/BranchAttendance';
 import InventoryMovementAnalysis from './pages/reports/InventoryMovementAnalysis';
 import BranchExpensesAverage from './pages/reports/BranchExpensesAverage';
 import PurchaseRequestTimeline from './pages/reports/PurchaseRequestTimeline';
+import LettersOfCredit from './pages/imports/LettersOfCredit';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -203,6 +204,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/inventory-movement-analysis" element={<InventoryMovementAnalysis />} />
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
         <Route path="/inventory/goods-receipt" element={<GoodsReceipt />} />
+        <Route path="/imports/letters-of-credit" element={<LettersOfCredit />} />
         <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />

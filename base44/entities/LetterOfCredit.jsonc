@@ -1,0 +1,126 @@
+{
+  "name": "LetterOfCredit",
+  "type": "object",
+  "properties": {
+    "lc_number": {
+      "type": "string",
+      "title": "\u0631\u0642\u0645 \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0641\u062a\u062d"
+    },
+    "expiry_date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u0646\u062a\u0647\u0627\u0621"
+    },
+    "bank_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0628\u0646\u0643"
+    },
+    "bank_branch": {
+      "type": "string",
+      "title": "\u0641\u0631\u0639 \u0627\u0644\u0628\u0646\u0643"
+    },
+    "beneficiary_name": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f / \u0627\u0644\u0645\u0648\u0631\u062f"
+    },
+    "beneficiary_account_id": {
+      "type": "string",
+      "title": "\u062d\u0633\u0627\u0628 \u0627\u0644\u0645\u0633\u062a\u0641\u064a\u062f"
+    },
+    "amount": {
+      "type": "number",
+      "title": "\u0627\u0644\u0645\u0628\u0644\u063a"
+    },
+    "currency": {
+      "type": "string",
+      "title": "\u0627\u0644\u0639\u0645\u0644\u0629",
+      "default": "\u062c.\u0645"
+    },
+    "lc_type": {
+      "type": "string",
+      "enum": [
+        "\u0627\u0633\u062a\u064a\u0631\u0627\u062f",
+        "\u062a\u0635\u062f\u064a\u0631"
+      ],
+      "title": "\u0646\u0648\u0639 \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f",
+      "default": "\u0627\u0633\u062a\u064a\u0631\u0627\u062f"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "\u0645\u0641\u062a\u0648\u062d",
+        "\u0645\u0633\u062a\u062e\u062f\u0645 \u062c\u0632\u0626\u064a\u0627\u064b",
+        "\u0645\u0633\u062a\u062e\u062f\u0645 \u0643\u0644\u064a\u0627\u064b",
+        "\u0645\u0646\u062a\u0647\u064a",
+        "\u0645\u0644\u063a\u064a"
+      ],
+      "title": "\u0627\u0644\u062d\u0627\u0644\u0629",
+      "default": "\u0645\u0641\u062a\u0648\u062d"
+    },
+    "used_amount": {
+      "type": "number",
+      "title": "\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645",
+      "default": 0
+    },
+    "remaining_amount": {
+      "type": "number",
+      "title": "\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0645\u062a\u0628\u0642\u064a",
+      "default": 0
+    },
+    "purpose": {
+      "type": "string",
+      "title": "\u0627\u0644\u063a\u0631\u0636 \u0645\u0646 \u0627\u0644\u0627\u0639\u062a\u0645\u0627\u062f"
+    },
+    "branch_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0641\u0631\u0639"
+    },
+    "branch_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0641\u0631\u0639"
+    },
+    "subscription_id": {
+      "type": "string",
+      "title": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+    },
+    "notes": {
+      "type": "string",
+      "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+    }
+  },
+  "required": [
+    "lc_number",
+    "date",
+    "bank_name",
+    "beneficiary_name",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "read": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "update": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "delete": {
+      "$and": [
+        {
+          "data.subscription_id": "{{user.subscription_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

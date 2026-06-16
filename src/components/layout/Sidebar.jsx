@@ -10,7 +10,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +59,8 @@ function getMenuItems(lang) {
     { label: l('purchasesInvoice'), path: "/invoices/purchases", icon: Receipt },
     { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
     { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag },
-    { label: lang === 'ar' ? "طلبات الشراء" : "Purchase Requests", path: "/purchase-requests", icon: ClipboardList }]
+         { label: lang === 'ar' ? "طلبات الشراء" : "Purchase Requests", path: "/purchase-requests", icon: ClipboardList },
+         { label: lang === 'ar' ? "الاعتمادات المستندية" : "Letters of Credit", path: "/imports/letters-of-credit", icon: CreditCard }]
 
   },
 
