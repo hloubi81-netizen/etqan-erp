@@ -86,6 +86,7 @@ import CustodyCalendar from './pages/custody/CustodyCalendar';
 import BudgetVsActualDashboard from './pages/reports/BudgetVsActualDashboard';
 import AIChatbot from './components/assistant/AIChatbot';
 import InventorySheetsSync from './pages/inventory/InventorySheetsSync';
+import GoodsReceipt from './pages/inventory/GoodsReceipt';
 import InventoryDashboard from './pages/inventory/InventoryDashboard';
 import AdminControlPanel from './pages/AdminControlPanel';
 import GoogleCalendarIntegration from './pages/settings/GoogleCalendarIntegration';
@@ -201,6 +202,7 @@ const AuthenticatedApp = () => {
         <Route path="/reports/purchase-request-timeline" element={<PurchaseRequestTimeline />} />
         <Route path="/reports/inventory-movement-analysis" element={<InventoryMovementAnalysis />} />
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
+        <Route path="/inventory/goods-receipt" element={<GoodsReceipt />} />
         <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
