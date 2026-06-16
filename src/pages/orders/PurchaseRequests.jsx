@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import PurchaseRequestKanban from "@/components/orders/PurchaseRequestKanban";
 
 const STATUS_CONFIG = {
   "قيد الانتظار": { color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock, label: "قيد الانتظار" },
@@ -288,7 +289,7 @@ export default function PurchaseRequests() {
         </Select>
       </div>
 
-      {/* Requests List */}
+      {/* Kanban Board */}
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
@@ -299,67 +300,12 @@ export default function PurchaseRequests() {
           <p>{search || statusFilter !== "all" ? "لا توجد نتائج مطابقة" : "لا توجد طلبات شراء بعد"}</p>
         </div>
       ) : (
-        <div className="grid gap-3">
-          {filteredRequests.map((req) => {
-            const cfg = STATUS_CONFIG[req.status] || STATUS_CONFIG["قيد الانتظار"];
-            const Icon = cfg.icon;
-            return (
-              <Card key={req.id} className="hover:shadow-md transition-shadow border">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center gap-3">
-                    {/* Info */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-gray-800">#{req.request_number}</span>
-                        <Badge className={cn("gap-1", cfg.color)} variant="outline">
-                          <Icon className="h-3 w-3" /> {cfg.label}
-                        </Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
-                        <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {req.date}</span>
-                        {req.delivery_date && <span className="flex items-center gap-1"><History className="h-3.5 w-3.5 text-purple-500" /> {req.delivery_date}</span>}
-                        <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" /> {req.employee_name}</span>
-                        {req.department && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {req.department}</span>}
-                        <span className="flex items-center gap-1"><Package className="h-3.5 w-3.5" /> {req.items?.length || 0} صنف</span>
-                      </div>
-                      {req.rejection_reason && (
-                        <p className="text-sm text-red-600 flex items-center gap-1">
-                          <AlertCircle className="h-3.5 w-3.5" /> سبب الرفض: {req.rejection_reason}
-                        </p>
-                      )}
-                      {req.approval_note && (
-                        <p className="text-sm text-green-600 flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> {req.approval_note}
-                        </p>
-                      )}
-                    </div>
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button variant="outline" size="sm" onClick={() => setShowDetail(req)} className="gap-1">
-                        <Eye className="h-3.5 w-3.5" /> عرض
-                      </Button>
-                      {isAdmin && req.status === "قيد الانتظار" && (
-                        <>
-                          <Button size="sm" onClick={() => { setShowApprove(req); setApprovalNote(""); }} className="gap-1 bg-green-600 hover:bg-green-700">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> موافقة
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => { setShowReject(req); setRejectionReason(""); }} className="gap-1">
-                            <XCircle className="h-3.5 w-3.5" /> رفض
-                          </Button>
-                        </>
-                      )}
-                      {isAdmin && req.status === "موافق عليه" && (
-                        <Button size="sm" variant="outline" onClick={() => handleMarkDispensed(req)} className="gap-1 border-blue-300 text-blue-700 hover:bg-blue-50">
-                          <Truck className="h-3.5 w-3.5" /> تم الصرف
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <PurchaseRequestKanban
+          requests={filteredRequests}
+          isAdmin={isAdmin}
+          onView={setShowDetail}
+          onRefresh={loadData}
+        />
       )}
 
       {/* New Request Dialog - Simplified & Fast */}
