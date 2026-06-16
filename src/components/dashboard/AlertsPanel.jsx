@@ -12,39 +12,56 @@ export default function AlertsPanel({ lang = "ar" }) {
   const [showAll, setShowAll] = useState({ overdue: false, stock: false });
 
   useEffect(() => {
-    const timer = setTimeout(() => loadAlerts(), 300);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled) loadAlerts();
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   async function loadAlerts() {
-    const today = new Date().toISOString().split("T")[0];
-    const [invoices, inventoryCounts] = await Promise.all([
-      base44.entities.Invoice.filter({ pattern_type: "مبيعات", status: "مرحّلة" }, "-date", 50),
-      base44.entities.InventoryCount.filter({ status: "معتمد" }, "-created_date", 20),
-    ]);
+    try {
+      const today = new Date().toISOString().split("T")[0];
 
-    // Overdue: sales invoices with remaining amount > 0 and date is past
-    const overdue = invoices.filter(
-      (inv) => (inv.remaining_amount || 0) > 0 && inv.date < today
-    );
-    setOverdueInvoices(overdue);
+      // Sequential calls to avoid rate limit bursts
+      const invoices = await base44.entities.Invoice.filter(
+        { pattern_type: "مبيعات", status: "مرحّلة" }, "-date", 50
+      );
 
-    // Low stock: InventoryCount items with deficit > 0
-    const lowStock = [];
-    inventoryCounts.forEach((count) => {
-      (count.items || []).forEach((item) => {
-        if ((item.deficit || 0) > 0) {
-          lowStock.push({
-            product_name: item.product_name,
-            deficit: item.deficit,
-            warehouse: count.warehouse_name,
-            countId: count.id,
-          });
-        }
+      // Overdue: sales invoices with remaining amount > 0 and date is past
+      const overdue = invoices.filter(
+        (inv) => (inv.remaining_amount || 0) > 0 && inv.date < today
+      );
+      setOverdueInvoices(overdue);
+
+      const inventoryCounts = await base44.entities.InventoryCount.filter(
+        { status: "معتمد" }, "-created_date", 20
+      );
+
+      // Low stock: InventoryCount items with deficit > 0
+      const lowStock = [];
+      inventoryCounts.forEach((count) => {
+        (count.items || []).forEach((item) => {
+          if ((item.deficit || 0) > 0) {
+            lowStock.push({
+              product_name: item.product_name,
+              deficit: item.deficit,
+              warehouse: count.warehouse_name,
+              countId: count.id,
+            });
+          }
+        });
       });
-    });
-    setLowStockItems(lowStock);
-    setLoading(false);
+      setLowStockItems(lowStock);
+    } catch (e) {
+      // Rate limit or network error — alerts will simply not show this load
+      console.warn("AlertsPanel: unable to load alerts", e?.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const totalAlerts = overdueInvoices.length + lowStockItems.length;
