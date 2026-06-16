@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import LcOperationsDialog from "@/components/imports/LcOperationsDialog";
+import LcExpensesDialog from "@/components/imports/LcExpensesDialog";
 import {
   CreditCard, Plus, Search, Building2, Calendar, DollarSign,
   TrendingUp, TrendingDown, Clock, CheckCircle2, XCircle, FileText,
-  ArrowRightLeft
+  ArrowRightLeft, Receipt
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -37,6 +38,8 @@ export default function LettersOfCredit() {
   const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [opsLc, setOpsLc] = useState(null);
   const [opsOpen, setOpsOpen] = useState(false);
+  const [expLc, setExpLc] = useState(null);
+  const [expOpen, setExpOpen] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -298,6 +301,10 @@ export default function LettersOfCredit() {
                               <ArrowRightLeft className="h-3.5 w-3.5 ml-1" />
                               عمليات
                             </Button>
+                            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { setExpLc(lc); setExpOpen(true); }} title="المصاريف الإضافية">
+                              <Receipt className="h-3.5 w-3.5 ml-1" />
+                              مصاريف
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => openEdit(lc)}>تعديل</Button>
                             <Button variant="ghost" size="sm" className="h-7 text-xs text-red-600 hover:text-red-700" onClick={() => handleDelete(lc)}>حذف</Button>
                           </div>
@@ -327,6 +334,13 @@ export default function LettersOfCredit() {
         open={opsOpen}
         onClose={() => { setOpsOpen(false); loadData(); }}
         lc={opsLc}
+        onUpdated={loadData}
+      />
+
+      <LcExpensesDialog
+        open={expOpen}
+        onClose={() => { setExpOpen(false); loadData(); }}
+        lc={expLc}
         onUpdated={loadData}
       />
     </div>
