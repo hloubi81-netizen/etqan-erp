@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  Sheet, Link2, RefreshCw, Upload, Download,
+  Sheet, Link2, Upload, Download, BarChart3, Clock,
   CheckCircle2, XCircle, Loader2, ExternalLink, LogIn
 } from "lucide-react";
 
@@ -18,6 +18,7 @@ export default function InventorySheetsSync() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [exportingFinance, setExportingFinance] = useState(false);
   const [spreadsheetId, setSpreadsheetId] = useState("");
   const [lastResult, setLastResult] = useState(null);
 
@@ -102,6 +103,24 @@ export default function InventorySheetsSync() {
       toast.error("فشل الاستيراد: " + e.message);
     }
     setImporting(false);
+  };
+
+  const handleFinanceExport = async () => {
+    setExportingFinance(true);
+    try {
+      const res = await base44.functions.invoke("syncInventoryToSheets", {
+        action: "exportFinancialReport",
+        spreadsheetId: spreadsheetId || null
+      });
+      setLastResult({ type: "finance", ...res.data });
+      if (!spreadsheetId && res.data.spreadsheetId) {
+        setSpreadsheetId(res.data.spreadsheetId);
+      }
+      toast.success(`تم تصدير التقرير المالي لـ ${res.data.itemsCount} صنف`);
+    } catch (e) {
+      toast.error("فشل التصدير: " + e.message);
+    }
+    setExportingFinance(false);
   };
 
   if (loading) {
@@ -210,6 +229,32 @@ export default function InventorySheetsSync() {
             </Button>
           </div>
 
+          {/* Financial Report */}
+          <Card className="border-blue-200 bg-blue-50/30 dark:border-blue-900/30 dark:bg-blue-950/10">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                <h2 className="font-semibold text-blue-700 dark:text-blue-400">تقرير القيم المالية للمخزون</h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                تصدير إجمالي القيمة المالية لكل صنف (قيمة التكلفة وقيمة البيع) مع المجاميع الكلية إلى ورقة "القيم المالية" في Google Sheets.
+              </p>
+              <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-100 dark:bg-blue-950/40 rounded-lg p-2.5">
+                <Clock className="h-4 w-4 flex-shrink-0" />
+                <span>يتم التحديث التلقائي يومياً الساعة 10:00 صباحاً بتوقيت القاهرة</span>
+              </div>
+              <Button
+                onClick={handleFinanceExport}
+                disabled={exportingFinance}
+                className="gap-2 w-full"
+                variant="default"
+              >
+                {exportingFinance ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
+                تصدير التقرير المالي الآن
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Result */}
           {lastResult && (
             <Card className="border-green-200 bg-green-50">
@@ -241,6 +286,28 @@ export default function InventorySheetsSync() {
                     تم تحديث <strong>{lastResult.rowsUpdated}</strong> صنف في المخزون
                   </p>
                 )}
+                {lastResult.type === "finance" && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-green-700">
+                      تم تصدير <strong>{lastResult.itemsCount}</strong> صنف إلى ورقة "القيم المالية"
+                    </p>
+                    <p className="text-xs text-green-700">
+                      إجمالي قيمة التكلفة: <strong>{lastResult.totalCostValue?.toLocaleString()}</strong>
+                    </p>
+                    <p className="text-xs text-green-700">
+                      إجمالي قيمة البيع: <strong>{lastResult.totalRetailValue?.toLocaleString()}</strong>
+                    </p>
+                    <a
+                      href={lastResult.spreadsheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-green-700 underline flex items-center gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      فتح جدول البيانات في Google Sheets
+                    </a>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -250,7 +317,7 @@ export default function InventorySheetsSync() {
             <CardContent className="p-4 space-y-2">
               <p className="text-xs font-semibold text-muted-foreground">الحقول المُصدَّرة:</p>
               <div className="flex flex-wrap gap-1">
-                {["رمز الصنف","اسم الصنف","المجموعة","الكمية المتاحة","سعر التكلفة","سعر الجملة","سعر المستهلك","الباركود","المنشأ"].map(f => (
+                {["رمز الصنف","اسم الصنف","المجموعة","الكمية المتاحة","سعر التكلفة","إجمالي قيمة التكلفة","سعر الجملة","سعر المستهلك","الباركود","المنشأ"].map(f => (
                   <Badge key={f} variant="secondary" className="text-xs">{f}</Badge>
                 ))}
               </div>

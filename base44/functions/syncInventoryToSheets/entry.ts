@@ -5,16 +5,25 @@ const CONNECTOR_ID = "6a2c415b525a77504f309883";
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const body = await req.json();
     const { spreadsheetId, action } = body;
 
-    // Get user's Google Sheets access token
-    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
+    let accessToken;
+    const isAuthenticated = await base44.auth.isAuthenticated();
+
+    if (isAuthenticated) {
+      // User-scoped: use their personal connection
+      const conn = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
+      accessToken = conn.accessToken;
+    } else {
+      // Service role (scheduled automation): use shared connection
+      const conn = await base44.asServiceRole.connectors.getSharedConnection(CONNECTOR_ID);
+      accessToken = conn.accessToken;
+    }
+
+    if (!accessToken) {
+      return Response.json({ error: 'لا يوجد اتصال بـ Google Sheets. اربط حسابك أولاً.' }, { status: 401 });
+    }
 
     if (action === "export") {
       // Fetch all products
@@ -23,7 +32,7 @@ Deno.serve(async (req) => {
       // Prepare rows
       const headers = [
         "رمز الصنف", "اسم الصنف", "المجموعة", "الكمية المتاحة",
-        "سعر التكلفة", "سعر الجملة", "سعر المستهلك", "الباركود", "المنشأ"
+        "سعر التكلفة", "إجمالي قيمة التكلفة", "سعر الجملة", "سعر المستهلك", "الباركود", "المنشأ"
       ];
       const rows = products.map(p => [
         p.item_code || "",
@@ -31,6 +40,7 @@ Deno.serve(async (req) => {
         p.group_id || "",
         p.available_qty ?? 0,
         p.cost_price ?? 0,
+        (p.available_qty ?? 0) * (p.cost_price ?? 0),
         p.wholesale_price ?? 0,
         p.retail_price ?? 0,
         p.barcode || "",
@@ -130,7 +140,118 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, rowsUpdated: updated });
     }
 
-    return Response.json({ error: "action غير صحيح. استخدم export أو import" }, { status: 400 });
+    if (action === "exportFinancialReport") {
+      const products = await base44.asServiceRole.entities.Product.list();
+
+      // Build financial report rows
+      const headers = [
+        "رمز الصنف", "اسم الصنف", "الكمية", "سعر التكلفة",
+        "إجمالي قيمة التكلفة", "سعر المستهلك", "إجمالي قيمة البيع"
+      ];
+
+      let totalCostValue = 0;
+      let totalRetailValue = 0;
+
+      const rows = products.map(p => {
+        const costVal = (p.available_qty ?? 0) * (p.cost_price ?? 0);
+        const retailVal = (p.available_qty ?? 0) * (p.retail_price ?? 0);
+        totalCostValue += costVal;
+        totalRetailValue += retailVal;
+
+        return [
+          p.item_code || "",
+          p.name || "",
+          p.available_qty ?? 0,
+          p.cost_price ?? 0,
+          costVal,
+          p.retail_price ?? 0,
+          retailVal
+        ];
+      });
+
+      // Add totals row
+      rows.push([
+        "", "المجموع الكلي", "", "",
+        totalCostValue, "", totalRetailValue
+      ]);
+
+      // Add timestamp row
+      const now = new Date().toLocaleString("ar-EG", { timeZone: "Africa/Cairo" });
+      rows.push([]);
+      rows.push(["آخر تحديث:", now, "", "", "", "", ""]);
+
+      let targetSpreadsheetId = spreadsheetId;
+
+      if (!targetSpreadsheetId) {
+        const createRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            properties: { title: `القيم المالية للمخزون - ETQAN` },
+            sheets: [
+              { properties: { title: "القيم المالية" } }
+            ]
+          })
+        });
+        const created = await createRes.json();
+        if (created.error) throw new Error(created.error.message);
+        targetSpreadsheetId = created.spreadsheetId;
+      } else {
+        // Ensure the financial sheet exists in existing spreadsheet
+        const metaRes = await fetch(
+          `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}`,
+          { headers: { "Authorization": `Bearer ${accessToken}` } }
+        );
+        const meta = await metaRes.json();
+        const sheetExists = (meta.sheets || []).some(s => s.properties?.title === "القيم المالية");
+
+        if (!sheetExists) {
+          await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}:batchUpdate`,
+            {
+              method: "POST",
+              headers: {
+                "Authorization": `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                requests: [{ addSheet: { properties: { title: "القيم المالية" } } }]
+              })
+            }
+          );
+        }
+      }
+
+      // Write to the "القيم المالية" sheet
+      const values = [headers, ...rows];
+      const writeRes = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/'القيم المالية'!A1?valueInputOption=USER_ENTERED`,
+        {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ values })
+        }
+      );
+      const writeResult = await writeRes.json();
+      if (writeResult.error) throw new Error(writeResult.error.message);
+
+      return Response.json({
+        success: true,
+        spreadsheetId: targetSpreadsheetId,
+        spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${targetSpreadsheetId}`,
+        totalCostValue,
+        totalRetailValue,
+        itemsCount: products.length
+      });
+    }
+
+    return Response.json({ error: "action غير صحيح. استخدم export، import، أو exportFinancialReport" }, { status: 400 });
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
