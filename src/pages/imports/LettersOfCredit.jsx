@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,19 +32,22 @@ export default function LettersOfCredit() {
   const [filterType, setFilterType] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editLc, setEditLc] = useState(null);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
 
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
     setLoading(true);
-    const [lcData, brs, accts] = await Promise.all([
+    const [lcData, brs, accts, pos] = await Promise.all([
       base44.entities.LetterOfCredit.list("-created_date", 500),
       base44.entities.Branch.list().catch(() => []),
       base44.entities.Account.list("-created_date", 500).catch(() => []),
+      base44.entities.PurchaseOrder.filter({}, "-created_date", 500).catch(() => []),
     ]);
     setLcs(lcData);
     setBranches(brs);
     setAccounts(accts || []);
+    setPurchaseOrders(pos || []);
     setLoading(false);
   }
 
@@ -56,7 +59,8 @@ export default function LettersOfCredit() {
         lc.lc_number?.toLowerCase().includes(s) ||
         lc.bank_name?.toLowerCase().includes(s) ||
         lc.beneficiary_name?.toLowerCase().includes(s) ||
-        lc.purpose?.toLowerCase().includes(s)
+        lc.purpose?.toLowerCase().includes(s) ||
+        lc.purchase_order_number?.toLowerCase().includes(s)
       );
     }
     if (filterStatus !== "all") result = result.filter(lc => lc.status === filterStatus);
@@ -217,6 +221,7 @@ export default function LettersOfCredit() {
                   <th className="text-right p-3 font-semibold">تاريخ الانتهاء</th>
                   <th className="text-right p-3 font-semibold">البنك</th>
                   <th className="text-right p-3 font-semibold">المستفيد</th>
+                  <th className="text-right p-3 font-semibold">أمر الشراء</th>
                   <th className="text-right p-3 font-semibold">النوع</th>
                   <th className="text-right p-3 font-semibold">المبلغ</th>
                   <th className="text-right p-3 font-semibold">المستخدم</th>
@@ -228,7 +233,7 @@ export default function LettersOfCredit() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="text-center py-16 text-muted-foreground">
+                    <td colSpan={12} className="text-center py-16 text-muted-foreground">
                       <CreditCard className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p className="font-medium">لا توجد اعتمادات مستندية</p>
                       <p className="text-xs mt-1">اضغط على "اعتماد جديد" لإضافة اعتماد</p>
@@ -257,6 +262,13 @@ export default function LettersOfCredit() {
                           </div>
                         </td>
                         <td className="p-3">{lc.beneficiary_name}</td>
+                        <td className="p-3">
+                          {lc.purchase_order_number ? (
+                            <Badge variant="outline" className="text-xs font-mono">{lc.purchase_order_number}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
+                        </td>
                         <td className="p-3">
                           <Badge variant="outline" className="text-xs">{lc.lc_type}</Badge>
                         </td>
@@ -300,17 +312,19 @@ export default function LettersOfCredit() {
         editLc={editLc}
         branches={branches}
         accounts={accounts}
+        purchaseOrders={purchaseOrders}
       />
     </div>
   );
 }
 
-function LcDialog({ open, onClose, onSave, editLc, branches, accounts }) {
+function LcDialog({ open, onClose, onSave, editLc, branches, accounts, purchaseOrders }) {
   const [form, setForm] = useState({
     lc_number: "", date: new Date().toISOString().slice(0, 10), expiry_date: "",
     bank_name: "", bank_branch: "", beneficiary_name: "", beneficiary_account_id: "",
     amount: 0, currency: "ج.م", lc_type: "استيراد",
     status: "مفتوح", used_amount: 0,
+    purchase_order_id: "", purchase_order_number: "",
     branch_id: "", branch_name: "", purpose: "", notes: "",
   });
 
@@ -329,6 +343,8 @@ function LcDialog({ open, onClose, onSave, editLc, branches, accounts }) {
         lc_type: editLc.lc_type || "استيراد",
         status: editLc.status || "مفتوح",
         used_amount: editLc.used_amount || 0,
+        purchase_order_id: editLc.purchase_order_id || "",
+        purchase_order_number: editLc.purchase_order_number || "",
         branch_id: editLc.branch_id || "",
         branch_name: editLc.branch_name || "",
         purpose: editLc.purpose || "",
@@ -341,6 +357,7 @@ function LcDialog({ open, onClose, onSave, editLc, branches, accounts }) {
         bank_name: "", bank_branch: "", beneficiary_name: "", beneficiary_account_id: "",
         amount: 0, currency: "ج.م", lc_type: "استيراد",
         status: "مفتوح", used_amount: 0,
+        purchase_order_id: "", purchase_order_number: "",
         branch_id: "", branch_name: "", purpose: "", notes: "",
       });
     }
@@ -404,6 +421,26 @@ function LcDialog({ open, onClose, onSave, editLc, branches, accounts }) {
               <SelectContent>
                 {accounts.filter(a => !a.is_parent).map(a => (
                   <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label>أمر الشراء المرتبط</Label>
+            <Select value={form.purchase_order_id || ""} onValueChange={v => {
+              const po = purchaseOrders.find(p => p.id === v);
+              update("purchase_order_id", v);
+              update("purchase_order_number", po?.order_number || "");
+              if (po) {
+                update("beneficiary_name", po.client_name || "");
+                update("purpose", `مرتبط بأمر الشراء ${po.order_number}`);
+              }
+            }}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="اختر أمر شراء (اختياري)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={null}>بدون أمر شراء</SelectItem>
+                {purchaseOrders.map(po => (
+                  <SelectItem key={po.id} value={po.id}>{po.order_number} - {po.client_name || ""}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
