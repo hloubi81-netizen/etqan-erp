@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import LcOperationsDialog from "@/components/imports/LcOperationsDialog";
 import LcExpensesDialog from "@/components/imports/LcExpensesDialog";
+import LcExportDialog from "@/components/imports/LcExportDialog";
 import {
   CreditCard, Plus, Search, Building2, Calendar, DollarSign,
   TrendingUp, TrendingDown, Clock, CheckCircle2, XCircle, FileText,
-  ArrowRightLeft, Receipt
+  ArrowRightLeft, Receipt, FileSpreadsheet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ export default function LettersOfCredit() {
   const [opsOpen, setOpsOpen] = useState(false);
   const [expLc, setExpLc] = useState(null);
   const [expOpen, setExpOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -133,6 +135,10 @@ export default function LettersOfCredit() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">إدارة خطابات الضمان والاعتمادات البنكية للاستيراد والتصدير</p>
         </div>
+        <Button variant="outline" onClick={() => setExportOpen(true)} className="gap-1.5">
+          <FileSpreadsheet className="h-4 w-4" />
+          تصدير
+        </Button>
         <Button onClick={openCreate} className="gap-1.5">
           <Plus className="h-4 w-4" />
           اعتماد جديد
@@ -342,6 +348,11 @@ export default function LettersOfCredit() {
         onClose={() => { setExpOpen(false); loadData(); }}
         lc={expLc}
         onUpdated={loadData}
+      />
+
+      <LcExportDialog
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
       />
     </div>
   );
