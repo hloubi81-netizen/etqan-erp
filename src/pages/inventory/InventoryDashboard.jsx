@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import VariantBatchCreator from "@/components/products/VariantBatchCreator";
+import InventoryBranchChart from "@/components/inventory/InventoryBranchChart";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
 import {
   Package, Layers, AlertTriangle, ArrowRightLeft, Search, GitBranch,
@@ -241,6 +242,9 @@ export default function InventoryDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Branch Financial Chart */}
+      <InventoryBranchChart />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
