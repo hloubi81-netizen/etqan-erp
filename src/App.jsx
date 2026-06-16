@@ -97,6 +97,7 @@ import InventoryMovementAnalysis from './pages/reports/InventoryMovementAnalysis
 import BranchExpensesAverage from './pages/reports/BranchExpensesAverage';
 import PurchaseRequestTimeline from './pages/reports/PurchaseRequestTimeline';
 import LettersOfCredit from './pages/imports/LettersOfCredit';
+import LcDashboard from './pages/imports/LcDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -205,6 +206,7 @@ const AuthenticatedApp = () => {
         <Route path="/inventory/sheets-sync" element={<InventorySheetsSync />} />
         <Route path="/inventory/goods-receipt" element={<GoodsReceipt />} />
         <Route path="/imports/letters-of-credit" element={<LettersOfCredit />} />
+        <Route path="/imports/lc-dashboard" element={<LcDashboard />} />
         <Route path="/inventory/dashboard" element={<InventoryDashboard />} />
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
