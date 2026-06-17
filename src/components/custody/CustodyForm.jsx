@@ -6,8 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 export default function CustodyForm({ open, onClose, onSaved, editing, employees, costCenters, accounts }) {
+  const { getSection } = useAppSettings();
+  const acctSettings = getSection("accounting");
   const EMPTY = {
     custody_number: "", employee_id: "", employee_name: "", department: "",
     purpose: "", issued_amount: 0, issue_date: new Date().toISOString().split("T")[0],
@@ -47,6 +50,10 @@ export default function CustodyForm({ open, onClose, onSaved, editing, employees
   async function save() {
     if (!form.employee_id || !form.issued_amount || !form.purpose) {
       toast.error("الموظف والمبلغ والغرض مطلوبة");
+      return;
+    }
+    if (acctSettings.requireCostCenter && !form.cost_center_id) {
+      toast.error("مركز التكلفة مطلوب حسب إعدادات النظام");
       return;
     }
     setSaving(true);
@@ -111,9 +118,11 @@ export default function CustodyForm({ open, onClose, onSaved, editing, employees
             </Select>
           </div>
           <div>
-            <Label>مركز التكلفة</Label>
+            <Label>{acctSettings.requireCostCenter ? "مركز التكلفة *" : "مركز التكلفة"}</Label>
             <Select value={form.cost_center_id} onValueChange={selectCostCenter}>
-              <SelectTrigger><SelectValue placeholder="اختر المركز" /></SelectTrigger>
+              <SelectTrigger className={acctSettings.requireCostCenter && !form.cost_center_id ? "border-red-300" : ""}>
+                <SelectValue placeholder="اختر المركز" />
+              </SelectTrigger>
               <SelectContent>
                 {costCenters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>

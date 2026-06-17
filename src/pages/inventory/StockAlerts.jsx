@@ -10,11 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Bell, BellOff, AlertTriangle, Package, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import { checkStockAlerts, calcCurrentStock } from "@/utils/inventoryEngine";
 
 const EMPTY = { product_id: "", product_name: "", warehouse_id: "", warehouse_name: "", min_quantity: 0, max_quantity: 0, reorder_quantity: 0, is_active: true };
 
 export default function StockAlerts() {
+  const { getSection } = useAppSettings();
+  const invSettings = getSection("inventory");
+
   const [alerts, setAlerts] = useState([]);
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -54,7 +58,7 @@ export default function StockAlerts() {
     return "ok";
   }
 
-  function openAdd() { setForm(EMPTY); setEditing(null); setOpen(true); }
+  function openAdd() { setForm({ ...EMPTY, min_quantity: invSettings.lowStockThreshold || 0 }); setEditing(null); setOpen(true); }
   function openEdit(a) { setForm({ ...a }); setEditing(a.id); setOpen(true); }
 
   async function save() {

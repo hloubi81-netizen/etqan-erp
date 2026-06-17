@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 function generateReceiptNumber() {
   const now = new Date();
@@ -22,6 +23,9 @@ function generateReceiptNumber() {
 }
 
 export default function QuickGoodsReceipt() {
+  const { getSection } = useAppSettings();
+  const warehouseSettings = getSection("warehouse");
+
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
   const [purchaseInvoices, setPurchaseInvoices] = useState([]);
@@ -98,6 +102,7 @@ export default function QuickGoodsReceipt() {
   const subtotal = form.items.reduce((s, i) => s + (i.total || 0), 0);
 
   const handleSave = async () => {
+    if (warehouseSettings.requireWarehouse && !form.warehouse_id) { toast.error("اختيار المستودع إلزامي حسب إعدادات النظام"); return; }
     if (!form.warehouse_id) { toast.error("اختر المستودع أولاً"); return; }
     if (!form.items.length) { toast.error("أضف صنفاً واحداً على الأقل"); return; }
 

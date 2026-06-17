@@ -9,17 +9,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import PageHeader from "@/components/shared/PageHeader";
 import { Progress } from "@/components/ui/progress";
 
+function getFiscalYear() {
+  const month = new Date().getMonth() + 1;
+  const fiscalStart = 7; // default July
+  return month >= fiscalStart ? new Date().getFullYear() : new Date().getFullYear() - 1;
+}
+
 const emptyForm = () => ({
-  name: "", year: new Date().getFullYear().toString(),
+  name: "", year: getFiscalYear().toString(),
   period_type: "سنوية", period_label: "",
   cost_center_id: "", cost_center_name: "",
   items: [], total_budgeted: 0, total_actual: 0, notes: "", status: "مسودة"
 });
 
 export default function BudgetManagement() {
+  const { getSection } = useAppSettings();
+  const acctSettings = getSection("accounting");
+
   const [budgets, setBudgets] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
