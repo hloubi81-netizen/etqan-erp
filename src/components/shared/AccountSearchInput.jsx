@@ -15,11 +15,12 @@ export default function AccountSearchInput({ accounts = [], value, onChange, pla
     setQuery(acc?.name || "");
   }, [value, accounts]);
 
+  const activeAccounts = accounts.filter(a => a.is_active !== false);
   const filtered = query.trim()
-    ? accounts.filter((a) =>
+    ? activeAccounts.filter((a) =>
         a.name.includes(query) || (a.account_number || "").includes(query)
       ).slice(0, 30)
-    : accounts.slice(0, 30);
+    : activeAccounts.slice(0, 30);
 
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };

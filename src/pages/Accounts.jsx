@@ -14,6 +14,7 @@ import ClientSupplierCard from "../components/accounts/ClientSupplierCard";
 import ExcelImport from "../components/shared/ExcelImport";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,8 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
           "flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors group",
           level === 0 && "bg-muted/30",
           isHighlighted && "bg-primary/10 border border-primary/20 ring-1 ring-primary/10",
-          isDimmed && "opacity-50"
+          isDimmed && "opacity-50",
+          account.is_active === false && "opacity-50 line-through"
         )}
         style={{ paddingRight: `${level * 24 + 12}px` }}
       >
@@ -80,6 +82,9 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
         )}
         {account.account_nature && (
           <Badge variant="outline" className="text-[10px]">{account.account_nature}</Badge>
+        )}
+        {account.is_active === false && (
+          <Badge variant="outline" className="text-[10px] border-red-300 text-red-600 bg-red-50">غير نشط</Badge>
         )}
         {account.final_account && (
           <Badge variant="secondary" className="text-[10px]">{account.final_account}</Badge>
@@ -145,7 +150,7 @@ export default function Accounts() {
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
     final_account: "", account_nature: "", financial_statement: "", currency: "",
-    is_parent: false, level: 0,
+    is_parent: false, is_active: true, level: 0,
   });
 
   useEffect(() => { loadData(); }, []);
@@ -173,7 +178,7 @@ export default function Accounts() {
     setForm({
       account_number: "", name: "", parent_account_id: "", parent_account_name: "",
       final_account: "", account_nature: "", financial_statement: "", currency: "",
-      phone: "", is_parent: false, level: 0, branch_id: "", branch_name: "",
+      phone: "", is_parent: false, is_active: true, level: 0, branch_id: "", branch_name: "",
     });
     setDialogOpen(true);
   }
@@ -190,6 +195,7 @@ export default function Accounts() {
       currency: acc.currency || "",
       phone: acc.phone || "",
       is_parent: acc.is_parent || false,
+      is_active: acc.is_active !== false,
       level: acc.level || 0,
       branch_id: acc.branch_id || "",
       branch_name: acc.branch_name || "",
@@ -621,6 +627,16 @@ export default function Accounts() {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 placeholder="مثال: 966501234567"
                 dir="ltr"
+              />
+            </div>
+            <div className="flex items-center justify-between border rounded-lg p-3 bg-muted/30">
+              <div>
+                <Label className="text-sm">الحساب نشط</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">عند التعطيل لن يظهر الحساب في قوائم البحث داخل السندات والفواتير</p>
+              </div>
+              <Switch
+                checked={form.is_active !== false}
+                onCheckedChange={(v) => setForm({ ...form, is_active: v })}
               />
             </div>
           </div>
