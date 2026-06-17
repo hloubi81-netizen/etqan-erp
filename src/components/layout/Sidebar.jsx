@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useLang } from "@/hooks/useLang.jsx";
+import { useAuth } from "@/lib/AuthContext";
 import { tr } from "@/lib/translations";
 import { useSubscription } from "@/hooks/useSubscription.jsx";
 import {
@@ -321,9 +322,15 @@ function SidebarItem({ item, onNavigate }) {
 
 }
 
+const ADMIN_EMAIL = "hloubi81@gmail.com";
+
 export default function Sidebar({ isOpen, onToggle }) {
   const { lang } = useLang();
-  const menuItems = getMenuItems(lang);
+  const { user } = useAuth();
+  const menuItems = getMenuItems(lang).filter(item => {
+    if (item.path === "/admin/control-panel" && user?.email !== ADMIN_EMAIL) return false;
+    return true;
+  });
   const isRTL = lang === 'ar';
 
   return (
