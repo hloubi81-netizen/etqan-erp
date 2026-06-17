@@ -95,7 +95,8 @@ Deno.serve(async (req) => {
       };
 
       // حساب متوسط التكلفة المرجح عند فاتورة المشتريات
-      if (isPurchase) {
+      // (مع احترام إعداد skipPriceUpdate القادم من واجهة المستخدم)
+      if (isPurchase && !invoice.skipPriceUpdate) {
         const invoiceItem = items.find(i => i.product_id === productId);
         if (invoiceItem) {
           const purchaseQty = (invoiceItem.quantity || 0) * (invoiceItem.conversion_factor || 1);

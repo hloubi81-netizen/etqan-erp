@@ -19,6 +19,7 @@ import BulkActionsBar from "@/components/shared/BulkActionsBar";
 import { exportToExcel } from "@/utils/exportUtils";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import WhatsAppSendButton from "../components/invoices/WhatsAppSendButton";
 import DocumentComments from "@/components/shared/DocumentComments";
 import InvoiceApprovalBadge from "../components/invoices/InvoiceApprovalBadge";
@@ -39,6 +40,7 @@ export default function Invoices() {
   const params = useParams();
   const invoiceType = TYPE_MAP[params.type] || "مبيعات";
   const { canView, canCreate, canEdit, canDelete } = usePermissions();
+  const { getSection } = useAppSettings();
   const [invoices, setInvoices] = useState([]);
   const [patterns, setPatterns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +157,12 @@ export default function Invoices() {
   }
 
   async function handleSave(data) {
+    // Apply purchase settings: skip price update if disabled
+    const purchaseSettings = getSection("purchases");
+    if (invoiceType.includes("مشتريات") && !purchaseSettings.autoUpdateProductPrice) {
+      data.skipPriceUpdate = true;
+    }
+
     let savedId = data.id;
     if (editing) {
       await base44.entities.Invoice.update(editing.id, data);

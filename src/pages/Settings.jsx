@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { useLang } from "@/hooks/useLang.jsx";
 import { useTheme } from "@/hooks/useTheme.jsx";
 import { base44 } from "@/api/base44Client";
-import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import {
   Settings as SettingsIcon, Palette, Globe, Building2, Bell, Shield,
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
   UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle,
-  Printer, Crown
+  Printer, Crown, ArrowDownToLine
 } from "lucide-react";
 import PrintTemplateDesigner from "@/components/print/PrintTemplateDesigner";
 import BackupPanel from "@/components/settings/BackupPanel";
@@ -29,6 +29,7 @@ const TABS = [
   { id: "language",      label: "اللغة",             icon: Globe },
   { id: "company",       label: "بيانات الشركة",     icon: Building2 },
   { id: "invoices",      label: "الفواتير",          icon: Receipt },
+  { id: "purchases",     label: "المشتريات",         icon: ArrowDownToLine },
   { id: "print_design",  label: "تصميم الطباعة",    icon: Printer },
   { id: "accounting",    label: "المحاسبة",          icon: CircleDollarSign },
   { id: "warehouse",     label: "المخزون",           icon: WarehouseIcon },
@@ -54,27 +55,7 @@ const THEMES = [
   { key: "slate",  label: "رمادي",   color: "#475569" },
 ];
 
-const SETTINGS_KEY = "itqan_app_settings";
 
-const DEFAULT_SETTINGS = {
-  company: { name: "شركة اتقان للتجارة", phone: "", email: "", address: "", taxNumber: "", commercialRegister: "", logo: "" },
-  notifications: { overdueInvoices: false, lowStock: false, dailySummary: false },
-  einvoice: {
-    enabled: false,
-    system: "zatca",
-    // ZATCA
-    zatca_vat_number: "", zatca_cr_number: "", zatca_otp: "", zatca_environment: "sandbox", zatca_cert: "", zatca_private_key: "",
-    // ETA Egypt
-    eta_client_id: "", eta_client_secret: "", eta_tax_id: "", eta_branch_code: "", eta_environment: "preproduction",
-  },
-  invoices: { defaultPayment: "نقداً", taxRate: 15, showTax: true, autoNumber: true, numberPrefix: "INV-", showLogo: true, printCopies: 1, footerNote: "" },
-  accounting: { fiscalYearStart: "01-01", defaultCurrency: "SAR", decimalPlaces: 2, autoPostJournals: true, requireCostCenter: false },
-  warehouse: { defaultWarehouse: "", enableSerialNumbers: false, lowStockAlert: true, lowStockThreshold: 10, allowNegativeStock: false },
-  pos: { cashierName: "", enableDiscount: true, maxDiscountPercent: 20, enableTax: true, taxRate: 15, printReceipt: true, receiptNote: "" },
-  hr: { workDaysPerWeek: 5, workHoursPerDay: 8, overtimeRate: 1.5, currency: "SAR", payrollDay: 25 },
-  assets: { defaultDepreciationMethod: "القسط الثابت", defaultUsefulLife: 5, fiscalYearEnd: "12-31" },
-  security: { twoFactorAuth: false, sessionTimeout: false, sessionTimeoutMinutes: 30, activityLogEnabled: true },
-};
 
 function ToggleRow({ label, desc, value, onChange }) {
   return (
@@ -110,8 +91,8 @@ function FieldRow({ label, children }) {
 export default function Settings() {
   const { lang, setLang } = useLang();
   const { theme, setTheme } = useTheme();
+  const { settings, update, saveSettings } = useAppSettings();
   const [activeTab, setActiveTab] = useState("general");
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [saved, setSaved] = useState(false);
   const [showPrintDesigner, setShowPrintDesigner] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -120,25 +101,9 @@ export default function Settings() {
     base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Merge with defaults so new sections always exist
-        setSettings({ ...DEFAULT_SETTINGS, ...parsed });
-      }
-    } catch {}
-  }, []);
-
-  const update = (section, key, value) => {
-    setSettings(prev => ({ ...prev, [section]: { ...prev[section], [key]: value } }));
-  };
-
-  const saveSettings = () => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  const handleSave = () => {
+    saveSettings();
     setSaved(true);
-    toast.success("تم حفظ الإعدادات بنجاح");
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -238,6 +203,50 @@ export default function Settings() {
               <ToggleRow label="ترقيم تلقائي" desc="ترقيم الفواتير تلقائياً" value={s.invoices.autoNumber} onChange={v => update("invoices","autoNumber",v)} />
               <ToggleRow label="إظهار الضريبة" desc="عرض بند الضريبة في الفاتورة" value={s.invoices.showTax} onChange={v => update("invoices","showTax",v)} />
               <ToggleRow label="طباعة الشعار" desc="إظهار شعار الشركة عند الطباعة" value={s.invoices.showLogo} onChange={v => update("invoices","showLogo",v)} />
+            </div>
+          </div>
+        );
+
+      case "purchases":
+        return (
+          <div className="space-y-4">
+            <SectionHeader title="إعدادات المشتريات" desc="سلوك تحديث أسعار المنتجات عند الشراء" />
+            <div className="space-y-2">
+              <ToggleRow
+                label="تحديث سعر الشراء تلقائياً"
+                desc="تحديث آخر سعر شراء في بطاقة المنتج عند إدخال فاتورة مشتريات جديدة"
+                value={s.purchases?.autoUpdateProductPrice}
+                onChange={v => update("purchases","autoUpdateProductPrice",v)}
+              />
+              <ToggleRow
+                label="تحديث آخر سعر شراء"
+                desc="تحديث حقل آخر سعر شراء (last_purchase_price) في المنتج"
+                value={s.purchases?.autoUpdateLastPurchasePrice}
+                onChange={v => update("purchases","autoUpdateLastPurchasePrice",v)}
+              />
+              <ToggleRow
+                label="تحديث متوسط سعر التكلفة"
+                desc="إعادة احتساب متوسط التكلفة المرجح (avg_purchase_price) عند كل شراء"
+                value={s.purchases?.autoUpdateAvgCost}
+                onChange={v => update("purchases","autoUpdateAvgCost",v)}
+              />
+            </div>
+            <div className="border-t border-border pt-4 mt-2">
+              <h4 className="font-semibold text-sm mb-3">قيود المشتريات</h4>
+              <div className="space-y-2">
+                <ToggleRow
+                  label="إلزام تحديد المستودع"
+                  desc="يجب اختيار مستودع عند إنشاء فاتورة مشتريات"
+                  value={s.purchases?.requireWarehouse}
+                  onChange={v => update("purchases","requireWarehouse",v)}
+                />
+                <ToggleRow
+                  label="إلزام مركز التكلفة"
+                  desc="يجب اختيار مركز تكلفة عند فاتورة المشتريات"
+                  value={s.purchases?.requireCostCenter}
+                  onChange={v => update("purchases","requireCostCenter",v)}
+                />
+              </div>
             </div>
           </div>
         );
@@ -616,7 +625,7 @@ export default function Settings() {
           <p className="text-muted-foreground text-sm mt-0.5">إدارة إعدادات النظام والوحدات</p>
         </div>
         {!["general","appearance","language","access","backup","print_design","upgrade"].includes(activeTab) && (
-          <Button onClick={saveSettings} className="gap-2">
+          <Button onClick={handleSave} className="gap-2">
             {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             {saved ? "تم الحفظ" : "حفظ الإعدادات"}
           </Button>

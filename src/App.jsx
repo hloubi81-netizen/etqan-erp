@@ -32,6 +32,7 @@ import CostManagement from './pages/costs/CostManagement';
 import CostReport from './pages/costs/CostReport';
 import SubscriptionManagement from './pages/SubscriptionManagement';
 import { SubscriptionProvider } from './hooks/useSubscription.jsx';
+import { AppSettingsProvider } from './hooks/useAppSettings.jsx';
 import { LangProvider } from './hooks/useLang.jsx';
 import { ThemeProvider } from './hooks/useTheme.jsx';
 import { CurrencyProvider } from './hooks/useCurrency.jsx';
@@ -224,6 +225,7 @@ function App() {
       <LangProvider>
       <CurrencyProvider>
       <SubscriptionProvider>
+      <AppSettingsProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <AuthenticatedApp />
@@ -231,6 +233,7 @@ function App() {
         </Router>
         <Toaster />
       </QueryClientProvider>
+      </AppSettingsProvider>
       </SubscriptionProvider>
       </CurrencyProvider>
       </LangProvider>
