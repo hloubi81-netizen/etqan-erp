@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, ClipboardList, Fingerprint, RefreshCw, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import ZKTecoSettings from "@/components/hr/ZKTecoSettings";
 import ZKTecoLogsPanel from "@/components/hr/ZKTecoLogsPanel";
 
@@ -17,6 +18,10 @@ const EMPTY = { employee_id: "", employee_name: "", date: new Date().toISOString
 const TYPE_COLORS = { "حضور": "default", "غياب": "destructive", "إجازة": "secondary", "إجازة مرضية": "outline", "تأخير": "outline" };
 
 export default function Attendance() {
+  const { getSection } = useAppSettings();
+  const hrSettings = getSection("hr");
+  const defaultWorkHours = hrSettings.workHoursPerDay || 8;
+
   const [records, setRecords] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);

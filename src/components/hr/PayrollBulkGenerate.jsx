@@ -7,19 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, AlertCircle, Zap, Settings2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 function computeSalary(emp, attendanceList, period, settings) {
   const workDays = settings.workDays || 26;
+  const workHours = settings.workHours || 8;
   const dailyRate = (emp.salary || 0) / workDays;
-  const hourlyRate = dailyRate / 8;
-  const overtimeMultiplier = emp.overtime_rate || 1.5;
+  const hourlyRate = dailyRate / workHours;
+  const overtimeMultiplier = emp.overtime_rate || settings.overtimeRate || 1.5;
 
   // حساب الحضور والغياب للفترة
   const empAtt = attendanceList.filter(a => a.employee_id === emp.id && a.date?.startsWith(period));
   const absenceDays = empAtt.filter(a => a.type === "غياب").length;
   const overtimeHours = empAtt.reduce((s, a) => {
     const hours = a.hours || 0;
-    return s + Math.max(0, hours - 8);
+    return s + Math.max(0, hours - (settings.workHours || 8));
   }, 0);
 
   const absenceDeduction = absenceDays * dailyRate;
@@ -66,10 +68,18 @@ function computeSalary(emp, attendanceList, period, settings) {
 }
 
 export default function PayrollBulkGenerate({ employees, records, attendance, costCenters, onRefresh }) {
+  const { getSection } = useAppSettings();
+  const hrSettings = getSection("hr");
+
   const [period, setPeriod] = useState(new Date().toISOString().slice(0, 7));
   const [filterDept, setFilterDept] = useState("all");
   const [filterCC, setFilterCC] = useState("all");
-  const [settings, setSettings] = useState({ workDays: 26 });
+  const [settings, setSettings] = useState({
+    workDays: hrSettings.workDaysPerWeek * 4 || 26,
+    workHours: hrSettings.workHoursPerDay || 8,
+    overtimeRate: hrSettings.overtimeRate || 1.5,
+    currency: hrSettings.currency || "ج.م",
+  });
   const [preview, setPreview] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);

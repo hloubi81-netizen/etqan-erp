@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 const CATEGORIES = ["مباني", "آلات ومعدات", "سيارات", "أثاث ومفروشات", "أجهزة حاسوب", "أصول أخرى"];
 
@@ -39,6 +40,9 @@ const EMPTY = {
 };
 
 export default function AssetForm({ open, onClose, onSave, asset, assetCount }) {
+  const { getSection } = useAppSettings();
+  const assetSettings = getSection("assets");
+
   const [form, setForm] = useState(EMPTY);
   const [accounts, setAccounts] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -56,7 +60,12 @@ export default function AssetForm({ open, onClose, onSave, asset, assetCount }) 
       setForm({ ...EMPTY, ...asset });
     } else {
       const num = String((assetCount || 0) + 1).padStart(4, "0");
-      setForm({ ...EMPTY, asset_number: `FA-${num}` });
+      setForm({
+        ...EMPTY,
+        asset_number: `FA-${num}`,
+        depreciation_method: assetSettings.defaultDepreciationMethod || "القسط الثابت",
+        useful_life_years: assetSettings.defaultUsefulLife || 5,
+      });
     }
   }, [asset, assetCount]);
 
