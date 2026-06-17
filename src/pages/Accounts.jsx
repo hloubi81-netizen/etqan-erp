@@ -17,17 +17,25 @@ import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
-  const [expanded, setExpanded] = useState(false);
+function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand }) {
+  const [expanded, setExpanded] = useState(autoExpand);
   const children = allAccounts.filter((a) => a.parent_account_id === account.id);
   const hasChildren = children.length > 0;
+
+  // Sync expansion when autoExpand changes (e.g., level filter selected)
+  useEffect(() => { setExpanded(autoExpand); }, [autoExpand]);
+
+  const isHighlighted = selectedLevel !== null && selectedLevel !== undefined && account.level === selectedLevel;
+  const isDimmed = selectedLevel !== null && selectedLevel !== undefined && account.level !== selectedLevel;
 
   return (
     <div>
       <div
         className={cn(
           "flex items-center gap-2 py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-colors group",
-          level === 0 && "bg-muted/30"
+          level === 0 && "bg-muted/30",
+          isHighlighted && "bg-primary/10 border border-primary/20 ring-1 ring-primary/10",
+          isDimmed && "opacity-50"
         )}
         style={{ paddingRight: `${level * 24 + 12}px` }}
       >
@@ -79,7 +87,7 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete }) {
         </div>
       </div>
       {expanded && children.map((child) => (
-        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} />
+        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} />
       ))}
     </div>
   );
@@ -96,6 +104,7 @@ export default function Accounts() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [activeCharts, setActiveCharts] = useState(["IFRS"]);
+  const [levelFilter, setLevelFilter] = useState(null);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -238,6 +247,11 @@ export default function Accounts() {
 
   const rootAccounts = filteredAccounts.filter((a) => !a.parent_account_id);
 
+  // Find max level in accounts for level buttons
+  const maxLevel = accounts.length > 0 ? Math.max(...accounts.map(a => a.level || 0)) : 0;
+  const levelLabels = ["المجموعات الرئيسية", "المجموعات الفرعية", "الحسابات الرئيسية", "الحسابات الفرعية", "الحسابات التفصيلية"];
+  const autoExpandAll = levelFilter !== null && levelFilter !== undefined;
+
   function handleExportAccounts() {
     const exportColumns = [
       { key: "account_number", label: "رقم الحساب" },
@@ -331,6 +345,33 @@ export default function Accounts() {
         </div>
       </div>
 
+      {rootAccounts.length > 0 && (
+        <div className="flex gap-1.5 mb-3 flex-wrap">
+          <Button
+            variant={levelFilter === null ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setLevelFilter(null)}
+          >
+            الكل
+          </Button>
+          {Array.from({ length: maxLevel + 1 }, (_, i) => {
+            const count = filteredAccounts.filter(a => a.level === i).length;
+            return (
+              <Button
+                key={i}
+                variant={levelFilter === i ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => setLevelFilter(i)}
+              >
+                {levelLabels[i] || `المستوى ${i + 1}`}
+                <span className="text-[10px] opacity-60">({count})</span>
+              </Button>
+            );
+          })}
+        </div>
+      )}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         {rootAccounts.length === 0 ? (
           <div className="p-12 text-center">
@@ -340,7 +381,7 @@ export default function Accounts() {
         ) : (
           <div className="p-2">
             {rootAccounts.map((acc) => (
-              <AccountNode key={acc.id} account={acc} allAccounts={accounts} level={0} onEdit={openEdit} onDelete={handleDelete} />
+              <AccountNode key={acc.id} account={acc} allAccounts={accounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} />
             ))}
           </div>
         )}
