@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard, Building2, ArrowUpLeft } from "lucide-react";
 import ClientSupplierCard from "../components/accounts/ClientSupplierCard";
 import ExcelImport from "../components/shared/ExcelImport";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,14 +17,39 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds, onOpenCard, clientSupplierIds, hasCardIds }) {
+function AssetChildRow({ asset, level }) {
+  return (
+    <Link
+      to="/assets"
+      className={cn(
+        "flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-amber-50 transition-colors group cursor-pointer border border-dashed border-amber-200 mx-2 my-0.5"
+      )}
+      style={{ paddingRight: `${level * 24 + 12}px` }}
+      title={`الأصل الثابت: ${asset.name}`}
+    >
+      <div className="w-4" />
+      <Building2 className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+      <span className="text-sm flex-1">
+        <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-700 border-amber-200 ml-2">أصل</Badge>
+        {asset.name}
+      </span>
+      <span className="text-xs text-muted-foreground">{asset.asset_number}</span>
+      <span className="text-xs font-medium text-emerald-600 whitespace-nowrap">{(asset.net_book_value || 0).toLocaleString()} ج.م</span>
+      <ArrowUpLeft className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+    </Link>
+  );
+}
+
+function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds, onOpenCard, clientSupplierIds, hasCardIds, fixedAssets }) {
   const isParentOfMatch = ancestorIds && ancestorIds.has(account.id);
   const isDirectMatch = matchingIds && matchingIds.has(account.id);
   const [expanded, setExpanded] = useState(autoExpand || isParentOfMatch);
   const children = allAccounts.filter((a) => a.parent_account_id === account.id);
-  const hasChildren = children.length > 0;
+  const linkedAssets = fixedAssets ? fixedAssets.filter(a => a.asset_account_id === account.id) : [];
+  const hasChildren = children.length > 0 || linkedAssets.length > 0;
 
   useEffect(() => { setExpanded(autoExpand || isParentOfMatch); }, [autoExpand, isParentOfMatch]);
 
@@ -123,9 +148,16 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
           </Button>
         </div>
       </div>
-      {expanded && children.map((child) => (
-      <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={onOpenCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} />
-      ))}
+      {expanded && (
+        <>
+          {children.map((child) => (
+            <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={onOpenCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
+          ))}
+          {linkedAssets.map((asset) => (
+            <AssetChildRow key={asset.id} asset={asset} level={level + 1} />
+          ))}
+        </>
+      )}
     </div>
   );
 }
@@ -155,12 +187,15 @@ export default function Accounts() {
 
   useEffect(() => { loadData(); }, []);
 
+  const [fixedAssets, setFixedAssets] = useState([]);
+
   async function loadData() {
-    const [accs, currs, brs, csData] = await Promise.all([
+    const [accs, currs, brs, csData, faData] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Currency.list(),
       base44.entities.Branch.list(),
       base44.entities.ClientSupplier.list(),
+      base44.entities.FixedAsset.list(),
     ]);
     // ترتيب الحسابات تصاعدياً حسب الرقم
     const sorted = [...accs].sort((a, b) =>
@@ -170,6 +205,7 @@ export default function Accounts() {
     setCurrencies(currs);
     setBranches(brs);
     setClientSuppliers(csData);
+    setFixedAssets(faData);
     setLoading(false);
   }
 
@@ -508,7 +544,7 @@ export default function Accounts() {
         ) : (
           <div className="p-2">
             {rootAccounts.map((acc) => (
-              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={openCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} />
+              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={openCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
             ))}
           </div>
         )}
