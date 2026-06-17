@@ -28,6 +28,18 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
   const isHighlighted = selectedLevel !== null && selectedLevel !== undefined && account.level === selectedLevel;
   const isDimmed = selectedLevel !== null && selectedLevel !== undefined && account.level !== selectedLevel;
 
+  // Calculate balance: parent = sum of children, leaf = own balance
+  function calcBalance(acc) {
+    if (!hasChildren) return acc.balance || 0;
+    return children.reduce((sum, child) => sum + (child.balance || 0), 0);
+  }
+  const balance = calcBalance(account);
+
+  function formatBalance(val) {
+    if (val === 0) return "0.00";
+    return Math.abs(val).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   return (
     <div>
       <div
@@ -68,6 +80,14 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
         {account.final_account && (
           <Badge variant="secondary" className="text-[10px]">{account.final_account}</Badge>
         )}
+        <span className={cn(
+          "text-sm font-medium whitespace-nowrap min-w-[120px] text-right",
+          balance > 0 && "text-emerald-600",
+          balance < 0 && "text-red-600",
+          balance === 0 && "text-muted-foreground"
+        )}>
+          {balance > 0 ? "+" : balance < 0 ? "-" : ""}{formatBalance(balance)} ج.م
+        </span>
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
           {account.phone && (
             <Button
