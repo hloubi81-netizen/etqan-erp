@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
@@ -13,6 +14,19 @@ import {
 } from "lucide-react";
 
 const SETTINGS_KEY = "itqan_app_settings";
+
+const DOC_TYPES = [
+  "فاتورة مبيعات",
+  "فاتورة مشتريات",
+  "مرتجع مبيعات",
+  "مرتجع مشتريات",
+  "سند قبض",
+  "سند دفع",
+  "سند يومية",
+  "إيصال نقطة بيع",
+  "تقرير",
+  "أخرى",
+];
 
 const TEMPLATE_STYLES = [
   {
@@ -285,21 +299,54 @@ function ClassicBody({ ps, color }) {
 }
 
 // ─── Main Designer Component ───────────────────────────────────────────────────
-export default function PrintTemplateDesigner({ open, onClose }) {
+export default function PrintTemplateDesigner({ open, onClose, existingTemplate, onSaved }) {
   const stored = getSettings();
-  const [ps, setPs] = useState({ ...DEFAULT_PRINT_SETTINGS, ...(stored.printTemplate || {}) });
+  const [ps, setPs] = useState(() => {
+    if (existingTemplate?.settings) {
+      return { ...DEFAULT_PRINT_SETTINGS, ...existingTemplate.settings };
+    }
+    return { ...DEFAULT_PRINT_SETTINGS, ...(stored.printTemplate || {}) };
+  });
+  const [templateName, setTemplateName] = useState(existingTemplate?.name || "");
+  const [documentType, setDocumentType] = useState(existingTemplate?.document_type || "فاتورة مبيعات");
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [savingToDb, setSavingToDb] = useState(false);
   const fileRef = useRef();
   const company = stored.company || {};
 
   const update = (key, val) => setPs(prev => ({ ...prev, [key]: val }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const name = templateName.trim() || `قالب ${documentType}`;
+    setSavingToDb(true);
+
+    if (existingTemplate?.id) {
+      // Update existing template
+      await base44.entities.PrintTemplate.update(existingTemplate.id, {
+        name,
+        document_type: documentType,
+        settings: ps,
+      });
+      toast.success("تم تحديث قالب الطباعة");
+    } else {
+      // Create new template
+      await base44.entities.PrintTemplate.create({
+        name,
+        document_type: documentType,
+        settings: ps,
+        is_default: false,
+      });
+      toast.success("تم حفظ قالب الطباعة الجديد");
+    }
+
+    // Also save to localStorage for backward compatibility
     saveSettings({ printTemplate: ps });
+
     setSaved(true);
-    toast.success("تم حفظ تصميم قالب الطباعة");
+    setSavingToDb(false);
     setTimeout(() => setSaved(false), 2000);
+    if (onSaved) onSaved();
   };
 
   const handleReset = () => {
@@ -343,9 +390,8 @@ export default function PrintTemplateDesigner({ open, onClose }) {
             <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={handleReset}>
               <RotateCcw className="h-3.5 w-3.5" /> إعادة ضبط
             </Button>
-            <Button size="sm" className="gap-1.5" onClick={handleSave}>
-              {saved ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-              {saved ? "تم الحفظ" : "حفظ التصميم"}
+            <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={savingToDb}>
+              {savingToDb ? "جاري الحفظ..." : saved ? <><Check className="h-4 w-4" /> تم الحفظ</> : <><Save className="h-4 w-4" /> حفظ التصميم</>}
             </Button>
             <Button variant="ghost" size="icon" onClick={onClose}><X className="h-4 w-4" /></Button>
           </div>
@@ -355,6 +401,40 @@ export default function PrintTemplateDesigner({ open, onClose }) {
         <div className="flex flex-1 overflow-hidden">
           {/* Left: Controls */}
           <div className="w-[52%] overflow-y-auto p-4 space-y-3 border-l">
+
+            {/* Template Binding */}
+            <div className="border rounded-xl p-4 bg-muted/20 space-y-3">
+              <div className="flex items-center gap-2 font-semibold text-sm">
+                <FileText className="h-4 w-4 text-primary" />
+                ربط القالب وحفظه
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="mb-1.5 block text-xs text-muted-foreground">اسم القالب</Label>
+                  <Input
+                    value={templateName}
+                    onChange={e => setTemplateName(e.target.value)}
+                    placeholder={`قالب ${documentType}`}
+                  />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block text-xs text-muted-foreground">نوع المستند</Label>
+                  <Select value={documentType} onValueChange={setDocumentType}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DOC_TYPES.map(dt => (
+                        <SelectItem key={dt} value={dt}>{dt}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {existingTemplate && (
+                <Badge variant="secondary" className="text-[10px]">تعديل قالب موجود: {existingTemplate.name}</Badge>
+              )}
+            </div>
 
             {/* Template Style */}
             <Section title="قالب التصميم" icon={Layout} defaultOpen={true}>

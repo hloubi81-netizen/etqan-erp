@@ -7,9 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag } from "lucide-react";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
-import { printPOSOrder } from "@/utils/posPrinter";
+import { printPOSOrder, buildReceiptHTML, printHTML } from "@/utils/posPrinter";
+import { getBoundPrintSettings, getCompanySettings } from "@/utils/printBinding";
 import { toast } from "sonner";
 import { useAppSettings } from "@/hooks/useAppSettings.jsx";
+import POSReceiptPreview from "@/components/pos/POSReceiptPreview";
 
 // حساب سعر الصنف بناءً على قائمة الأسعار المختارة
 function calcPriceFromList(product, priceList) {
@@ -61,6 +63,8 @@ export default function POS() {
   const [lastReceipt, setLastReceipt] = useState(null);
   const [scanMode, setScanMode] = useState(false);
   const [printers, setPrinters] = useState([]);
+  const [showReceiptPreview, setShowReceiptPreview] = useState(false);
+  const [receiptPreviewData, setReceiptPreviewData] = useState(null);
   const [groups, setGroups] = useState([]);
   const [activeGroup, setActiveGroup] = useState("all");
   const [priceLists, setPriceLists] = useState([]);
@@ -212,9 +216,17 @@ export default function POS() {
     });
     setLastReceipt(rec);
 
-    // الطباعة حسب الإعدادات
+    // إظهار معاينة قبل الطباعة
     if (printReceipt) {
-      await printPOSOrder({
+      const depts = {};
+      cart.forEach(item => {
+        const product = products.find(p => p.id === item.product_id);
+        const dept = product?.print_department || "عام";
+        if (!depts[dept]) depts[dept] = [];
+        depts[dept].push({ ...item, print_department: dept });
+      });
+
+      setReceiptPreviewData({
         cart,
         products,
         printers,
@@ -231,7 +243,9 @@ export default function POS() {
         companyName,
         receiptNote,
         cashierName,
+        departments: depts,
       });
+      setShowReceiptPreview(true);
     }
 
     setCart([]);
@@ -496,6 +510,15 @@ export default function POS() {
           </Button>
         </div>
       </div>
+
+      {/* Receipt Preview Dialog */}
+      {showReceiptPreview && receiptPreviewData && (
+        <POSReceiptPreview
+          open={showReceiptPreview}
+          onClose={() => { setShowReceiptPreview(false); setReceiptPreviewData(null); }}
+          receiptData={receiptPreviewData}
+        />
+      )}
     </div>
   );
 }

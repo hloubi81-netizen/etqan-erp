@@ -13,9 +13,10 @@ import {
   Settings as SettingsIcon, Palette, Globe, Building2, Bell, Shield,
   Database, Receipt, WarehouseIcon, CircleDollarSign, ShoppingCart,
   UserCog, Landmark, Save, Check, FileCode2, Link2, CheckCircle2, XCircle, AlertCircle,
-  Printer, Crown, ArrowDownToLine
+  Printer, Crown, ArrowDownToLine, FileText
 } from "lucide-react";
 import PrintTemplateDesigner from "@/components/print/PrintTemplateDesigner";
+import PrintBindingSettings from "@/components/print/PrintBindingSettings";
 import BackupPanel from "@/components/settings/BackupPanel";
 import PrintersManager from "@/components/pos/PrintersManager";
 import NotificationsSettings from "@/components/settings/NotificationsSettings";
@@ -31,6 +32,7 @@ const TABS = [
   { id: "invoices",      label: "الفواتير",          icon: Receipt },
   { id: "purchases",     label: "المشتريات",         icon: ArrowDownToLine },
   { id: "print_design",  label: "تصميم الطباعة",    icon: Printer },
+  { id: "print_binding", label: "ربط الطباعة",       icon: FileText },
   { id: "accounting",    label: "المحاسبة",          icon: CircleDollarSign },
   { id: "warehouse",     label: "المخزون",           icon: WarehouseIcon },
   { id: "pos",           label: "نقطة البيع",        icon: ShoppingCart },
@@ -553,6 +555,9 @@ export default function Settings() {
             )}
           </div>
         );
+
+      case "print_binding":
+        return <PrintBindingSettings />;
 
       case "print_design":
         return (

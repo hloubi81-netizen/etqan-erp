@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Printer, X, Settings2 } from "lucide-react";
 import { getPrintSettings } from "@/components/print/PrintTemplateDesigner";
+import { getBoundPrintSettings, getCompanySettings } from "@/utils/printBinding";
 
 const SETTINGS_KEY = "itqan_app_settings";
 
@@ -260,9 +261,36 @@ function getSignaturesHTML(invoice, company, ps, isSales) {
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function InvoicePrintTemplate({ invoice, open, onClose }) {
   const printRef = useRef(null);
+  const [ps, setPs] = useState(null);
+  const [loading, setLoading] = useState(true);
   const settings = getSettings();
   const company = settings?.company || {};
-  const ps = getPrintSettings();
+
+  useEffect(() => {
+    if (!invoice || !open) return;
+    setLoading(true);
+    const docType = invoice?.pattern_type || "فاتورة مبيعات";
+    getBoundPrintSettings(docType).then(s => {
+      setPs(s);
+      setLoading(false);
+    });
+  }, [invoice, open]);
+
+  if (!ps) {
+    // Fallback while loading
+    const fallback = getPrintSettings();
+    if (!ps) {
+      return loading && open ? (
+        <Dialog open={open} onOpenChange={onClose}>
+          <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-0">
+            <div className="flex items-center justify-center py-20">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
+          </DialogContent>
+        </Dialog>
+      ) : null;
+    }
+  }
 
   const isSales = invoice?.pattern_type?.includes("مبيعات");
   const isReturn = invoice?.pattern_type?.includes("مرتجع");
