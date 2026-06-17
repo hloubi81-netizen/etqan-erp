@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, AlertTriangle, Phone, MessageCircle, GitBranch, FileSpreadsheet } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown } from "lucide-react";
 import ExcelImport from "../components/shared/ExcelImport";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -93,7 +95,7 @@ export default function Accounts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [selectedChart, setSelectedChart] = useState("IFRS");
+  const [activeCharts, setActiveCharts] = useState(["IFRS"]);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -178,16 +180,32 @@ export default function Accounts() {
     }
   }
 
+  function toggleChart(chartKey) {
+    setActiveCharts(prev =>
+      prev.includes(chartKey) ? prev.filter(k => k !== chartKey) : [...prev, chartKey]
+    );
+  }
+
+  function activeChartsLabel() {
+    if (activeCharts.length === 0) return "لم يتم اختيار دليل";
+    if (activeCharts.length === CHART_OPTIONS.length) return "كل الأدلة";
+    return activeCharts.map(k => CHART_TYPES[k]?.name || k).join(" + ");
+  }
+
   async function importDefaultAccounts() {
-    const chartLabel = CHART_TYPES[selectedChart]?.name || "IFRS";
-    if (!confirm(`سيتم إنشاء شجرة الحسابات الافتراضية وفق ${chartLabel}. هل تريد المتابعة؟`)) return;
+    if (activeCharts.length === 0) {
+      toast.error("يرجى اختيار دليل محاسبي واحد على الأقل");
+      return;
+    }
+    const names = activeCharts.map(k => CHART_TYPES[k]?.name || k).join(" و ");
+    if (!confirm(`سيتم إنشاء شجرة الحسابات الافتراضية وفق ${names}. هل تريد المتابعة؟`)) return;
     setImporting(true);
     try {
-      // Build id map by account_number for parent linking
+      // Build id map by account_number for parent linking (across all charts)
       const numToId = {};
-      const chartData = getChartData(selectedChart);
-      // Create in order (parents first)
-      for (const acc of chartData) {
+      for (const chartKey of activeCharts) {
+        const chartData = getChartData(chartKey);
+        for (const acc of chartData) {
         const payload = { ...acc };
         const parentNum = payload._parent;
         delete payload._parent;
@@ -196,8 +214,10 @@ export default function Accounts() {
           const parentAcc = chartData.find(a => a.account_number === parentNum);
           if (parentAcc) payload.parent_account_name = parentAcc.name;
         }
+        payload.chart_source = chartKey;
         const created = await base44.entities.Account.create(payload);
         numToId[acc.account_number] = created.id;
+      }
       }
       toast.success("تم تحميل شجرة الحسابات الافتراضية بنجاح!");
       loadData();
@@ -246,20 +266,31 @@ export default function Accounts() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">شجرة الحسابات</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{CHART_TYPES[selectedChart]?.name || "الدليل المحاسبي"}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{activeChartsLabel()}</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          <Select value={selectedChart} onValueChange={setSelectedChart}>
-            <SelectTrigger className="h-9 w-52 text-sm">
-              <FolderTree className="h-3.5 w-3.5 text-muted-foreground ml-1" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-9 gap-2 text-sm max-w-[260px]">
+                <FolderTree className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="truncate">{activeChartsLabel()}</span>
+                <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-2" align="start">
+              <div className="text-xs text-muted-foreground mb-2 px-1">اختر الأدلة المحاسبية المطلوبة</div>
               {CHART_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <div
+                  key={opt.value}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer"
+                  onClick={() => toggleChart(opt.value)}
+                >
+                  <Checkbox checked={activeCharts.includes(opt.value)} />
+                  <span className="text-sm">{opt.label}</span>
+                </div>
               ))}
-            </SelectContent>
-          </Select>
+            </PopoverContent>
+          </Popover>
           {isAdmin && branches.length > 0 && (
             <Select value={branchFilter} onValueChange={setBranchFilter}>
               <SelectTrigger className="h-9 w-40 text-sm">
@@ -275,9 +306,9 @@ export default function Accounts() {
             </Select>
           )}
           {accounts.length === 0 && (
-            <Button variant="outline" onClick={importDefaultAccounts} disabled={importing} className="gap-2">
+            <Button variant="outline" onClick={importDefaultAccounts} disabled={importing || activeCharts.length === 0} className="gap-2">
               <Download className="h-4 w-4"/>
-              {importing ? "جاري التحميل..." : `تحميل الحسابات الافتراضية (${CHART_TYPES[selectedChart]?.name || "IFRS"})`}
+              {importing ? "جاري التحميل..." : `تحميل الحسابات الافتراضية`}
             </Button>
           )}
           <ExcelImport
