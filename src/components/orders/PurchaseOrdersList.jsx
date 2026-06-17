@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, PackageCheck, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 const STATUS_COLORS = {
   "مسودة": "bg-gray-100 text-gray-700",
@@ -27,6 +28,11 @@ const emptyForm = () => ({
 });
 
 export default function PurchaseOrdersList({ orders, products, warehouses, receipts, onRefresh }) {
+  const { getSection } = useAppSettings();
+  const purchaseSettings = getSection("purchases");
+  const requireWarehouse = purchaseSettings.requireWarehouse !== false;
+  const requireCostCenter = purchaseSettings.requireCostCenter || false;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm());
@@ -59,6 +65,12 @@ export default function PurchaseOrdersList({ orders, products, warehouses, recei
 
   async function handleSave(status) {
     const data = { ...form, status: status || form.status };
+
+    if (requireWarehouse && !data.warehouse_id) {
+      toast.error("يجب اختيار المستودع (إعدادات النظام)");
+      return;
+    }
+
     if (editing) await base44.entities.PurchaseOrder.update(editing.id, data);
     else await base44.entities.PurchaseOrder.create(data);
     toast.success("تم الحفظ");
@@ -185,7 +197,7 @@ export default function PurchaseOrdersList({ orders, products, warehouses, recei
             <div><Label>تاريخ الاستلام المتوقع</Label><Input type="date" value={form.expected_date} onChange={e => setForm(f => ({ ...f, expected_date: e.target.value }))} /></div>
             <div className="col-span-2"><Label>المورد</Label><Input value={form.client_name} onChange={e => setForm(f => ({ ...f, client_name: e.target.value }))} placeholder="اسم المورد" /></div>
             <div>
-              <Label>المستودع</Label>
+              <Label>المستودع{requireWarehouse && <span className="text-destructive ml-1">*</span>}</Label>
               <Select value={form.warehouse_id} onValueChange={v => { const w = warehouses.find(x => x.id === v); setForm(f => ({ ...f, warehouse_id: v, warehouse_name: w?.name || "" })); }}>
                 <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                 <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>

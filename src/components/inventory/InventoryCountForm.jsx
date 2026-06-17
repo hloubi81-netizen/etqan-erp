@@ -13,6 +13,7 @@ import {
   CheckCircle2, AlertTriangle, Minus, Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 function DiffBadge({ book, actual }) {
   const diff = (actual ?? 0) - (book ?? 0);
@@ -22,11 +23,18 @@ function DiffBadge({ book, actual }) {
 }
 
 export default function InventoryCountForm({ open, onClose, onSaved, editing, warehouses, products, countsLength }) {
+  const { getSection } = useAppSettings();
+  const warehouseSettings = getSection("warehouse");
+  const defaultWarehouse = warehouseSettings.defaultWarehouse || "";
+  const lowStockAlert = warehouseSettings.lowStockAlert !== false;
+  const lowStockThreshold = warehouseSettings.lowStockThreshold || 10;
+
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState(() => editing || {
     count_number: String(countsLength + 1).padStart(4, "0"),
     date: today,
-    warehouse_id: "", warehouse_name: "",
+    warehouse_id: defaultWarehouse || "",
+    warehouse_name: warehouses.find(w => w.id === defaultWarehouse)?.name || "",
     type: "محضر جرد", items: [], notes: "", status: "مسودة",
   });
   const [loadingStock, setLoadingStock] = useState(false);
@@ -240,6 +248,11 @@ export default function InventoryCountForm({ open, onClose, onSaved, editing, wa
                     <div key={idx} className={cn("grid grid-cols-12 gap-0 px-4 py-2.5 items-center hover:bg-muted/20 transition-colors", rowColor)}>
                       <div className="col-span-4">
                         <p className="font-medium text-sm">{item.product_name}</p>
+                        {lowStockAlert && item.book_quantity <= lowStockThreshold && (
+                          <span className="text-[10px] text-amber-600 flex items-center gap-1 mt-0.5">
+                            <AlertTriangle className="h-2.5 w-2.5" /> مخزون منخفض
+                          </span>
+                        )}
                       </div>
                       <div className="col-span-2 text-center">
                         <span className="text-sm font-mono font-semibold text-muted-foreground">{item.book_quantity ?? 0}</span>

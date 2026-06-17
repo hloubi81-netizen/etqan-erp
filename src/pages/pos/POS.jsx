@@ -9,6 +9,7 @@ import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCir
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { printPOSOrder } from "@/utils/posPrinter";
 import { toast } from "sonner";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 // حساب سعر الصنف بناءً على قائمة الأسعار المختارة
 function calcPriceFromList(product, priceList) {
@@ -44,6 +45,9 @@ function calcPriceFromList(product, priceList) {
 }
 
 export default function POS() {
+  const { getSection } = useAppSettings();
+  const posSettings = getSection("pos");
+
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
@@ -61,6 +65,16 @@ export default function POS() {
   const [activeGroup, setActiveGroup] = useState("all");
   const [priceLists, setPriceLists] = useState([]);
   const [selectedPriceList, setSelectedPriceList] = useState(null); // null = سعر التجزئة الافتراضي
+
+  // POS settings defaults
+  const enableDiscount = posSettings.enableDiscount !== false;
+  const maxDiscountPercent = posSettings.maxDiscountPercent || 20;
+  const enableTax = posSettings.enableTax !== false;
+  const taxRate = posSettings.taxRate || 0;
+  const printReceipt = posSettings.printReceipt !== false;
+  const receiptNote = posSettings.receiptNote || "شكراً لزيارتكم";
+  const cashierName = posSettings.cashierName || "";
+  const companyName = useAppSettings().getSection("company").name || "نقطة البيع";
 
   useEffect(() => {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
@@ -161,13 +175,18 @@ export default function POS() {
   }
 
   const subtotal = cart.reduce((s, i) => s + i.total, 0);
-  const discountAmt = parseFloat(discount) || 0;
-  const total = Math.max(0, subtotal - discountAmt);
+  const discountAmt = enableDiscount ? Math.min(parseFloat(discount) || 0, subtotal * maxDiscountPercent / 100) : 0;
+  const taxAmt = enableTax ? (subtotal - discountAmt) * taxRate / 100 : 0;
+  const total = Math.max(0, subtotal - discountAmt + taxAmt);
   const paidAmt = parseFloat(paid) || 0;
   const change = Math.max(0, paidAmt - total);
 
   async function checkout() {
     if (cart.length === 0) { toast.error("السلة فارغة"); return; }
+    if (enableDiscount && discountAmt > subtotal * maxDiscountPercent / 100) {
+      toast.error(`الخصم لا يمكن أن يتجاوز ${maxDiscountPercent}%`);
+      return;
+    }
     setSaving(true);
     const sessions = await base44.entities.POSSession.list();
     const num = String(sessions.length + 1).padStart(5, "0");
@@ -182,34 +201,38 @@ export default function POS() {
       items: cartWithBase,
       subtotal,
       discount: discountAmt,
-      tax: 0,
+      tax: taxAmt,
       total,
       paid: paidAmt,
       change,
       payment_method: paymentMethod,
       client_name: clientName,
+      cashier_name: cashierName || undefined,
       status: "مكتملة",
     });
     setLastReceipt(rec);
 
-    // الطباعة على الطابعات المناسبة
-    const settings = (() => { try { return JSON.parse(localStorage.getItem("itqan_app_settings") || "{}"); } catch { return {}; } })();
-    await printPOSOrder({
-      cart,
-      products,
-      printers,
-      orderNumber: num,
-      date: new Date().toISOString(),
-      subtotal,
-      discount: discountAmt,
-      total,
-      paid: paidAmt,
-      change,
-      paymentMethod,
-      clientName,
-      companyName: settings?.company?.name || "نقطة البيع",
-      receiptNote: settings?.pos?.receiptNote || "شكراً لزيارتكم",
-    });
+    // الطباعة حسب الإعدادات
+    if (printReceipt) {
+      await printPOSOrder({
+        cart,
+        products,
+        printers,
+        orderNumber: num,
+        date: new Date().toISOString(),
+        subtotal,
+        discount: discountAmt,
+        tax: taxAmt,
+        total,
+        paid: paidAmt,
+        change,
+        paymentMethod,
+        clientName,
+        companyName,
+        receiptNote,
+        cashierName,
+      });
+    }
 
     setCart([]);
     setDiscount(0);
@@ -439,7 +462,10 @@ export default function POS() {
           )}
           <Input placeholder="اسم العميل (اختياري)" value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8 text-sm" />
           <div className="flex items-center gap-2">
-            <Input type="number" placeholder="خصم" value={discount} onChange={(e) => setDiscount(e.target.value)} className="h-8 text-sm" />
+            {enableDiscount && (
+              <Input type="number" placeholder={`خصم (حد أقصى ${maxDiscountPercent}%)`} value={discount}
+                onChange={(e) => setDiscount(e.target.value)} className="h-8 text-sm" />
+            )}
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -453,6 +479,7 @@ export default function POS() {
           <div className="bg-muted/30 rounded-lg p-3 space-y-1.5 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">المجموع</span><span>{subtotal.toLocaleString()}</span></div>
             {discountAmt > 0 && <div className="flex justify-between text-red-500"><span>الخصم</span><span>- {discountAmt.toLocaleString()}</span></div>}
+            {taxAmt > 0 && <div className="flex justify-between text-blue-500"><span>الضريبة ({taxRate}%)</span><span>+ {taxAmt.toLocaleString()}</span></div>}
             <div className="flex justify-between font-bold text-base border-t border-border pt-1.5 mt-1"><span>الإجمالي</span><span className="text-primary">{total.toLocaleString()}</span></div>
           </div>
 

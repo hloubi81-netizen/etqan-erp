@@ -11,10 +11,18 @@ import { refreshAccountBalances } from "@/utils/journalEngine";
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 import AttachmentsUploader from "@/components/shared/AttachmentsUploader";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 export default function VoucherForm({ open, onClose, onSave, voucher, voucherType }) {
+  const { getSection } = useAppSettings();
+  const accountingSettings = getSection("accounting");
+  const decimalPlaces = accountingSettings.decimalPlaces || 2;
+  const autoPostJournals = accountingSettings.autoPostJournals !== false;
+  const requireCostCenter = accountingSettings.requireCostCenter || false;
+
   const [accounts, setAccounts] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [costCenters, setCostCenters] = useState([]);
   const isJournal = voucherType === "سند قيد" || voucherType === "سند قيد افتتاحي" || voucherType === "سند يومية";
 
   const [form, setForm] = useState({
@@ -34,6 +42,8 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
     total_credit: voucher?.total_credit || 0,
     status: voucher?.status || "مسودة",
     attachments: voucher?.attachments || [],
+    cost_center_id: voucher?.cost_center_id || "",
+    cost_center_name: voucher?.cost_center_name || "",
   });
 
   useEffect(() => {
@@ -41,13 +51,15 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
   }, []);
 
   async function loadData() {
-    const [accs, currs, existingVouchers] = await Promise.all([
+    const [accs, currs, existingVouchers, ccs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Currency.list(),
       base44.entities.Voucher.filter({ type: voucherType }),
+      base44.entities.CostCenter.list(),
     ]);
     setAccounts(accs);
     setCurrencies(currs);
+    setCostCenters(ccs);
     if (!voucher) {
       const cashAccount = accs.find((a) => a.name?.includes("صندوق"));
       setForm((prev) => ({
@@ -101,7 +113,7 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <Label>رقم السند</Label>
               <Input value={form.voucher_number} onChange={(e) => setForm({ ...form, voucher_number: e.target.value })} />
@@ -118,6 +130,18 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
                   {currencies.map((c) => (
                     <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>مركز التكلفة{requireCostCenter && <span className="text-destructive ml-1">*</span>}</Label>
+              <Select value={form.cost_center_id} onValueChange={v => {
+                const cc = costCenters.find(c => c.id === v);
+                setForm(f => ({ ...f, cost_center_id: v, cost_center_name: cc?.name || "" }));
+              }}>
+                <SelectTrigger><SelectValue placeholder="اختياري" /></SelectTrigger>
+                <SelectContent>
+                  {costCenters.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -223,7 +247,13 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
           <Button onClick={() => onSave({ ...form, status: "مسودة" })} disabled={!canSave} variant="outline">حفظ مسودة</Button>
           <Button
             onClick={async () => {
-              const saved = { ...form, status: "مرحّل" };
+              if (requireCostCenter && !form.cost_center_id) {
+                toast.error("يجب اختيار مركز التكلفة (إعدادات النظام)");
+                return;
+              }
+
+              const postStatus = autoPostJournals ? "مرحّل" : "مسودة";
+              const saved = { ...form, status: postStatus };
               await onSave(saved);
               // تحديث فوري لأرصدة حسابات السند (الصندوق والحساب المقابل)
               const directIds = [
@@ -232,7 +262,7 @@ export default function VoucherForm({ open, onClose, onSave, voucher, voucherTyp
                 ...(saved.entries || []).map(e => e.account_id),
               ];
               await refreshAccountBalances(directIds);
-              toast.success("تم ترحيل السند وتحديث الأرصدة");
+              toast.success(autoPostJournals ? "تم ترحيل السند وتحديث الأرصدة" : "تم حفظ السند");
             }}
             disabled={!canSave}
             className="gap-1.5"
