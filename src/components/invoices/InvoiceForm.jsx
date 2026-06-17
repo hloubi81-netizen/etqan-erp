@@ -17,6 +17,7 @@ import { createCurrencyDiffEntry, toLocalCurrency } from "@/utils/currencyEngine
 import { toast } from "sonner";
 import AccountSearchInput from "@/components/shared/AccountSearchInput";
 import AttachmentsUploader from "@/components/shared/AttachmentsUploader";
+import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 
 /**
  * ترحيل قيود يومية للبنود الخدمية في الفاتورة
@@ -116,6 +117,15 @@ function buildDefaultItems(existing) {
 }
 
 export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceType, pattern }) {
+  const { getSection } = useAppSettings();
+  const invoiceSettings = getSection("invoices");
+  const purchaseSettings = getSection("purchases");
+  const accountingSettings = getSection("accounting");
+
+  // Determine if fields are required based on settings
+  const requireWarehouse = purchaseSettings.requireWarehouse !== false;
+  const requireCostCenter = purchaseSettings.requireCostCenter || accountingSettings.requireCostCenter;
+
   const [products, setProducts] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -125,6 +135,8 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
   const [allInvoices, setAllInvoices] = useState([]);
 
   const [showScanner, setShowScanner] = useState(false);
+
+  const defaultPayment = invoiceSettings.defaultPayment || "نقداً";
 
   const [form, setForm] = useState({
     invoice_number: invoice?.invoice_number || "",
@@ -140,7 +152,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
     client_balance: invoice?.client_balance || 0,
     warehouse_id: invoice?.warehouse_id || pattern?.default_warehouse_id || "",
     warehouse_name: invoice?.warehouse_name || "",
-    payment_method: invoice?.payment_method || "نقداً",
+    payment_method: invoice?.payment_method || defaultPayment,
     currency: invoice?.currency || pattern?.default_currency || "",
     exchange_rate: invoice?.exchange_rate || 1,
     items: buildDefaultItems(invoice?.items),
@@ -343,7 +355,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               </div>
             </div>
             <div>
-              <Label>المستودع</Label>
+              <Label>المستودع{requireWarehouse && <span className="text-destructive ml-1">*</span>}</Label>
               <Select
                 value={form.warehouse_id}
                 onValueChange={(v) => {
@@ -402,7 +414,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
               />
             </div>
             <div>
-              <Label>مركز التكلفة</Label>
+              <Label>مركز التكلفة{requireCostCenter && <span className="text-destructive ml-1">*</span>}</Label>
               <Select
                 value={form.cost_center_id}
                 onValueChange={(v) => {
@@ -563,6 +575,17 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
           <Button
             onClick={async () => {
               const saved = { ...form, items: form.items.filter(i => i.product_id), status: "مرحّلة" };
+
+              // Validate required fields from settings
+              if (requireWarehouse && !saved.warehouse_id) {
+                toast.error("يجب اختيار المستودع (إعدادات النظام)");
+                return;
+              }
+              if (requireCostCenter && !saved.cost_center_id) {
+                toast.error("يجب اختيار مركز التكلفة (إعدادات النظام)");
+                return;
+              }
+
               await onSave(saved);
 
               // تحديث أرصدة الحسابات للفرع المحدد
