@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard } from "lucide-react";
+import ClientSupplierCard from "../components/accounts/ClientSupplierCard";
 import ExcelImport from "../components/shared/ExcelImport";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +18,7 @@ import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds }) {
+function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds, onOpenCard, clientSupplierIds, hasCardIds }) {
   const isParentOfMatch = ancestorIds && ancestorIds.has(account.id);
   const isDirectMatch = matchingIds && matchingIds.has(account.id);
   const [expanded, setExpanded] = useState(autoExpand || isParentOfMatch);
@@ -28,6 +29,8 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
 
   const isHighlighted = (selectedLevel !== null && selectedLevel !== undefined && account.level === selectedLevel) || isDirectMatch;
   const isDimmed = (selectedLevel !== null && selectedLevel !== undefined && account.level !== selectedLevel) || (searchQuery && !isDirectMatch && !isParentOfMatch);
+  const isCSLeaf = clientSupplierIds && clientSupplierIds.has(account.id);
+  const hasCard = hasCardIds && hasCardIds.has(account.id);
 
   // Calculate balance: parent = sum of children, leaf = own balance
   function calcBalance(acc) {
@@ -81,6 +84,9 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
         {account.final_account && (
           <Badge variant="secondary" className="text-[10px]">{account.final_account}</Badge>
         )}
+        {hasCard && (
+          <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">بطاقة</Badge>
+        )}
         <span className={cn(
           "text-sm font-medium whitespace-nowrap min-w-[120px] text-right",
           balance > 0 && "text-emerald-600",
@@ -90,6 +96,11 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
           {balance > 0 ? "+" : balance < 0 ? "-" : ""}{formatBalance(balance)} ج.م
         </span>
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+          {isCSLeaf && onOpenCard && (
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" title="بطاقة العميل / المورد" onClick={() => onOpenCard(account)}>
+              <IdCard className="h-3 w-3" />
+            </Button>
+          )}
           {account.phone && (
             <Button
               variant="ghost" size="icon" className="h-6 w-6 text-green-600"
@@ -108,7 +119,7 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
         </div>
       </div>
       {expanded && children.map((child) => (
-        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} />
+      <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={onOpenCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} />
       ))}
     </div>
   );
@@ -124,9 +135,12 @@ export default function Accounts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [clientSuppliers, setClientSuppliers] = useState([]);
   const [activeCharts, setActiveCharts] = useState(["IFRS"]);
   const [levelFilter, setLevelFilter] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardAccount, setCardAccount] = useState(null);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -137,10 +151,11 @@ export default function Accounts() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [accs, currs, brs] = await Promise.all([
+    const [accs, currs, brs, csData] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Currency.list(),
       base44.entities.Branch.list(),
+      base44.entities.ClientSupplier.list(),
     ]);
     // ترتيب الحسابات تصاعدياً حسب الرقم
     const sorted = [...accs].sort((a, b) =>
@@ -149,6 +164,7 @@ export default function Accounts() {
     setAccounts(sorted);
     setCurrencies(currs);
     setBranches(brs);
+    setClientSuppliers(csData);
     setLoading(false);
   }
 
@@ -181,21 +197,52 @@ export default function Accounts() {
     setDialogOpen(true);
   }
 
+  function isClientOrSupplier(acc) {
+    if (!acc) return false;
+    const num = (acc.account_number || "").trim();
+    // Check parent chain for customer/supplier account numbers
+    let current = acc;
+    while (current) {
+      const cn = (current.account_number || "").trim();
+      // Customer accounts: 1221 or starting with 122
+      if (cn === "1221" || cn.startsWith("1221")) return true;
+      // Supplier accounts: 2211 or starting with 221
+      if (cn === "2211" || cn.startsWith("2211")) return true;
+      if (!current.parent_account_id) break;
+      current = accounts.find(a => a.id === current.parent_account_id);
+      if (!current) break;
+    }
+    return false;
+  }
+
   async function handleSave() {
     const payload = { ...form };
     if (!payload.parent_account_id) {
       delete payload.parent_account_id;
       delete payload.parent_account_name;
     }
+    let savedAccount;
     if (editing) {
-      await base44.entities.Account.update(editing.id, payload);
+      savedAccount = await base44.entities.Account.update(editing.id, payload);
       toast.success("تم تحديث الحساب");
     } else {
-      await base44.entities.Account.create(payload);
+      savedAccount = await base44.entities.Account.create(payload);
       toast.success("تم إضافة الحساب");
     }
     setDialogOpen(false);
-    loadData();
+    await loadData();
+
+    // If it's a customer or supplier, open the card
+    const acc = editing ? { ...editing, ...payload } : savedAccount;
+    if (isClientOrSupplier(acc)) {
+      setCardAccount(acc);
+      setCardOpen(true);
+    }
+  }
+
+  function openCard(acc) {
+    setCardAccount(acc);
+    setCardOpen(true);
   }
 
   async function handleDelete(acc) {
@@ -290,6 +337,15 @@ export default function Accounts() {
       }
     });
   }
+
+  // Identify which accounts are customer/supplier leaf accounts
+  const clientSupplierIds = new Set();
+  const hasCardIds = new Set(clientSuppliers.map(cs => cs.account_id));
+  filteredAccounts.forEach(a => {
+    if (isClientOrSupplier(a) && !filteredAccounts.some(child => child.parent_account_id === a.id)) {
+      clientSupplierIds.add(a.id);
+    }
+  });
 
   // Find max level in accounts for level buttons
   const maxLevel = accounts.length > 0 ? Math.max(...accounts.map(a => a.level || 0)) : 0;
@@ -446,7 +502,7 @@ export default function Accounts() {
         ) : (
           <div className="p-2">
             {rootAccounts.map((acc) => (
-              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} />
+              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={openCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} />
             ))}
           </div>
         )}
@@ -574,6 +630,13 @@ export default function Accounts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ClientSupplierCard
+        open={cardOpen}
+        onClose={() => { setCardOpen(false); loadData(); }}
+        account={cardAccount}
+        onSaved={loadData}
+      />
     </div>
   );
 }
