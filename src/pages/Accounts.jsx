@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useBranchFilter } from "@/hooks/useBranchFilter";
-import { defaultChartOfAccounts } from "../utils/defaultAccounts";
+import { getChartData, CHART_OPTIONS, CHART_TYPES } from "../utils/charts";
 import PageHeader from "../components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,6 +93,7 @@ export default function Accounts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [selectedChart, setSelectedChart] = useState("IFRS");
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -108,7 +109,11 @@ export default function Accounts() {
       base44.entities.Currency.list(),
       base44.entities.Branch.list(),
     ]);
-    setAccounts(accs);
+    // ترتيب الحسابات تصاعدياً حسب الرقم
+    const sorted = [...accs].sort((a, b) =>
+      (a.account_number || "").localeCompare(b.account_number || "", undefined, { numeric: true })
+    );
+    setAccounts(sorted);
     setCurrencies(currs);
     setBranches(brs);
     setLoading(false);
@@ -174,19 +179,21 @@ export default function Accounts() {
   }
 
   async function importDefaultAccounts() {
-    if (!confirm("سيتم إنشاء شجرة الحسابات الافتراضية وفق المعايير الدولية (IFRS). هل تريد المتابعة؟")) return;
+    const chartLabel = CHART_TYPES[selectedChart]?.name || "IFRS";
+    if (!confirm(`سيتم إنشاء شجرة الحسابات الافتراضية وفق ${chartLabel}. هل تريد المتابعة؟`)) return;
     setImporting(true);
     try {
       // Build id map by account_number for parent linking
       const numToId = {};
+      const chartData = getChartData(selectedChart);
       // Create in order (parents first)
-      for (const acc of defaultChartOfAccounts) {
+      for (const acc of chartData) {
         const payload = { ...acc };
         const parentNum = payload._parent;
         delete payload._parent;
         if (parentNum && numToId[parentNum]) {
           payload.parent_account_id = numToId[parentNum];
-          const parentAcc = defaultChartOfAccounts.find(a => a.account_number === parentNum);
+          const parentAcc = chartData.find(a => a.account_number === parentNum);
           if (parentAcc) payload.parent_account_name = parentAcc.name;
         }
         const created = await base44.entities.Account.create(payload);
@@ -239,9 +246,20 @@ export default function Accounts() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">شجرة الحسابات</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">الدليل المحاسبي وفق المعايير الدولية (IFRS)</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{CHART_TYPES[selectedChart]?.name || "الدليل المحاسبي"}</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
+          <Select value={selectedChart} onValueChange={setSelectedChart}>
+            <SelectTrigger className="h-9 w-52 text-sm">
+              <FolderTree className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CHART_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {isAdmin && branches.length > 0 && (
             <Select value={branchFilter} onValueChange={setBranchFilter}>
               <SelectTrigger className="h-9 w-40 text-sm">
@@ -259,7 +277,7 @@ export default function Accounts() {
           {accounts.length === 0 && (
             <Button variant="outline" onClick={importDefaultAccounts} disabled={importing} className="gap-2">
               <Download className="h-4 w-4"/>
-              {importing ? "جاري التحميل..." : "تحميل الحسابات الافتراضية (IFRS)"}
+              {importing ? "جاري التحميل..." : `تحميل الحسابات الافتراضية (${CHART_TYPES[selectedChart]?.name || "IFRS"})`}
             </Button>
           )}
           <ExcelImport
