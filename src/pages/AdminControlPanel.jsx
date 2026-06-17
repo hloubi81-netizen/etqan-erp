@@ -10,11 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/AuthContext";
+import { ShieldX } from "lucide-react";
 import {
   Crown, Users, CheckCircle, XCircle, AlertTriangle,
   Settings, Plus, Edit2, Power, TrendingUp, Calendar, Package
 } from "lucide-react";
-import PermissionGuard from "@/components/shared/PermissionGuard";
+
+const ADMIN_EMAIL = "hloubi81@gmail.com";
 
 const PLAN_COLORS = {
   free_trial: "bg-amber-100 text-amber-700 border-amber-200",
@@ -24,6 +27,7 @@ const PLAN_COLORS = {
 };
 
 export default function AdminControlPanel() {
+  const { user } = useAuth();
   const [subscriptions, setSubscriptions] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -158,6 +162,16 @@ export default function AdminControlPanel() {
     return diff >= 0 && diff <= 7;
   }).length;
 
+  if (user?.email !== ADMIN_EMAIL) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground" dir="rtl">
+        <ShieldX className="h-12 w-12 text-destructive/50" />
+        <p className="text-lg font-medium">غير مصرح بالوصول</p>
+        <p className="text-sm">ليس لديك صلاحية للوصول إلى هذا القسم</p>
+      </div>
+    );
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -165,7 +179,6 @@ export default function AdminControlPanel() {
   );
 
   return (
-    <PermissionGuard module="admin">
       <div className="p-6 space-y-6" dir="rtl">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -436,6 +449,5 @@ export default function AdminControlPanel() {
           </Dialog>
         )}
       </div>
-    </PermissionGuard>
   );
 }
