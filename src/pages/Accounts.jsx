@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search } from "lucide-react";
 import ExcelImport from "../components/shared/ExcelImport";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,16 +17,17 @@ import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand }) {
-  const [expanded, setExpanded] = useState(autoExpand);
+function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds }) {
+  const isParentOfMatch = ancestorIds && ancestorIds.has(account.id);
+  const isDirectMatch = matchingIds && matchingIds.has(account.id);
+  const [expanded, setExpanded] = useState(autoExpand || isParentOfMatch);
   const children = allAccounts.filter((a) => a.parent_account_id === account.id);
   const hasChildren = children.length > 0;
 
-  // Sync expansion when autoExpand changes (e.g., level filter selected)
-  useEffect(() => { setExpanded(autoExpand); }, [autoExpand]);
+  useEffect(() => { setExpanded(autoExpand || isParentOfMatch); }, [autoExpand, isParentOfMatch]);
 
-  const isHighlighted = selectedLevel !== null && selectedLevel !== undefined && account.level === selectedLevel;
-  const isDimmed = selectedLevel !== null && selectedLevel !== undefined && account.level !== selectedLevel;
+  const isHighlighted = (selectedLevel !== null && selectedLevel !== undefined && account.level === selectedLevel) || isDirectMatch;
+  const isDimmed = (selectedLevel !== null && selectedLevel !== undefined && account.level !== selectedLevel) || (searchQuery && !isDirectMatch && !isParentOfMatch);
 
   // Calculate balance: parent = sum of children, leaf = own balance
   function calcBalance(acc) {
@@ -107,7 +108,7 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
         </div>
       </div>
       {expanded && children.map((child) => (
-        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} />
+        <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} />
       ))}
     </div>
   );
@@ -125,6 +126,7 @@ export default function Accounts() {
   const [importing, setImporting] = useState(false);
   const [activeCharts, setActiveCharts] = useState(["IFRS"]);
   const [levelFilter, setLevelFilter] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
@@ -267,6 +269,28 @@ export default function Accounts() {
 
   const rootAccounts = filteredAccounts.filter((a) => !a.parent_account_id);
 
+  // Search logic: build matching IDs and their ancestor IDs
+  const matchingIds = new Set();
+  const ancestorIds = new Set();
+  if (searchQuery.trim()) {
+    const q = searchQuery.trim().toLowerCase();
+    filteredAccounts.forEach((a) => {
+      if (
+        (a.name || "").toLowerCase().includes(q) ||
+        (a.account_number || "").toLowerCase().includes(q)
+      ) {
+        matchingIds.add(a.id);
+        // Walk up ancestors
+        let current = a;
+        while (current.parent_account_id) {
+          ancestorIds.add(current.parent_account_id);
+          current = filteredAccounts.find((pa) => pa.id === current.parent_account_id);
+          if (!current) break;
+        }
+      }
+    });
+  }
+
   // Find max level in accounts for level buttons
   const maxLevel = accounts.length > 0 ? Math.max(...accounts.map(a => a.level || 0)) : 0;
   const levelLabels = ["المجموعات الرئيسية", "المجموعات الفرعية", "الحسابات الرئيسية", "الحسابات الفرعية", "الحسابات التفصيلية"];
@@ -392,16 +416,37 @@ export default function Accounts() {
           })}
         </div>
       )}
+      {rootAccounts.length > 0 && (
+        <div className="relative mb-3">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="ابحث عن حساب بالاسم أو الرقم..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pr-9 bg-white"
+          />
+          {searchQuery && matchingIds.size > 0 && (
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              {matchingIds.size} نتيجة
+            </span>
+          )}
+        </div>
+      )}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         {rootAccounts.length === 0 ? (
           <div className="p-12 text-center">
             <FolderTree className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground">لا توجد حسابات بعد. ابدأ بإنشاء الحسابات الرئيسية</p>
           </div>
+        ) : searchQuery && matchingIds.size === 0 ? (
+          <div className="p-12 text-center">
+            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">لا توجد نتائج مطابقة لـ "{searchQuery}"</p>
+          </div>
         ) : (
           <div className="p-2">
             {rootAccounts.map((acc) => (
-              <AccountNode key={acc.id} account={acc} allAccounts={accounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} />
+              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} />
             ))}
           </div>
         )}
