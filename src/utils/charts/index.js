@@ -1,9 +1,13 @@
 import ifrsChart from "./ifrs.json";
 import syrianChart from "./syrian.json";
+import egyptianChart from "./egyptian.json";
+import saudiChart from "./saudi.json";
 
 export const CHART_TYPES = {
   IFRS: { name: "المعايير الدولية (IFRS)", file: "ifrs", data: ifrsChart },
   SYRIAN: { name: "الدليل المحاسبي الموحد (سوريا)", file: "syrian", data: syrianChart },
+  EGYPTIAN: { name: "الدليل المحاسبي المصري", file: "egyptian", data: egyptianChart },
+  SAUDI: { name: "الدليل المحاسبي السعودي", file: "saudi", data: saudiChart },
 };
 
 export const CHART_OPTIONS = Object.entries(CHART_TYPES).map(([key, value]) => ({
