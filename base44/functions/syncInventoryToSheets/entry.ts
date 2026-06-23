@@ -9,15 +9,14 @@ Deno.serve(async (req) => {
     const { spreadsheetId, action } = body;
 
     let accessToken;
-    const isAuthenticated = await base44.auth.isAuthenticated();
 
-    if (isAuthenticated) {
-      // User-scoped: use their personal app-user connection
+    // Try app-user connection first (when called from the UI with a user session);
+    // fall back to the platform shared connection (used by scheduled automations).
+    try {
       const conn = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
       accessToken = conn.accessToken;
-    } else {
-      // Service role (scheduled automation): use the workspace shared connection
-      const conn = await base44.asServiceRole.connectors.getWorkspaceConnection(CONNECTOR_ID);
+    } catch {
+      const conn = await base44.asServiceRole.connectors.getConnection("googlesheets");
       accessToken = conn.accessToken;
     }
 
