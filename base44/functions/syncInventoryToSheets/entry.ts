@@ -12,12 +12,12 @@ Deno.serve(async (req) => {
     const isAuthenticated = await base44.auth.isAuthenticated();
 
     if (isAuthenticated) {
-      // User-scoped: use their personal connection
+      // User-scoped: use their personal app-user connection
       const conn = await base44.asServiceRole.connectors.getCurrentAppUserConnection(CONNECTOR_ID);
       accessToken = conn.accessToken;
     } else {
-      // Service role (scheduled automation): use shared connection
-      const conn = await base44.asServiceRole.connectors.getSharedConnection(CONNECTOR_ID);
+      // Service role (scheduled automation): use the workspace shared connection
+      const conn = await base44.asServiceRole.connectors.getWorkspaceConnection(CONNECTOR_ID);
       accessToken = conn.accessToken;
     }
 
