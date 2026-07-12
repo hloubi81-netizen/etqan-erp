@@ -109,6 +109,11 @@ export default function SalesAgent() {
       <PageHeader title="وكيل مبيعات إتقان" subtitle="إدارة محادثات الوكيل الذكي عبر واتساب ومتابعة العملاء المحتملين" />
 
       <div className="flex justify-end gap-2">
+        <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+          <Button variant="outline" className="gap-2 border-success/40 text-success hover:bg-success/5">
+            <MessageCircle className="w-4 h-4" /> ربط واتساب
+          </Button>
+        </a>
         <Button onClick={handleNewConversation} disabled={creating} className="gap-2">
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
           محادثة جديدة
@@ -134,15 +139,14 @@ export default function SalesAgent() {
             <div><p className="text-2xl font-bold">{stats.demos}</p><p className="text-xs text-muted-foreground">عروض توضيحية</p></div>
           </CardContent>
         </Card>
-        {whatsappLink && (
-          <Card className="border-success/30 bg-success/5">
-            <CardContent className="flex items-center justify-center p-4">
-              <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-success font-medium text-sm hover:underline">
-                <MessageCircle className="w-5 h-5" /> ربط واتساب
-              </a>
+        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="block">
+          <Card className="border-success/30 bg-success/5 hover:bg-success/10 transition-colors cursor-pointer h-full">
+            <CardContent className="flex items-center gap-3 p-4">
+              <div className="p-2 rounded-lg bg-success/15"><MessageCircle className="w-5 h-5 text-success" /></div>
+              <div><p className="text-sm font-bold text-success">واتساب</p><p className="text-xs text-muted-foreground">ربط / بدء محادثة</p></div>
             </CardContent>
           </Card>
-        )}
+        </a>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-320px)] min-h-[400px]">
