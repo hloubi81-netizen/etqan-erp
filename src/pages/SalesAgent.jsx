@@ -96,7 +96,7 @@ export default function SalesAgent() {
     }
   };
 
-  const whatsappLink = base44.agents?.getWhatsAppConnectURL?.(AGENT_NAME);
+  const whatsappLink = base44.agents?.getWhatsAppConnectURL?.(AGENT_NAME) || `https://base44.app/api/apps/69ffe09178af8150a6277332/agents/etqan_sales/whatsapp`;
 
   const stats = {
     total: conversations.length,
