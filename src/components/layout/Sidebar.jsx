@@ -11,7 +11,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, Bot } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,9 @@ function getMenuItems(lang) {
   return [
   // ── الرئيسية ──
   { label: l('dashboard'), icon: LayoutDashboard, path: "/" },
+
+  // ── مساعد ETQAN الذكي ──
+  { label: lang === 'ar' ? "مساعد ETQAN الذكي" : "ETQAN AI Copilot", icon: Bot, path: "/ai-copilot" },
 
 
   // ── المخزون والمنتجات ──
@@ -122,6 +125,7 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "الموظفون" : "Employees", path: "/hr/employees", icon: Users },
     { label: lang === 'ar' ? "الحضور والغياب" : "Attendance", path: "/hr/attendance", icon: CalendarCheck },
     { label: lang === 'ar' ? "الرواتب" : "Payroll", path: "/hr/payroll", icon: Banknote },
+    { label: lang === 'ar' ? "كشوف الرواتب" : "Payroll Runs", path: "/hr/payroll-runs", icon: Banknote },
     { label: lang === 'ar' ? "طلبات الإجازات" : "Leave Requests", path: "/hr/leaves", icon: CalendarCheck }]
 
   },
@@ -220,7 +224,8 @@ const ITEM_FEATURES = {
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
-  "/hr/employees": "users", "/hr/attendance": "users", "/hr/payroll": "users", "/hr/leaves": "users",
+  "/hr/employees": "users", "/hr/attendance": "users", "/hr/payroll": "users", "/hr/payroll-runs": "users", "/hr/leaves": "users",
+  "/ai-copilot": "users",
   "/users": "users"
 };
 

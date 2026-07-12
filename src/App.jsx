@@ -99,6 +99,8 @@ import BranchExpensesAverage from './pages/reports/BranchExpensesAverage';
 import PurchaseRequestTimeline from './pages/reports/PurchaseRequestTimeline';
 import LettersOfCredit from './pages/imports/LettersOfCredit';
 import LcDashboard from './pages/imports/LcDashboard';
+import AICopilot from './pages/AICopilot';
+import PayrollRuns from './pages/PayrollRuns';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -124,6 +126,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/ai-copilot" element={<AICopilot />} />
         <Route path="/groups" element={<Groups />} />
         <Route path="/products" element={<Products />} />
         <Route path="/services" element={<Services />} />
@@ -159,6 +162,7 @@ const AuthenticatedApp = () => {
         <Route path="/hr/employees" element={<Employees />} />
         <Route path="/hr/attendance" element={<Attendance />} />
         <Route path="/hr/payroll" element={<Payroll />} />
+        <Route path="/hr/payroll-runs" element={<PayrollRuns />} />
         <Route path="/reports/advanced" element={<AdvancedReports />} />
         <Route path="/assets" element={<FixedAssets />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
