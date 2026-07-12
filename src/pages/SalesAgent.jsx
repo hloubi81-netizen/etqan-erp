@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Users, Calendar, TrendingUp, Loader2, MessageCircle } from "lucide-react";
+import { MessageSquare, Send, Users, Calendar, TrendingUp, Loader2, MessageCircle, Plus } from "lucide-react";
 
 const AGENT_NAME = "etqan_sales";
 
@@ -29,6 +29,9 @@ export default function SalesAgent() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [leadsCount, setLeadsCount] = useState(0);
+  const [demosCount, setDemosCount] = useState(0);
+  const [creating, setCreating] = useState(false);
 
   const loadConversations = useCallback(async () => {
     try {
@@ -41,7 +44,34 @@ export default function SalesAgent() {
     }
   }, []);
 
-  useEffect(() => { loadConversations(); }, [loadConversations]);
+  const loadStats = useCallback(async () => {
+    try {
+      const leads = await base44.entities.CRMContact.filter({ type: "عميل محتمل" });
+      setLeadsCount(leads?.length || 0);
+      const demos = await base44.entities.CRMActivity.filter({ type: "اجتماع", status: "مجدول" });
+      setDemosCount(demos?.length || 0);
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => { loadConversations(); loadStats(); }, [loadConversations, loadStats]);
+
+  const handleNewConversation = async () => {
+    setCreating(true);
+    try {
+      const conv = await base44.agents.createConversation({
+        agent_name: AGENT_NAME,
+        metadata: { name: `محادثة ${new Date().toLocaleDateString('ar-EG')}`, description: "عميل محتمل جديد" }
+      });
+      await loadConversations();
+      setSelectedId(conv.id);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     if (!selectedId) { setMessages([]); return; }
@@ -70,13 +100,20 @@ export default function SalesAgent() {
 
   const stats = {
     total: conversations.length,
-    leads: 0,
-    demos: 0,
+    leads: leadsCount,
+    demos: demosCount,
   };
 
   return (
     <div className="space-y-4 p-4 md:p-6">
       <PageHeader title="وكيل مبيعات إتقان" subtitle="إدارة محادثات الوكيل الذكي عبر واتساب ومتابعة العملاء المحتملين" />
+
+      <div className="flex justify-end gap-2">
+        <Button onClick={handleNewConversation} disabled={creating} className="gap-2">
+          {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+          محادثة جديدة
+        </Button>
+      </div>
 
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card>
