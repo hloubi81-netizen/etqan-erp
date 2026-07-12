@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, Send, Users, Calendar, TrendingUp, Loader2, MessageCircle, Plus } from "lucide-react";
+import CalendarAvailability from "@/components/sales/CalendarAvailability";
 
 const AGENT_NAME = "etqan_sales";
 
@@ -148,6 +149,8 @@ export default function SalesAgent() {
           </Card>
         </a>
       </div>
+
+      <CalendarAvailability />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(100vh-320px)] min-h-[400px]">
         <Card className="lg:col-span-1 overflow-hidden">

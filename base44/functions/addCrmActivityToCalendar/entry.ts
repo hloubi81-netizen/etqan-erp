@@ -79,9 +79,21 @@ Deno.serve(async (req) => {
 
     const createdEvent = await response.json();
 
-    // Update the CRMActivity with the calendar event link
+    // Update the CRMActivity with the calendar event link and event ID
     await base44.asServiceRole.entities.CRMActivity.update(activity.id, {
       description: (activity.description || "") + `\n\n[رابط تقويم جوجل](${createdEvent.htmlLink})`,
+      calendar_event_id: createdEvent.id,
+      calendar_event_link: createdEvent.htmlLink,
+    });
+
+    // Create activity log for the scheduled meeting
+    await base44.asServiceRole.entities.AuditLog.create({
+      action: "إنشاء",
+      entity: "CRMActivity",
+      details: `تم جدولة اجتماع "${activity.subject || "اجتماع جديد"}" مع ${activity.contact_name || "عميل"} في ${activity.date} ${activity.time || "09:00"} ومزامنته مع تقويم جوجل`,
+      channel: "مساعد ذكي",
+      timestamp: new Date().toISOString(),
+      subscription_id: activity.subscription_id || null,
     });
 
     return Response.json({
