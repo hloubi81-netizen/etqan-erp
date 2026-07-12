@@ -101,6 +101,7 @@ import LettersOfCredit from './pages/imports/LettersOfCredit';
 import LcDashboard from './pages/imports/LcDashboard';
 import AICopilot from './pages/AICopilot';
 import PayrollRuns from './pages/PayrollRuns';
+import SalesAgent from './pages/SalesAgent';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -216,6 +217,7 @@ const AuthenticatedApp = () => {
         <Route path="/admin/control-panel" element={<AdminControlPanel />} />
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
         <Route path="/team" element={<TeamManagement />} />
+        <Route path="/sales-agent" element={<SalesAgent />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
