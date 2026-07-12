@@ -170,6 +170,7 @@ function getMenuItems(lang) {
   { label: lang === 'ar' ? "النقاط والعروض الخاصة" : "Loyalty & Promotions", icon: Sparkles, path: "/loyalty" },
 
   // ── إدارة العملاء والتواصل ──
+  { label: lang === 'ar' ? "وكيل مبيعات واتساب" : "WhatsApp Sales Agent", icon: Bot, path: "/sales-agent" },
   { label: lang === 'ar' ? "إدارة علاقات العملاء" : "CRM", icon: MessageSquare, path: "/crm" },
   { label: lang === 'ar' ? "الرسائل الداخلية" : "Internal Messages", icon: Mail, path: "/messages" },
   { label: lang === 'ar' ? "الإشعارات والتنبيهات" : "Notifications", icon: Bell, path: "/notifications" },
