@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag, Undo2 } from "lucide-react";
+import SalesReturnDialog from "@/components/pos/SalesReturnDialog";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { printPOSOrder, buildReceiptHTML, printHTML } from "@/utils/posPrinter";
 import { getBoundPrintSettings, getCompanySettings } from "@/utils/printBinding";
@@ -69,6 +70,7 @@ export default function POS() {
   const [activeGroup, setActiveGroup] = useState("all");
   const [priceLists, setPriceLists] = useState([]);
   const [selectedPriceList, setSelectedPriceList] = useState(null); // null = سعر التجزئة الافتراضي
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
 
   // POS settings defaults
   const enableDiscount = posSettings.enableDiscount !== false;
@@ -269,7 +271,18 @@ export default function POS() {
       {/* Products Panel */}
       <div className="flex-1 flex flex-col bg-muted/20 p-4 overflow-hidden min-h-0">
         <div className="mb-3">
-          <h1 className="text-xl font-bold mb-2">نقطة البيع</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl font-bold">نقطة البيع</h1>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/30"
+              onClick={() => setReturnDialogOpen(true)}
+            >
+              <Undo2 className="h-4 w-4" />
+              مرتجع مبيعات
+            </Button>
+          </div>
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -519,6 +532,14 @@ export default function POS() {
           receiptData={receiptPreviewData}
         />
       )}
+
+      {/* Sales Return Dialog */}
+      <SalesReturnDialog
+        open={returnDialogOpen}
+        onClose={() => setReturnDialogOpen(false)}
+        onDone={() => toast.success("تم حفظ المرتجع")}
+        cashierName={cashierName}
+      />
     </div>
   );
 }
