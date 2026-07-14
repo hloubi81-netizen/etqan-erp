@@ -105,6 +105,7 @@ import LcDashboard from './pages/imports/LcDashboard';
 import AICopilot from './pages/AICopilot';
 import PayrollRuns from './pages/PayrollRuns';
 import SalesAgent from './pages/SalesAgent';
+import ShippingHub from './pages/shipping/ShippingHub';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -224,6 +225,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings/google-calendar" element={<GoogleCalendarIntegration />} />
         <Route path="/team" element={<TeamManagement />} />
         <Route path="/sales-agent" element={<SalesAgent />} />
+        <Route path="/shipping" element={<ShippingHub />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

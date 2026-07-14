@@ -136,6 +136,9 @@ function getMenuItems(lang) {
   // ── العهد المالية ──
   { label: lang === 'ar' ? "العهَد المالية" : "Custody Management", icon: Wallet, path: "/custody" },
 
+  // ── شركات الشحن ──
+  { label: lang === 'ar' ? "شركات الشحن" : "Shipping", icon: Truck, path: "/shipping" },
+
   // ── التقارير ──
   {
     label: l('reports'), icon: BarChart3,
