@@ -69,7 +69,7 @@
     "delete": {
       "$and": [
         {
-          "data.subscription_id": "{{user.subscription_id }}"
+          "data.subscription_id": "{{user.subscription_id}}"
         },
         {
           "user_condition": {
