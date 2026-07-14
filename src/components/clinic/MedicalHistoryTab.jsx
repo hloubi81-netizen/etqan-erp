@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { FileText, FlaskConical, Stethoscope, Unlink } from "lucide-react";
+import { FileText, FlaskConical, Stethoscope, Unlink, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { printPatientReport } from "@/utils/clinicReport";
 
 export default function MedicalHistoryTab() {
   const [patients, setPatients] = useState([]);
@@ -64,11 +65,18 @@ export default function MedicalHistoryTab() {
     <div>
       <div className="flex justify-between items-center mb-3 gap-2 flex-wrap">
         <h3 className="font-semibold">التاريخ الطبي</h3>
-        <div className="w-64">
-          <Select value={patientId} onValueChange={setPatientId}>
-            <SelectTrigger><SelectValue placeholder="اختر المريض" /></SelectTrigger>
-            <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-          </Select>
+        <div className="flex items-center gap-2">
+          {patientId && (
+            <Button variant="outline" size="sm" onClick={() => printPatientReport(patientId).catch(() => toast.error("تعذّر إنشاء التقرير"))}>
+              <Printer className="h-4 w-4" /> تقرير مفصل
+            </Button>
+          )}
+          <div className="w-64">
+            <Select value={patientId} onValueChange={setPatientId}>
+              <SelectTrigger><SelectValue placeholder="اختر المريض" /></SelectTrigger>
+              <SelectContent>{patients.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
