@@ -7,11 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search } from "lucide-react";
+import { Search, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const BLOOD = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const emptyForm = { code: "", name: "", phone: "", gender: "ذكر", birth_date: "", blood_type: "", address: "", insurance_provider: "", insurance_number: "", notes: "" };
+const emptyForm = { code: "", name: "", phone: "", gender: "ذكر", birth_date: "", blood_type: "", address: "", insurance_provider: "", insurance_number: "", medical_tests: [], notes: "" };
 
 export default function PatientsTab() {
   const [items, setItems] = useState([]);
@@ -28,8 +28,12 @@ export default function PatientsTab() {
     setItems(data); setLoading(false);
   }
 
-  function openNew() { setEditing(null); setForm(emptyForm); setOpen(true); }
-  function openEdit(r) { setEditing(r); setForm({ ...emptyForm, ...r }); setOpen(true); }
+  function openNew() { setEditing(null); setForm({ ...emptyForm, medical_tests: [] }); setOpen(true); }
+  function openEdit(r) { setEditing(r); setForm({ ...emptyForm, medical_tests: [], ...r }); setOpen(true); }
+
+  function addTest() { setForm({ ...form, medical_tests: [...(form.medical_tests || []), { test_name: "", date: new Date().toISOString().split("T")[0], result: "", notes: "" }] }); }
+  function updateTest(i, field, val) { const arr = [...(form.medical_tests || [])]; arr[i] = { ...arr[i], [field]: val }; setForm({ ...form, medical_tests: arr }); }
+  function removeTest(i) { const arr = [...(form.medical_tests || [])]; arr.splice(i, 1); setForm({ ...form, medical_tests: arr }); }
 
   async function save() {
     if (editing) { await base44.entities.Patient.update(editing.id, form); toast.success("تم تحديث المريض"); }
@@ -89,6 +93,28 @@ export default function PatientsTab() {
               <div><Label>رقم التأمين</Label><Input value={form.insurance_number} onChange={(e) => setForm({ ...form, insurance_number: e.target.value })} /></div>
             </div>
             <div><Label>العنوان</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <Label>سجل الفحوصات والتحاليل الطبية</Label>
+                <Button type="button" size="sm" variant="outline" onClick={addTest}><Plus className="h-4 w-4 ml-1" /> فحص</Button>
+              </div>
+              <div className="space-y-2">
+                {(form.medical_tests || []).map((t, i) => (
+                  <div key={i} className="border rounded-lg p-2 bg-muted/30 space-y-1.5">
+                    <div className="grid grid-cols-12 gap-1.5 items-end">
+                      <div className="col-span-5"><Label className="text-[10px]">نوع الفحص</Label><Input value={t.test_name} onChange={(e) => updateTest(i, "test_name", e.target.value)} className="h-8 text-xs" /></div>
+                      <div className="col-span-4"><Label className="text-[10px]">التاريخ</Label><Input type="date" value={t.date} onChange={(e) => updateTest(i, "date", e.target.value)} className="h-8 text-xs" /></div>
+                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => removeTest(i)}><Trash2 className="h-4 w-4" /></Button>
+                    </div>
+                    <div className="grid grid-cols-12 gap-1.5 items-end">
+                      <div className="col-span-5"><Label className="text-[10px]">النتيجة</Label><Input value={t.result} onChange={(e) => updateTest(i, "result", e.target.value)} className="h-8 text-xs" /></div>
+                      <div className="col-span-6"><Label className="text-[10px]">ملاحظات</Label><Input value={t.notes} onChange={(e) => updateTest(i, "notes", e.target.value)} className="h-8 text-xs" /></div>
+                    </div>
+                  </div>
+                ))}
+                {(!form.medical_tests || form.medical_tests.length === 0) && <p className="text-xs text-muted-foreground">لا توجد فحوصات بعد.</p>}
+              </div>
+            </div>
             <div><Label>ملاحظات</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <DialogFooter className="gap-2">
