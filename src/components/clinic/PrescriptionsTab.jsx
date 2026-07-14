@@ -6,11 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-const emptyForm = { patient_id: "", date: new Date().toISOString().split("T")[0], doctor_name: "", items: [], notes: "" };
+const DIAG_STATUSES = ["حاد", "مزمن", "مستقر", "حرج", "قيد العلاج", "يتعافى"];
+const DIAG_COLOR = { "حاد": "warning", "مزمن": "secondary", "مستقر": "success", "حرج": "destructive", "قيد العلاج": "default", "يتعافى": "default" };
+const emptyForm = { patient_id: "", date: new Date().toISOString().split("T")[0], doctor_name: "", diagnostic_status: "مستقر", items: [], notes: "" };
 
 export default function PrescriptionsTab() {
   const [items, setItems] = useState([]);
@@ -51,6 +54,7 @@ export default function PrescriptionsTab() {
     { key: "patient_name", label: "المريض" },
     { key: "date", label: "التاريخ" },
     { key: "doctor_name", label: "الطبيب" },
+    { key: "diagnostic_status", label: "الحالة التشخيصية", render: (v) => v ? <Badge variant={DIAG_COLOR[v] || "default"}>{v}</Badge> : null },
     { key: "items", label: "عدد الأدوية", render: (v) => (v && v.length) || 0 },
   ];
 
@@ -77,6 +81,12 @@ export default function PrescriptionsTab() {
             <div className="grid grid-cols-2 gap-3">
               <div><Label>التاريخ *</Label><Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></div>
               <div><Label>الطبيب</Label><Input value={form.doctor_name} onChange={(e) => setForm({ ...form, doctor_name: e.target.value })} /></div>
+            </div>
+            <div><Label>الحالة التشخيصية</Label>
+              <Select value={form.diagnostic_status} onValueChange={(v) => setForm({ ...form, diagnostic_status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{DIAG_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div>
               <div className="flex justify-between items-center mb-1">
