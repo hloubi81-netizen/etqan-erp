@@ -178,6 +178,12 @@ function StyledReceipt({ receiptData, ps, company }) {
           </tr>
           {paid > 0 && <tr><td style={{ padding: "2px 8px" }}>المدفوع ({paymentMethod})</td><td style={{ padding: "2px 8px", textAlign: "left" }}>{paid.toLocaleString()} {cur}</td></tr>}
           {change > 0 && <tr><td style={{ padding: "2px 8px" }}>الباقي</td><td style={{ padding: "2px 8px", textAlign: "left" }}>{change.toLocaleString()} {cur}</td></tr>}
+          {receiptData.isForeign && receiptData.fxTotal != null && (
+            <tr style={{ background: "#eff6ff" }}>
+              <td style={{ padding: "3px 8px", color: "#1d4ed8", fontWeight: "bold" }}>الإجمالي ({receiptData.currencySymbol}) × {receiptData.exchangeRate}</td>
+              <td style={{ padding: "3px 8px", textAlign: "left", color: "#1d4ed8", fontWeight: "bold" }}>{receiptData.fxTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} {receiptData.currencySymbol}</td>
+            </tr>
+          )}
         </tbody>
       </table>
       <div style={{ borderTop: "1px dashed #cbd5e1", margin: "6px 8px" }} />
@@ -219,6 +225,9 @@ function BasicReceipt({ receiptData }) {
           <tr><td style={{ fontSize: 14, fontWeight: "bold", borderTop: "1px solid #000" }}>الإجمالي</td><td style={{ fontSize: 14, fontWeight: "bold", borderTop: "1px solid #000", textAlign: "left" }}>{total.toLocaleString()}</td></tr>
           {paid > 0 && <tr><td>المدفوع ({paymentMethod})</td><td style={{ textAlign: "left" }}>{paid.toLocaleString()}</td></tr>}
           {change > 0 && <tr><td>الباقي</td><td style={{ textAlign: "left" }}>{change.toLocaleString()}</td></tr>}
+          {receiptData.isForeign && receiptData.fxTotal != null && (
+            <tr><td style={{ fontSize: 11, color: "#1d4ed8" }}>الإجمالي ({receiptData.currencySymbol})</td><td style={{ textAlign: "left", fontSize: 11, color: "#1d4ed8", fontWeight: "bold" }}>{receiptData.fxTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })} {receiptData.currencySymbol}</td></tr>
+          )}
         </tbody>
       </table>
       <div style={{ borderTop: "1px dashed #000", margin: "6px 0" }} />

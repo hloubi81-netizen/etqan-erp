@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag, Undo2 } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag, Undo2, Coins } from "lucide-react";
 import SalesReturnDialog from "@/components/pos/SalesReturnDialog";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { printPOSOrder, buildReceiptHTML, printHTML } from "@/utils/posPrinter";
@@ -71,6 +71,9 @@ export default function POS() {
   const [priceLists, setPriceLists] = useState([]);
   const [selectedPriceList, setSelectedPriceList] = useState(null); // null = سعر التجزئة الافتراضي
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [currencies, setCurrencies] = useState([]);
+  const [selectedCurrencyId, setSelectedCurrencyId] = useState("");
+  const [exchangeRate, setExchangeRate] = useState(1);
 
   // POS settings defaults
   const enableDiscount = posSettings.enableDiscount !== false;
@@ -86,6 +89,11 @@ export default function POS() {
     base44.entities.Product.list().then((p) => { setProducts(p); setLoading(false); });
     base44.entities.ProductGroup.list().then(setGroups);
     base44.entities.Printer.list().then(setPrinters);
+    base44.entities.Currency.list().then(list => {
+      setCurrencies(list || []);
+      const local = (list || []).find(c => c.is_local);
+      if (local) { setSelectedCurrencyId(local.id); setExchangeRate(local.exchange_rate || 1); }
+    });
     base44.entities.PriceList.filter({ is_active: true }).catch(() => []).then(pl => {
       // فلترة القوائم الصالحة حسب التاريخ
       const today = new Date().toISOString().split("T")[0];
@@ -184,8 +192,16 @@ export default function POS() {
   const discountAmt = enableDiscount ? Math.min(parseFloat(discount) || 0, subtotal * maxDiscountPercent / 100) : 0;
   const taxAmt = enableTax ? (subtotal - discountAmt) * taxRate / 100 : 0;
   const total = Math.max(0, subtotal - discountAmt + taxAmt);
-  const paidAmt = parseFloat(paid) || 0;
-  const change = Math.max(0, paidAmt - total);
+  const selectedCurrency = selectedCurrencyId === "local"
+    ? currencies.find(c => c.is_local)
+    : currencies.find(c => c.id === selectedCurrencyId);
+  const isForeign = !!selectedCurrency && !selectedCurrency.is_local && exchangeRate !== 1;
+  const fx = (localAmount) => isForeign ? localAmount / exchangeRate : localAmount;
+  const paidEntered = parseFloat(paid) || 0;
+  const paidLocal = isForeign ? paidEntered * exchangeRate : paidEntered;
+  const changeLocal = Math.max(0, paidLocal - total);
+  const changeDisplay = isForeign ? changeLocal / exchangeRate : changeLocal;
+  const fxTotal = fx(total);
 
   async function checkout() {
     if (cart.length === 0) { toast.error("السلة فارغة"); return; }
@@ -209,11 +225,14 @@ export default function POS() {
       discount: discountAmt,
       tax: taxAmt,
       total,
-      paid: paidAmt,
-      change,
+      total_local: total,
+      paid: paidLocal,
+      change: changeLocal,
       payment_method: paymentMethod,
       client_name: clientName,
       cashier_name: cashierName || undefined,
+      currency: selectedCurrency?.name || "",
+      exchange_rate: exchangeRate,
       status: "مكتملة",
     });
     setLastReceipt(rec);
@@ -238,14 +257,18 @@ export default function POS() {
         discount: discountAmt,
         tax: taxAmt,
         total,
-        paid: paidAmt,
-        change,
+        paid: paidLocal,
+        change: changeLocal,
         paymentMethod,
         clientName,
         companyName,
         receiptNote,
         cashierName,
         departments: depts,
+        isForeign,
+        currencySymbol: selectedCurrency?.symbol || "",
+        fxTotal,
+        exchangeRate,
       });
       setShowReceiptPreview(true);
     }
@@ -355,7 +378,7 @@ export default function POS() {
                 </div>
                 <p className="text-xs font-semibold leading-tight line-clamp-2">{p.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{p.item_code}</p>
-                <p className="text-sm font-bold text-primary mt-1">{(p.retail_price || 0).toLocaleString()}</p>
+                <p className="text-sm font-bold text-primary mt-1">{(isForeign ? (p.retail_price || 0) / exchangeRate : (p.retail_price || 0)).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
               </button>
             ))}
             {filtered.length === 0 && (
@@ -412,12 +435,12 @@ export default function POS() {
                 </div>
               )}
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-bold text-primary">{item.total.toLocaleString()}</p>
+                <p className="text-sm font-bold text-primary">{(isForeign ? item.total / exchangeRate : item.total).toLocaleString(undefined, { maximumFractionDigits: 2 })}</p>
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
-                    value={item.price}
-                    onChange={(e) => updatePrice(item.key, e.target.value)}
+                    value={isForeign ? (item.price / exchangeRate) : item.price}
+                    onChange={(e) => updatePrice(item.key, isForeign ? (parseFloat(e.target.value) || 0) * exchangeRate : parseFloat(e.target.value) || 0)}
                     className="h-7 w-20 text-xs text-center"
                   />
                   <div className="flex items-center gap-0.5">
@@ -487,6 +510,23 @@ export default function POS() {
               )}
             </div>
           )}
+          <div className="flex gap-2">
+            <Select value={selectedCurrencyId} onValueChange={(v) => {
+              const cur = currencies.find(c => c.id === v);
+              setSelectedCurrencyId(v);
+              setExchangeRate(cur?.exchange_rate || 1);
+            }}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="العملة" /></SelectTrigger>
+              <SelectContent>
+                {currencies.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name} {c.is_local ? "🏠" : `(${c.exchange_rate})`}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isForeign && (
+              <Input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1)} min="0.0001" step="0.0001" className="h-8 text-xs w-24" title="سعر الصرف (محلي/أجنبي)" />
+            )}
+          </div>
           <Input placeholder="اسم العميل (اختياري)" value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8 text-sm" />
           <div className="flex items-center gap-2">
             {enableDiscount && (
@@ -508,12 +548,18 @@ export default function POS() {
             {discountAmt > 0 && <div className="flex justify-between text-red-500"><span>الخصم</span><span>- {discountAmt.toLocaleString()}</span></div>}
             {taxAmt > 0 && <div className="flex justify-between text-blue-500"><span>الضريبة ({taxRate}%)</span><span>+ {taxAmt.toLocaleString()}</span></div>}
             <div className="flex justify-between font-bold text-base border-t border-border pt-1.5 mt-1"><span>الإجمالي</span><span className="text-primary">{total.toLocaleString()}</span></div>
+            {isForeign && (
+              <div className="flex justify-between text-sm text-blue-600 bg-blue-50 rounded px-2 py-1">
+                <span className="flex items-center gap-1"><Coins className="h-3 w-3" /> الإجمالي ({selectedCurrency?.symbol || ""}) × {exchangeRate}</span>
+                <span className="font-semibold">{fxTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
           </div>
 
           {paymentMethod === "نقداً" && (
             <div className="flex items-center gap-2">
-              <Input type="number" placeholder="المبلغ المدفوع" value={paid} onChange={(e) => setPaid(e.target.value)} className="h-8 text-sm" />
-              {change > 0 && <Badge variant="secondary" className="text-xs whitespace-nowrap">الباقي: {change.toLocaleString()}</Badge>}
+              <Input type="number" placeholder={isForeign ? `المدفوع (${selectedCurrency?.symbol || ""})` : "المبلغ المدفوع"} value={paid} onChange={(e) => setPaid(e.target.value)} className="h-8 text-sm" />
+              {changeLocal > 0 && <Badge variant="secondary" className="text-xs whitespace-nowrap">الباقي: {changeDisplay.toLocaleString(undefined, { maximumFractionDigits: 2 })}</Badge>}
             </div>
           )}
 
