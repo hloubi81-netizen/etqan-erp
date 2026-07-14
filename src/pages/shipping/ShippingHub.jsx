@@ -9,6 +9,7 @@ import ShippingDashboard from "@/components/shipping/ShippingDashboard";
 import PayrollManager from "@/components/hr/PayrollManager";
 import AttendanceManager from "@/components/hr/AttendanceManager";
 import PayrollSlipGenerator from "@/components/hr/PayrollSlipGenerator";
+import EmployeesTab from "@/components/hr/EmployeesTab";
 
 export default function ShippingHub() {
   return (
@@ -25,6 +26,7 @@ export default function ShippingHub() {
           <TabsTrigger value="payroll">الرواتب</TabsTrigger>
           <TabsTrigger value="attendance">الحضور والانصراف</TabsTrigger>
           <TabsTrigger value="slips">كشوف الرواتب</TabsTrigger>
+          <TabsTrigger value="employees">الموظفون</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4"><ShippingDashboard /></TabsContent>
         <TabsContent value="shipments" className="mt-4"><ShipmentsTab /></TabsContent>
@@ -35,6 +37,7 @@ export default function ShippingHub() {
         <TabsContent value="payroll" className="mt-4"><PayrollManager department="الشحن" /></TabsContent>
         <TabsContent value="attendance" className="mt-4"><AttendanceManager department="الشحن" /></TabsContent>
         <TabsContent value="slips" className="mt-4"><PayrollSlipGenerator department="الشحن" companyName="شركة الشحن" /></TabsContent>
+        <TabsContent value="employees" className="mt-4"><EmployeesTab department="الشحن" /></TabsContent>
       </Tabs>
     </div>
   );
