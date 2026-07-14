@@ -13,7 +13,8 @@ import { toast } from "sonner";
 
 const STATUSES = ["تم الإنشاء", "قيد الشحن", "تم التسليم", "مرتجع", "مفقود"];
 const STATUS_COLOR = { "تم الإنشاء": "secondary", "قيد الشحن": "default", "تم التسليم": "success", "مرتجع": "destructive", "مفقود": "destructive" };
-const emptyForm = { tracking_number: "", carrier_id: "", ship_date: new Date().toISOString().split("T")[0], origin_city: "", destination_city: "", recipient_name: "", recipient_phone: "", weight: 0, declared_value: 0, shipping_cost: 0, status: "تم الإنشاء", estimated_delivery: "", actual_delivery: "", linked_invoice_number: "", trip_id: "", notes: "" };
+const COD_STATUSES = ["غير محدد", "مستحق", "محصّل"];
+const emptyForm = { tracking_number: "", carrier_id: "", ship_date: new Date().toISOString().split("T")[0], origin_city: "", destination_city: "", recipient_name: "", recipient_phone: "", recipient_email: "", weight: 0, declared_value: 0, shipping_cost: 0, cod_amount: 0, cod_status: "غير محدد", status: "تم الإنشاء", status_history: [], estimated_delivery: "", actual_delivery: "", linked_invoice_number: "", trip_id: "", notes: "" };
 
 export default function ShipmentsTab() {
   const [items, setItems] = useState([]);
@@ -51,10 +52,29 @@ export default function ShipmentsTab() {
   async function save() {
     const carrier = carriers.find(c => c.id === form.carrier_id);
     const trip = trips.find(t => t.id === form.trip_id);
-    const payload = { ...form, carrier_name: carrier?.name || "", trip_number: trip?.trip_number || "", weight: parseFloat(form.weight) || 0, declared_value: parseFloat(form.declared_value) || 0, shipping_cost: parseFloat(form.shipping_cost) || 0 };
+    const history = Array.isArray(editing?.status_history) ? [...editing.status_history] : [];
+    if (!editing || editing.status !== form.status) {
+      history.push({ status: form.status, date: new Date().toISOString().split("T")[0], note: "" });
+    }
+    const payload = {
+      ...form,
+      carrier_name: carrier?.name || "",
+      trip_number: trip?.trip_number || "",
+      weight: parseFloat(form.weight) || 0,
+      declared_value: parseFloat(form.declared_value) || 0,
+      shipping_cost: parseFloat(form.shipping_cost) || 0,
+      cod_amount: parseFloat(form.cod_amount) || 0,
+      status_history: history,
+    };
     if (editing) { await base44.entities.Shipment.update(editing.id, payload); toast.success("تم تحديث الشحنة"); }
     else { await base44.entities.Shipment.create(payload); toast.success("تم إنشاء الشحنة"); }
     setOpen(false); load();
+  }
+
+  async function collectCod(r) {
+    await base44.entities.Shipment.update(r.id, { cod_status: "محصّل" });
+    toast.success("تم تسجيل تحصيل COD");
+    load();
   }
 
   async function del(r) { if (confirm("حذف الشحنة؟")) { await base44.entities.Shipment.delete(r.id); toast.success("تم الحذف"); load(); } }
@@ -69,6 +89,12 @@ export default function ShipmentsTab() {
     { key: "recipient_name", label: "المستلم" },
     { key: "weight", label: "الوزن", render: (v) => v ? `${v} كغ` : "" },
     { key: "shipping_cost", label: "التكلفة", render: (v) => v ? v.toLocaleString() : "" },
+    { key: "cod_amount", label: "COD", render: (v, r) => v ? (
+      <div className="flex items-center gap-1">
+        <Badge variant={r.cod_status === "محصّل" ? "success" : "warning"}>{v.toLocaleString()}</Badge>
+        {r.cod_status === "مستحق" && <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => collectCod(r)}>تحصيل</Button>}
+      </div>
+    ) : "—" },
     { key: "status", label: "الحالة", render: (v) => <Badge variant={STATUS_COLOR[v] || "secondary"}>{v}</Badge> },
   ];
 
@@ -111,6 +137,14 @@ export default function ShipmentsTab() {
               <div><Label>مدينة الاستلام</Label><Input value={form.destination_city} onChange={(e) => setForm({ ...form, destination_city: e.target.value })} /></div>
               <div><Label>اسم المستلم</Label><Input value={form.recipient_name} onChange={(e) => setForm({ ...form, recipient_name: e.target.value })} /></div>
               <div><Label>هاتف المستلم</Label><Input value={form.recipient_phone} onChange={(e) => setForm({ ...form, recipient_phone: e.target.value })} /></div>
+              <div><Label>بريد المستلم (للإشعارات)</Label><Input type="email" value={form.recipient_email} onChange={(e) => setForm({ ...form, recipient_email: e.target.value })} /></div>
+              <div><Label>مبلغ الدفع عند الاستلام (COD)</Label><Input type="number" value={form.cod_amount} onChange={(e) => setForm({ ...form, cod_amount: e.target.value })} /></div>
+              <div><Label>حالة تحصيل COD</Label>
+                <Select value={form.cod_status} onValueChange={(v) => setForm({ ...form, cod_status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{COD_STATUSES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div><Label>الوزن (كغ)</Label><Input type="number" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></div>
               <div><Label>القيمة المعلنة</Label><Input type="number" value={form.declared_value} onChange={(e) => setForm({ ...form, declared_value: e.target.value })} /></div>
               <div className="flex items-end gap-2">
@@ -127,6 +161,23 @@ export default function ShipmentsTab() {
               <div><Label>التسليم الفعلي</Label><Input type="date" value={form.actual_delivery} onChange={(e) => setForm({ ...form, actual_delivery: e.target.value })} /></div>
               <div><Label>الفاتورة المرتبطة</Label><Input value={form.linked_invoice_number} onChange={(e) => setForm({ ...form, linked_invoice_number: e.target.value })} /></div>
             </div>
+            {(editing?.status_history?.length > 0) && (
+              <div className="border rounded-lg p-3 bg-muted/30">
+                <div className="text-sm font-medium mb-2">سجل حالات الشحنة</div>
+                <div className="relative pr-4">
+                  <div className="absolute right-[7px] top-1 bottom-1 w-px bg-border" />
+                  <div className="space-y-2">
+                    {(editing.status_history).map((h, i) => (
+                      <div key={i} className="relative flex items-center gap-2 text-xs">
+                        <span className="h-3 w-3 rounded-full bg-primary ring-2 ring-background" />
+                        <span className="text-muted-foreground">{h.date}</span>
+                        <Badge variant={STATUS_COLOR[h.status] || "secondary"}>{h.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
             <div><Label>ملاحظات</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           </div>
           <DialogFooter className="gap-2">
