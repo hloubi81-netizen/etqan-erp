@@ -19,6 +19,10 @@
       "type": "string",
       "title": "\u0627\u0644\u0637\u0628\u064a\u0628"
     },
+    "visit_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0632\u064a\u0627\u0631\u0629 \u0627\u0644\u0645\u0631\u062a\u0628\u0637\u0629"
+    },
     "diagnostic_status": {
       "type": "string",
       "title": "\u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u0634\u062e\u064a\u0635\u064a\u0629"

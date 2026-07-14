@@ -5,6 +5,7 @@ import PatientsTab from "@/components/clinic/PatientsTab";
 import AppointmentsTab from "@/components/clinic/AppointmentsTab";
 import MedicalRecordsTab from "@/components/clinic/MedicalRecordsTab";
 import PrescriptionsTab from "@/components/clinic/PrescriptionsTab";
+import MedicalHistoryTab from "@/components/clinic/MedicalHistoryTab";
 import InvoicesTab from "@/components/clinic/InvoicesTab";
 import InsuranceClaimsTab from "@/components/clinic/InsuranceClaimsTab";
 
@@ -18,6 +19,7 @@ export default function ClinicHub() {
           <TabsTrigger value="patients">المرضى</TabsTrigger>
           <TabsTrigger value="appointments">المواعيد</TabsTrigger>
           <TabsTrigger value="records">السجلات الطبية</TabsTrigger>
+          <TabsTrigger value="history">التاريخ الطبي</TabsTrigger>
           <TabsTrigger value="prescriptions">الوصفات</TabsTrigger>
           <TabsTrigger value="invoices">الفوترة</TabsTrigger>
           <TabsTrigger value="claims">مطالبات التأمين</TabsTrigger>
@@ -26,6 +28,7 @@ export default function ClinicHub() {
         <TabsContent value="patients" className="mt-4"><PatientsTab /></TabsContent>
         <TabsContent value="appointments" className="mt-4"><AppointmentsTab /></TabsContent>
         <TabsContent value="records" className="mt-4"><MedicalRecordsTab /></TabsContent>
+        <TabsContent value="history" className="mt-4"><MedicalHistoryTab /></TabsContent>
         <TabsContent value="prescriptions" className="mt-4"><PrescriptionsTab /></TabsContent>
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
         <TabsContent value="claims" className="mt-4"><InsuranceClaimsTab /></TabsContent>
