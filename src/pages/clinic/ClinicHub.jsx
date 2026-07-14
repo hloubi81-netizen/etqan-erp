@@ -1,5 +1,6 @@
 import PageHeader from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardTab from "@/components/clinic/DashboardTab";
 import PatientsTab from "@/components/clinic/PatientsTab";
 import AppointmentsTab from "@/components/clinic/AppointmentsTab";
 import MedicalRecordsTab from "@/components/clinic/MedicalRecordsTab";
@@ -11,8 +12,9 @@ export default function ClinicHub() {
   return (
     <div>
       <PageHeader title="العيادات الطبية" subtitle="إدارة المرضى، المواعيد، السجلات الطبية، الوصفات، الفوترة والتأمين الصحي" />
-      <Tabs defaultValue="patients" className="mt-2">
+      <Tabs defaultValue="dashboard" className="mt-2">
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value="dashboard">لوحة التحكم</TabsTrigger>
           <TabsTrigger value="patients">المرضى</TabsTrigger>
           <TabsTrigger value="appointments">المواعيد</TabsTrigger>
           <TabsTrigger value="records">السجلات الطبية</TabsTrigger>
@@ -20,6 +22,7 @@ export default function ClinicHub() {
           <TabsTrigger value="invoices">الفوترة</TabsTrigger>
           <TabsTrigger value="claims">مطالبات التأمين</TabsTrigger>
         </TabsList>
+        <TabsContent value="dashboard" className="mt-4"><DashboardTab /></TabsContent>
         <TabsContent value="patients" className="mt-4"><PatientsTab /></TabsContent>
         <TabsContent value="appointments" className="mt-4"><AppointmentsTab /></TabsContent>
         <TabsContent value="records" className="mt-4"><MedicalRecordsTab /></TabsContent>
