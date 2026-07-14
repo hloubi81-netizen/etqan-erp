@@ -71,6 +71,7 @@ import CogsReport from './pages/reports/CogsReport';
 import PriceLists from './pages/PriceLists';
 import TaxRates from './pages/tax/TaxRates';
 import LoyaltyProgram from './pages/loyalty/LoyaltyProgram';
+import CustomerPortal from './pages/loyalty/CustomerPortal';
 import TaxReport from './pages/reports/TaxReport';
 import InventoryVarianceReport from './pages/reports/InventoryVarianceReport';
 import BranchPerformance from './pages/reports/BranchPerformance';
@@ -193,6 +194,7 @@ const AuthenticatedApp = () => {
         <Route path="/price-lists" element={<PriceLists />} />
         <Route path="/tax-rates" element={<TaxRates />} />
         <Route path="/loyalty" element={<LoyaltyProgram />} />
+        <Route path="/customer-portal" element={<CustomerPortal />} />
         <Route path="/reports/tax" element={<TaxReport />} />
         <Route path="/reports/inventory-variance" element={<InventoryVarianceReport />} />
         <Route path="/reports/branch-performance" element={<BranchPerformance />} />

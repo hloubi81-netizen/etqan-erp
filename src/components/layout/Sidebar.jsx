@@ -11,7 +11,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, Bot } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, UserCircle, Bot } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -169,6 +169,7 @@ function getMenuItems(lang) {
 
   // ── نظام النقاط والعروض ──
   { label: lang === 'ar' ? "النقاط والعروض الخاصة" : "Loyalty & Promotions", icon: Sparkles, path: "/loyalty" },
+  { label: lang === 'ar' ? "بوابة العميل" : "Customer Portal", icon: UserCircle, path: "/customer-portal" },
 
   // ── إدارة العملاء والتواصل ──
   { label: lang === 'ar' ? "وكيل مبيعات واتساب" : "WhatsApp Sales Agent", icon: Bot, path: "/sales-agent" },
@@ -201,6 +202,7 @@ const ITEM_FEATURES = {
   "/orders": "invoices", "/purchase-requests": "invoices", "/store-connections": "invoices", "/ecom-product-mappings": "invoices",
   "/price-lists": "invoices", "/pos": "invoices", "/pos/history": "invoices",
   "/loyalty": "invoices",
+  "/customer-portal": "invoices",
   "/vouchers/receipt": "vouchers", "/vouchers/payment": "vouchers", "/vouchers/daily": "vouchers",
   "/vouchers/journal": "vouchers", "/vouchers/opening": "vouchers",
   "/groups": "warehouses", "/products": "warehouses", "/services": "warehouses",

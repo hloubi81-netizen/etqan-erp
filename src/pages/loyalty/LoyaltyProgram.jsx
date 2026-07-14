@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoyaltyClients from "@/components/loyalty/LoyaltyClients";
 import PromotionsManager from "@/components/loyalty/PromotionsManager";
 import PointsSettings from "@/components/loyalty/PointsSettings";
-import { Star, Tag, Settings } from "lucide-react";
+import LoyaltyTierBenefits from "@/components/loyalty/LoyaltyTierBenefits";
+import { Star, Tag, Settings, Crown } from "lucide-react";
 
 export default function LoyaltyProgram() {
   return (
@@ -15,12 +16,15 @@ export default function LoyaltyProgram() {
       </div>
 
       <Tabs defaultValue="clients" dir="rtl">
-        <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="clients" className="gap-1.5">
-            <Star className="h-4 w-4" /> نقاط العملاء
+            <Star className="h-4 w-4" /> العملاء
+          </TabsTrigger>
+          <TabsTrigger value="tiers" className="gap-1.5">
+            <Crown className="h-4 w-4" /> المستويات
           </TabsTrigger>
           <TabsTrigger value="promotions" className="gap-1.5">
-            <Tag className="h-4 w-4" /> العروض الخاصة
+            <Tag className="h-4 w-4" /> العروض
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-1.5">
             <Settings className="h-4 w-4" /> الإعدادات
@@ -29,6 +33,9 @@ export default function LoyaltyProgram() {
 
         <TabsContent value="clients" className="mt-4">
           <LoyaltyClients />
+        </TabsContent>
+        <TabsContent value="tiers" className="mt-4">
+          <LoyaltyTierBenefits />
         </TabsContent>
         <TabsContent value="promotions" className="mt-4">
           <PromotionsManager />

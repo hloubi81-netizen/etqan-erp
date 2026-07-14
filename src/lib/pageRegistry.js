@@ -127,6 +127,7 @@ export const PAGE_GROUPS = [
     label: "أدوات أخرى",
     pages: [
       { path: "/loyalty", label: "النقاط والعروض الخاصة", section: "invoices" },
+      { path: "/customer-portal", label: "بوابة العميل", section: "invoices" },
       { path: "/crm", label: "إدارة علاقات العملاء", section: "invoices" },
       { path: "/messages", label: "الرسائل الداخلية", section: "dashboard" },
       { path: "/notifications", label: "الإشعارات والتنبيهات", section: "dashboard" },

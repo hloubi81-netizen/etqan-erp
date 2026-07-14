@@ -14,6 +14,9 @@ const DEFAULTS = {
   silver_threshold: 500,
   gold_threshold: 1500,
   platinum_threshold: 5000,
+  silver_discount: 0,
+  gold_discount: 0,
+  platinum_discount: 0,
   enable_loyalty: true,
   enable_promotions: true,
 };
@@ -95,6 +98,7 @@ export default function PointsSettings() {
                 <span className="text-sm font-medium">فضي</span>
               </div>
               {field("النقاط المطلوبة", "silver_threshold", "number", "500")}
+              {field("خصم المستوى (%)", "silver_discount", "number", "5")}
             </div>
             <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="flex items-center gap-2 mb-2">
@@ -102,6 +106,7 @@ export default function PointsSettings() {
                 <span className="text-sm font-medium">ذهبي</span>
               </div>
               {field("النقاط المطلوبة", "gold_threshold", "number", "1500")}
+              {field("خصم المستوى (%)", "gold_discount", "number", "10")}
             </div>
             <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
               <div className="flex items-center gap-2 mb-2">
@@ -109,6 +114,7 @@ export default function PointsSettings() {
                 <span className="text-sm font-medium">بلاتيني</span>
               </div>
               {field("النقاط المطلوبة", "platinum_threshold", "number", "5000")}
+              {field("خصم المستوى (%)", "platinum_discount", "number", "15")}
             </div>
           </div>
         </CardContent>
