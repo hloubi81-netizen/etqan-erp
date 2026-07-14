@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Search, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { printShipmentWaybill } from "@/utils/waybillPrint";
+import ShipmentStatusUpdate from "@/components/shipping/ShipmentStatusUpdate";
 
-const STATUSES = ["تم الإنشاء", "قيد الشحن", "تم التسليم", "مرتجع", "مفقود"];
-const STATUS_COLOR = { "تم الإنشاء": "secondary", "قيد الشحن": "default", "تم التسليم": "success", "مرتجع": "destructive", "مفقود": "destructive" };
+const STATUSES = ["تم الإنشاء", "قيد التجهيز", "قيد الشحن", "تم التسليم", "مرتجع", "مفقود"];
+const STATUS_COLOR = { "تم الإنشاء": "secondary", "قيد التجهيز": "default", "قيد الشحن": "default", "تم التسليم": "success", "مرتجع": "destructive", "مفقود": "destructive" };
 const COD_STATUSES = ["غير محدد", "مستحق", "محصّل"];
 const emptyForm = { tracking_number: "", carrier_id: "", ship_date: new Date().toISOString().split("T")[0], origin_city: "", destination_city: "", recipient_name: "", recipient_phone: "", recipient_email: "", weight: 0, declared_value: 0, shipping_cost: 0, cod_amount: 0, cod_status: "غير محدد", status: "تم الإنشاء", status_history: [], estimated_delivery: "", actual_delivery: "", linked_invoice_number: "", trip_id: "", notes: "" };
 
@@ -26,6 +27,7 @@ export default function ShipmentsTab() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [q, setQ] = useState("");
+  const [tracking, setTracking] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -55,7 +57,8 @@ export default function ShipmentsTab() {
     const trip = trips.find(t => t.id === form.trip_id);
     const history = Array.isArray(editing?.status_history) ? [...editing.status_history] : [];
     if (!editing || editing.status !== form.status) {
-      history.push({ status: form.status, date: new Date().toISOString().split("T")[0], note: "" });
+      const ts = new Date().toISOString();
+      history.push({ status: form.status, date: ts.slice(0, 10), time: ts.slice(11, 16), timestamp: ts, note: "" });
     }
     const payload = {
       ...form,
@@ -97,6 +100,7 @@ export default function ShipmentsTab() {
       </div>
     ) : "—" },
     { key: "status", label: "الحالة", render: (v) => <Badge variant={STATUS_COLOR[v] || "secondary"}>{v}</Badge> },
+    { key: "_track", label: "تتبع", render: (_, r) => <Button size="sm" variant="default" className="h-7 px-2 text-xs" onClick={() => setTracking(r)}>تحديث الحالة</Button> },
     { key: "_waybill", label: "بوليصة", render: (_, r) => <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => printShipmentWaybill(r.id).catch(() => toast.error("تعذّر إنشاء البوليصة"))}><Printer className="h-3.5 w-3.5" /> طباعة</Button> },
   ];
 
@@ -169,13 +173,17 @@ export default function ShipmentsTab() {
                 <div className="relative pr-4">
                   <div className="absolute right-[7px] top-1 bottom-1 w-px bg-border" />
                   <div className="space-y-2">
-                    {(editing.status_history).map((h, i) => (
-                      <div key={i} className="relative flex items-center gap-2 text-xs">
+                    {(editing.status_history).map((h, i) => {
+                      const dt = h.timestamp ? new Date(h.timestamp) : null;
+                      return (
+                      <div key={i} className="relative flex flex-wrap items-center gap-2 text-xs">
                         <span className="h-3 w-3 rounded-full bg-primary ring-2 ring-background" />
-                        <span className="text-muted-foreground">{h.date}</span>
+                        <span className="text-muted-foreground">{dt ? dt.toLocaleDateString("ar-EG") + " " + dt.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : `${h.date}${h.time ? " " + h.time : ""}`}</span>
                         <Badge variant={STATUS_COLOR[h.status] || "secondary"}>{h.status}</Badge>
+                        {h.updated_by && <span className="text-muted-foreground">— {h.updated_by}</span>}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -189,6 +197,14 @@ export default function ShipmentsTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {tracking && (
+        <ShipmentStatusUpdate
+          shipment={tracking}
+          onClose={() => setTracking(null)}
+          onUpdated={load}
+        />
+      )}
     </div>
   );
 }
