@@ -9,6 +9,7 @@ import MedicalHistoryTab from "@/components/clinic/MedicalHistoryTab";
 import InvoicesTab from "@/components/clinic/InvoicesTab";
 import InsuranceClaimsTab from "@/components/clinic/InsuranceClaimsTab";
 import PayrollManager from "@/components/hr/PayrollManager";
+import AttendanceManager from "@/components/hr/AttendanceManager";
 
 export default function ClinicHub() {
   return (
@@ -25,6 +26,7 @@ export default function ClinicHub() {
           <TabsTrigger value="invoices">الفوترة</TabsTrigger>
           <TabsTrigger value="claims">مطالبات التأمين</TabsTrigger>
           <TabsTrigger value="payroll">الرواتب</TabsTrigger>
+          <TabsTrigger value="attendance">الحضور والانصراف</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4"><DashboardTab /></TabsContent>
         <TabsContent value="patients" className="mt-4"><PatientsTab /></TabsContent>
@@ -35,6 +37,7 @@ export default function ClinicHub() {
         <TabsContent value="invoices" className="mt-4"><InvoicesTab /></TabsContent>
         <TabsContent value="claims" className="mt-4"><InsuranceClaimsTab /></TabsContent>
         <TabsContent value="payroll" className="mt-4"><PayrollManager department="العيادة" /></TabsContent>
+        <TabsContent value="attendance" className="mt-4"><AttendanceManager department="العيادة" /></TabsContent>
       </Tabs>
     </div>
   );
