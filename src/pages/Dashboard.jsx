@@ -17,6 +17,7 @@ import AlertsPanel from "@/components/dashboard/AlertsPanel";
 import { SkeletonCard } from "@/components/shared/SkeletonLoader";
 import CurrencySelector from "@/components/dashboard/CurrencySelector";
 import BranchMonthlyReport from "@/components/dashboard/BranchMonthlyReport";
+import SalesReturnsChart from "@/components/dashboard/SalesReturnsChart";
 import SubscriptionSummary from "@/components/dashboard/SubscriptionSummary";
 import CompanyDataExport from "@/components/dashboard/CompanyDataExport";
 
@@ -180,6 +181,9 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sales vs Returns Chart */}
+      <SalesReturnsChart />
 
       {/* Branch Monthly Report */}
       <BranchMonthlyReport />
