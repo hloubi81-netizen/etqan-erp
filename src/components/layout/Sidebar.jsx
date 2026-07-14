@@ -11,7 +11,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, UserCircle, Bot } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, UserCircle, Bot, Stethoscope } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +138,9 @@ function getMenuItems(lang) {
 
   // ── شركات الشحن ──
   { label: lang === 'ar' ? "شركات الشحن" : "Shipping", icon: Truck, path: "/shipping" },
+
+  // ── العيادات الطبية ──
+  { label: lang === 'ar' ? "العيادات الطبية" : "Clinics", icon: Stethoscope, path: "/clinic" },
 
   // ── التقارير ──
   {
