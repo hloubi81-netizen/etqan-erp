@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search } from "lucide-react";
+import { Search, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { printShipmentWaybill } from "@/utils/waybillPrint";
 
 const STATUSES = ["تم الإنشاء", "قيد الشحن", "تم التسليم", "مرتجع", "مفقود"];
 const STATUS_COLOR = { "تم الإنشاء": "secondary", "قيد الشحن": "default", "تم التسليم": "success", "مرتجع": "destructive", "مفقود": "destructive" };
@@ -96,6 +97,7 @@ export default function ShipmentsTab() {
       </div>
     ) : "—" },
     { key: "status", label: "الحالة", render: (v) => <Badge variant={STATUS_COLOR[v] || "secondary"}>{v}</Badge> },
+    { key: "_waybill", label: "بوليصة", render: (_, r) => <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => printShipmentWaybill(r.id).catch(() => toast.error("تعذّر إنشاء البوليصة"))}><Printer className="h-3.5 w-3.5" /> طباعة</Button> },
   ];
 
   if (loading) return <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
@@ -182,6 +184,7 @@ export default function ShipmentsTab() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
+            {editing && <Button type="button" variant="secondary" onClick={() => printShipmentWaybill(editing.id).catch(() => toast.error("تعذّر إنشاء البوليصة"))}><Printer className="h-4 w-4" /> طباعة البوليصة</Button>}
             <Button onClick={save} disabled={!form.tracking_number || !form.ship_date}>حفظ</Button>
           </DialogFooter>
         </DialogContent>
