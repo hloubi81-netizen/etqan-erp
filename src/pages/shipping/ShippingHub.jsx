@@ -6,6 +6,7 @@ import TripsTab from "@/components/shipping/TripsTab";
 import DriversTab from "@/components/shipping/DriversTab";
 import VehiclesTab from "@/components/shipping/VehiclesTab";
 import ShippingDashboard from "@/components/shipping/ShippingDashboard";
+import PayrollManager from "@/components/hr/PayrollManager";
 
 export default function ShippingHub() {
   return (
@@ -19,6 +20,7 @@ export default function ShippingHub() {
           <TabsTrigger value="trips">الرحلات</TabsTrigger>
           <TabsTrigger value="drivers">السائقون</TabsTrigger>
           <TabsTrigger value="vehicles">الأسطول</TabsTrigger>
+          <TabsTrigger value="payroll">الرواتب</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard" className="mt-4"><ShippingDashboard /></TabsContent>
         <TabsContent value="shipments" className="mt-4"><ShipmentsTab /></TabsContent>
@@ -26,6 +28,7 @@ export default function ShippingHub() {
         <TabsContent value="trips" className="mt-4"><TripsTab /></TabsContent>
         <TabsContent value="drivers" className="mt-4"><DriversTab /></TabsContent>
         <TabsContent value="vehicles" className="mt-4"><VehiclesTab /></TabsContent>
+        <TabsContent value="payroll" className="mt-4"><PayrollManager department="الشحن" /></TabsContent>
       </Tabs>
     </div>
   );
