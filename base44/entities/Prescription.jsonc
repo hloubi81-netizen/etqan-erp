@@ -1,0 +1,80 @@
+{
+  "name": "Prescription",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "title": "\u0627\u0644\u0645\u0631\u064a\u0636"
+    },
+    "patient_name": {
+      "type": "string",
+      "title": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u064a\u0636"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "\u0627\u0644\u062a\u0627\u0631\u064a\u062e"
+    },
+    "doctor_name": {
+      "type": "string",
+      "title": "\u0627\u0644\u0637\u0628\u064a\u0628"
+    },
+    "items": {
+      "type": "array",
+      "title": "\u0623\u062f\u0648\u064a\u0629 \u0627\u0644\u0648\u0635\u0641\u0629",
+      "items": {
+        "type": "object",
+        "properties": {
+          "medicine": {
+            "type": "string"
+          },
+          "dosage": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "subscription_id": {
+      "type": "string",
+      "title": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+    },
+    "notes": {
+      "type": "string",
+      "title": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "patient_id",
+    "date"
+  ],
+  "rls": {
+    "create": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "read": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "update": {
+      "data.subscription_id": "{{user.subscription_id}}"
+    },
+    "delete": {
+      "$and": [
+        {
+          "data.subscription_id": "{{user.subscription_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
