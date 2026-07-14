@@ -48,6 +48,7 @@ import FixedAssets from './pages/assets/FixedAssets';
 import CashFlow from './pages/financial/CashFlow';
 import CashCalendar from './pages/financial/CashCalendar';
 import Settings from './pages/Settings';
+import ApprovalWorkflows from './pages/settings/ApprovalWorkflows';
 import LeaveRequests from './pages/hr/LeaveRequests';
 import BankReconciliation from './pages/accounting/BankReconciliation';
 import StockAlerts from './pages/inventory/StockAlerts';
@@ -65,6 +66,7 @@ import CRM from './pages/crm/CRM';
 import NotificationsCenter from './pages/notifications/NotificationsCenter';
 import CustomReports from './pages/reports/CustomReports';
 import SalesDashboard from './pages/reports/SalesDashboard';
+import DemandForecasting from './pages/reports/DemandForecasting';
 import CogsReport from './pages/reports/CogsReport';
 import PriceLists from './pages/PriceLists';
 import TaxRates from './pages/tax/TaxRates';
@@ -168,6 +170,7 @@ const AuthenticatedApp = () => {
         <Route path="/assets" element={<FixedAssets />} />
         <Route path="/subscriptions" element={<SubscriptionManagement />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/approval-workflows" element={<ApprovalWorkflows />} />
         <Route path="/hr/leaves" element={<LeaveRequests />} />
         <Route path="/accounting/bank-reconciliation" element={<BankReconciliation />} />
         <Route path="/inventory/stock-alerts" element={<StockAlerts />} />
@@ -184,6 +187,7 @@ const AuthenticatedApp = () => {
         <Route path="/crm" element={<CRM />} />
         <Route path="/notifications" element={<NotificationsCenter />} />
         <Route path="/reports/custom" element={<CustomReports />} />
+        <Route path="/reports/demand-forecasting" element={<DemandForecasting />} />
         <Route path="/reports/sales-dashboard" element={<SalesDashboard />} />
         <Route path="/reports/cogs" element={<CogsReport />} />
         <Route path="/price-lists" element={<PriceLists />} />

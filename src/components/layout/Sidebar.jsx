@@ -11,7 +11,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, Bot } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, Bot } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -154,6 +154,7 @@ function getMenuItems(lang) {
     { label: lang === 'ar' ? "فروقات الجرد" : "Inventory Variance", path: "/reports/inventory-variance", icon: ClipboardList },
     { label: lang === 'ar' ? "التقرير الضريبي (VAT)" : "Tax Report (VAT)", path: "/reports/tax", icon: Calculator },
     { label: lang === 'ar' ? "التقارير المخصصة" : "Custom Reports", path: "/reports/custom", icon: TrendingUp },
+    { label: lang === 'ar' ? "التنبؤ بالطلب (AI)" : "Demand Forecasting (AI)", path: "/reports/demand-forecasting", icon: Sparkles },
     { label: lang === 'ar' ? "سجل النشاط" : "Activity Log", path: "/reports/activity-log", icon: ClipboardList },
     { label: lang === 'ar' ? "أداء الفروع" : "Branch Performance", path: "/reports/branch-performance", icon: GitBranch },
     { label: lang === 'ar' ? "ربحية الخدمات" : "Service Profitability", path: "/reports/service-profitability", icon: Wrench },
@@ -185,6 +186,7 @@ function getMenuItems(lang) {
   { label: l('users'), icon: Users, path: "/users" },
   { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
   { label: lang === 'ar' ? "لوحة تحكم المدير" : "Admin Control Panel", icon: Crown, path: "/admin/control-panel" },
+  { label: lang === 'ar' ? "مسارات الاعتماد" : "Approval Workflows", icon: ClipboardCheck, path: "/settings/approval-workflows" },
   { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
   { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" }];
 
@@ -219,6 +221,7 @@ const ITEM_FEATURES = {
   "/reports/branch-performance": "reports", "/reports/service-profitability": "reports",
   "/reports/services-dashboard": "reports", "/reports/budget-vs-actual": "reports",
   "/reports/business-performance": "reports",
+  "/reports/demand-forecasting": "reports",
   "/reports/inventory-movement-analysis": "reports",
   "/reports/branch-attendance": "reports",
   "/settings/google-calendar": "reports",

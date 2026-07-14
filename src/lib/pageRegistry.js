@@ -115,6 +115,7 @@ export const PAGE_GROUPS = [
       { path: "/reports/inventory-variance", label: "فروقات الجرد", section: "reports" },
       { path: "/reports/tax", label: "التقرير الضريبي (VAT)", section: "reports" },
       { path: "/reports/custom", label: "التقارير المخصصة", section: "reports" },
+      { path: "/reports/demand-forecasting", label: "التنبؤ بالطلب (AI)", section: "reports" },
       { path: "/reports/activity-log", label: "سجل النشاط", section: "reports" },
       { path: "/reports/branch-performance", label: "أداء الفروع", section: "reports" },
       { path: "/reports/service-profitability", label: "ربحية الخدمات", section: "reports" },
@@ -140,6 +141,7 @@ export const PAGE_GROUPS = [
     pages: [
       { path: "/users", label: "إدارة المستخدمين", section: "users" },
       { path: "/subscriptions", label: "الاشتراكات", section: "users" },
+      { path: "/settings/approval-workflows", label: "مسارات الاعتماد", section: "settings" },
       { path: "/settings", label: "الإعدادات", section: "settings" },
       { path: "/user-guide", label: "دليل الاستخدام", section: "dashboard" },
       { path: "/about", label: "عن النظام", section: "dashboard" },
