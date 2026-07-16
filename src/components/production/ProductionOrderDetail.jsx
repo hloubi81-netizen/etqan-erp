@@ -15,7 +15,7 @@ const EMPTY_STAGE = {
   employee_id: "", employee_name: "", planned_hours: 0, actual_hours: 0,
   labor_cost: 0, material_cost: 0, overhead_cost: 0, total_cost: 0,
   output_quantity: 0, rejected_quantity: 0, start_time: "", end_time: "",
-  status: "بانتظار", notes: "",
+  status: "بانتظار", notes: "", materials_consumed: [],
 };
 
 export default function ProductionOrderDetail({ orderId, onBack }) {
@@ -23,6 +23,8 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
   const [stages, setStages] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [costCenters, setCostCenters] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_STAGE);
@@ -32,15 +34,17 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
 
   async function load() {
     setLoading(true);
-    const [o, s, emp, cc] = await Promise.all([
+    const [o, s, emp, cc, prod, wh] = await Promise.all([
       base44.entities.ProductionOrder.get(orderId),
       base44.entities.ProductionStage.filter({ order_id: orderId }),
       base44.entities.Employee.list(),
       base44.entities.CostCenter.list(),
+      base44.entities.Product.list(),
+      base44.entities.Warehouse.list(),
     ]);
     setOrder(o);
     setStages(s.sort((a, b) => (a.sequence || 0) - (b.sequence || 0)));
-    setEmployees(emp); setCostCenters(cc);
+    setEmployees(emp); setCostCenters(cc); setProducts(prod); setWarehouses(wh);
     setLoading(false);
   }
 
@@ -77,6 +81,29 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
     await base44.entities.ProductionStage.update(s.id, { status });
     toast.success("تم تحديث حالة المرحلة");
     load(); recomputeOrder();
+  }
+
+  const [startingStage, setStartingStage] = useState(null);
+
+  async function startStage(s) {
+    setStartingStage(s.id);
+    try {
+      const res = await base44.functions.invoke("consumeStageMaterials", { stage_id: s.id });
+      const msg = res.data?.items?.length
+        ? `بدأت المرحلة وخصم ${res.data.items.length} مادة (${(res.data.total_material_cost || 0).toLocaleString()})`
+        : "بدأت المرحلة";
+      toast.success(msg);
+      load(); recomputeOrder();
+    } catch (e) {
+      const d = e?.response?.data;
+      if (d?.insufficient) {
+        toast.error("رصيد غير كافٍ: " + d.insufficient.map(i => `${i.name} (${i.reason})`).join("، "));
+      } else if (d?.already_deducted) {
+        toast.error("تم خصم المواد من قبل لهذه المرحلة");
+      } else {
+        toast.error(e?.message || "تعذّر بدء المرحلة");
+      }
+    } finally { setStartingStage(null); }
   }
 
   async function recomputeOrder() {
@@ -173,6 +200,16 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
                         <Badge variant={stageColor[s.status] || "secondary"} className="text-xs">{s.status}</Badge>
                       </div>
                       {s.description && <p className="text-xs text-muted-foreground mt-1">{s.description}</p>}
+                      {s.materials_consumed?.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {s.materials_consumed.map((m, mi) => (
+                            <span key={mi} className={`text-xs px-2 py-0.5 rounded ${s.materials_deducted ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                              {m.product_name}: {m.quantity} {m.unit || ""}
+                              {s.materials_deducted ? " ✓" : " (بانتظار الخصم)"}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-xs">
                         {s.employee_name && <span className="text-muted-foreground">المنفذ: {s.employee_name}</span>}
                         <span className="text-muted-foreground">ساعات: {s.actual_hours || 0} / {s.planned_hours || 0}</span>
@@ -182,7 +219,7 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {s.status === "بانتظار" && <Button size="icon" variant="ghost" onClick={() => changeStageStatus(s, "جاري")}><PlayCircle className="h-4 w-4" /></Button>}
+                    {s.status === "بانتظار" && <Button size="icon" variant="ghost" disabled={startingStage === s.id} onClick={() => startStage(s)} title="بدء المرحلة وخصم المواد">{startingStage === s.id ? <div className="h-3 w-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> : <PlayCircle className="h-4 w-4" />}</Button>}
                     {s.status === "جاري" && <Button size="icon" variant="ghost" onClick={() => changeStageStatus(s, "مكتمل")}><CheckCircle2 className="h-4 w-4" /></Button>}
                     <Button size="icon" variant="ghost" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="icon" variant="ghost" onClick={() => delStage(s.id)}><Trash2 className="h-4 w-4" /></Button>
@@ -242,9 +279,45 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
           </div>
 
           <div className="border-t pt-3 mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold">المواد الخام المستهلكة</p>
+              <Button type="button" size="sm" variant="outline" className="gap-1 h-7" onClick={() => setForm(p => ({ ...p, materials_consumed: [...(p.materials_consumed || []), { product_id: "", product_name: "", quantity: 1, unit: "", warehouse_id: order.warehouse_id || "", warehouse_name: order.warehouse_name || "" }] }))}>
+                <Plus className="h-3 w-3" /> مادة
+              </Button>
+            </div>
+            {(form.materials_consumed || []).map((m, mi) => (
+              <div key={mi} className="grid grid-cols-12 gap-1.5 items-center mb-1.5">
+                <div className="col-span-5">
+                  <Select value={m.product_id || ""} onValueChange={(v) => {
+                    const prod = products.find(x => x.id === v);
+                    setForm(p => {
+                      const arr = [...(p.materials_consumed || [])];
+                      arr[mi] = { ...arr[mi], product_id: v, product_name: prod?.name || "", unit: (prod?.units?.[0]?.name) || arr[mi].unit || "", unit_cost: prod?.avg_purchase_price || prod?.cost_price || 0 };
+                      return { ...p, materials_consumed: arr };
+                    });
+                  }}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر المادة" /></SelectTrigger>
+                    <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2"><Input type="number" value={m.quantity || 0} onChange={(e) => setForm(p => { const arr = [...(p.materials_consumed || [])]; arr[mi] = { ...arr[mi], quantity: parseFloat(e.target.value) || 0 }; return { ...p, materials_consumed: arr }; })} className="h-8 text-xs" placeholder="الكمية" /></div>
+                <div className="col-span-1"><span className="text-xs text-muted-foreground">{m.unit || ""}</span></div>
+                <div className="col-span-3">
+                  <Select value={m.warehouse_id || ""} onValueChange={(v) => { const wh = warehouses.find(x => x.id === v); setForm(p => { const arr = [...(p.materials_consumed || [])]; arr[mi] = { ...arr[mi], warehouse_id: v, warehouse_name: wh?.name || "" }; return { ...p, materials_consumed: arr }; }); }}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="المستودع" /></SelectTrigger>
+                    <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <button type="button" className="col-span-1 text-destructive" onClick={() => setForm(p => { const arr = [...(p.materials_consumed || [])]; arr.splice(mi, 1); return { ...p, materials_consumed: arr }; })}><Trash2 className="h-4 w-4" /></button>
+              </div>
+            ))}
+            {(!form.materials_consumed || form.materials_consumed.length === 0) && <p className="text-xs text-muted-foreground mb-2">لا توجد مواد — تُخصم تلقائيًا من المخزون عند بدء المرحلة</p>}
+          </div>
+
+          <div className="border-t pt-3 mt-2">
             <p className="text-sm font-semibold mb-2">تكاليف المرحلة</p>
             <div className="grid grid-cols-3 gap-3">
-              <div><Label className="text-xs">مواد</Label><Input type="number" value={form.material_cost || 0} onChange={(e) => setForm(p => ({ ...p, material_cost: parseFloat(e.target.value) || 0 }))} className="mt-1 h-8" /></div>
+              <div><Label className="text-xs">مواد {(form.materials_consumed || []).length > 0 && <span className="text-[10px] text-muted-foreground">(تلقائي)</span>}</Label><Input type="number" disabled={(form.materials_consumed || []).length > 0} value={form.material_cost || 0} onChange={(e) => setForm(p => ({ ...p, material_cost: parseFloat(e.target.value) || 0 }))} className="mt-1 h-8" /></div>
               <div><Label className="text-xs">عمالة</Label><Input type="number" value={form.labor_cost || 0} onChange={(e) => setForm(p => ({ ...p, labor_cost: parseFloat(e.target.value) || 0 }))} className="mt-1 h-8" /></div>
               <div><Label className="text-xs">غير مباشرة</Label><Input type="number" value={form.overhead_cost || 0} onChange={(e) => setForm(p => ({ ...p, overhead_cost: parseFloat(e.target.value) || 0 }))} className="mt-1 h-8" /></div>
             </div>
