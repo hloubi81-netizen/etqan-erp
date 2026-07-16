@@ -144,6 +144,11 @@ function getMenuItems(lang) {
   // ── العيادات الطبية ──
   { label: lang === 'ar' ? "العيادات الطبية" : "Clinics", icon: Stethoscope, path: "/clinic" },
 
+  // ── الإنتاج الصناعي ──
+  { label: lang === 'ar' ? "أوامر الإنتاج" : "Production Orders", icon: Factory, path: "/production/orders" },
+  { label: lang === 'ar' ? "تكاليف الإنتاج" : "Production Cost Report", icon: TrendingUp, path: "/production/cost-report" },
+  { label: lang === 'ar' ? "انحرافات التكاليف والمواد" : "Cost & Material Variances", icon: Scale, path: "/production/variance-report" },
+
   // ── التقارير ──
   {
     label: l('reports'), icon: BarChart3,

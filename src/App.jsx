@@ -109,6 +109,7 @@ import ShippingHub from './pages/shipping/ShippingHub';
 import ClinicHub from './pages/clinic/ClinicHub';
 import ProductionOrders from './pages/production/ProductionOrders';
 import ProductionCostReport from './pages/production/ProductionCostReport';
+import ProductionVarianceReport from './pages/production/ProductionVarianceReport';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -232,6 +233,7 @@ const AuthenticatedApp = () => {
         <Route path="/clinic" element={<ClinicHub />} />
         <Route path="/production/orders" element={<ProductionOrders />} />
         <Route path="/production/cost-report" element={<ProductionCostReport />} />
+        <Route path="/production/variance-report" element={<ProductionVarianceReport />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

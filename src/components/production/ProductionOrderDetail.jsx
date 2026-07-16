@@ -15,7 +15,7 @@ const EMPTY_STAGE = {
   employee_id: "", employee_name: "", planned_hours: 0, actual_hours: 0,
   labor_cost: 0, material_cost: 0, overhead_cost: 0, total_cost: 0,
   output_quantity: 0, rejected_quantity: 0, start_time: "", end_time: "",
-  status: "بانتظار", notes: "", materials_consumed: [],
+  status: "بانتظار", notes: "", materials_consumed: [], planned_materials: [], standard_rate: 0,
 };
 
 export default function ProductionOrderDetail({ orderId, onBack }) {
@@ -210,6 +210,14 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
                           ))}
                         </div>
                       )}
+                      {s.planned_materials?.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          <span className="text-[10px] text-muted-foreground">معياري: </span>
+                          {s.planned_materials.map((m, mi) => (
+                            <span key={mi} className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700">{m.product_name}: {m.quantity} {m.unit || ""}</span>
+                          ))}
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-xs">
                         {s.employee_name && <span className="text-muted-foreground">المنفذ: {s.employee_name}</span>}
                         <span className="text-muted-foreground">ساعات: {s.actual_hours || 0} / {s.planned_hours || 0}</span>
@@ -312,6 +320,37 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
               </div>
             ))}
             {(!form.materials_consumed || form.materials_consumed.length === 0) && <p className="text-xs text-muted-foreground mb-2">لا توجد مواد — تُخصم تلقائيًا من المخزون عند بدء المرحلة</p>}
+          </div>
+
+          <div className="border-t pt-3 mt-2">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-semibold">المواد المعيارية (BOM) — لحساب انحراف الكمية</p>
+              <Button type="button" size="sm" variant="outline" className="gap-1 h-7" onClick={() => setForm(p => ({ ...p, planned_materials: [...(p.planned_materials || []), { product_id: "", product_name: "", quantity: 1, unit: "", unit_cost: 0, total_cost: 0 }] }))}>
+                <Plus className="h-3 w-3" /> مادة معيارية
+              </Button>
+            </div>
+            {(form.planned_materials || []).map((m, mi) => (
+              <div key={mi} className="grid grid-cols-12 gap-1.5 items-center mb-1.5">
+                <div className="col-span-5">
+                  <Select value={m.product_id || ""} onValueChange={(v) => {
+                    const prod = products.find(x => x.id === v);
+                    setForm(p => { const arr = [...(p.planned_materials || [])]; arr[mi] = { ...arr[mi], product_id: v, product_name: prod?.name || "", unit: (prod?.units?.[0]?.name) || arr[mi].unit || "", unit_cost: prod?.avg_purchase_price || prod?.cost_price || 0, total_cost: (arr[mi].quantity || 1) * (prod?.avg_purchase_price || prod?.cost_price || 0) }; return { ...p, planned_materials: arr }; });
+                  }}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر المادة" /></SelectTrigger>
+                    <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2"><Input type="number" value={m.quantity || 0} onChange={(e) => setForm(p => { const arr = [...(p.planned_materials || [])]; const q = parseFloat(e.target.value) || 0; arr[mi] = { ...arr[mi], quantity: q, total_cost: q * (arr[mi].unit_cost || 0) }; return { ...p, planned_materials: arr }; })} className="h-8 text-xs" placeholder="الكمية المعيارية" /></div>
+                <div className="col-span-2"><Input type="number" value={m.unit_cost || 0} onChange={(e) => setForm(p => { const arr = [...(p.planned_materials || [])]; const uc = parseFloat(e.target.value) || 0; arr[mi] = { ...arr[mi], unit_cost: uc, total_cost: uc * (arr[mi].quantity || 0) }; return { ...p, planned_materials: arr }; })} className="h-8 text-xs" placeholder="تكلفة الوحدة المعيارية" /></div>
+                <div className="col-span-2"><span className="text-xs">{(m.total_cost || 0).toLocaleString()}</span></div>
+                <button type="button" className="col-span-1 text-destructive" onClick={() => setForm(p => { const arr = [...(p.planned_materials || [])]; arr.splice(mi, 1); return { ...p, planned_materials: arr }; })}><Trash2 className="h-4 w-4" /></button>
+              </div>
+            ))}
+            {(!form.planned_materials || form.planned_materials.length === 0) && <p className="text-xs text-muted-foreground mb-2">لا توجد مواد معيارية — أدخلها لحساب انحراف الاستخدام في تقرير الانحرافات</p>}
+            <div className="mt-2">
+              <Label className="text-xs">معدل التكلفة المعياري للساعة (لانحراف العمالة)</Label>
+              <Input type="number" value={form.standard_rate || 0} onChange={(e) => setForm(p => ({ ...p, standard_rate: parseFloat(e.target.value) || 0 }))} className="mt-1 h-8" />
+            </div>
           </div>
 
           <div className="border-t pt-3 mt-2">

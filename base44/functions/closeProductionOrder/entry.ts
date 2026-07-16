@@ -16,13 +16,26 @@ Deno.serve(async (req) => {
 
     const stages = await base44.asServiceRole.entities.ProductionStage.filter({ order_id });
 
-    // Aggregate costs from stages
+    // Aggregate actual costs from stages
     const materialCost = stages.reduce((a, s) => a + (s.material_cost || 0), 0);
     const laborCost = stages.reduce((a, s) => a + (s.labor_cost || 0), 0);
     const overheadCost = stages.reduce((a, s) => a + (s.overhead_cost || 0), 0);
     const totalCost = materialCost + laborCost + overheadCost;
 
     if (totalCost <= 0) return Response.json({ error: 'لا توجد تكاليف مرحّلة على المراحل' }, { status: 400 });
+
+    // ---- Compute Variances (Standard/Planned vs Actual) ----
+    // Positive variance = favorable (under budget), Negative = unfavorable (over budget)
+    const plannedMaterial = order.planned_material_cost || 0;
+    const plannedLabor = order.planned_labor_cost || 0;
+    const plannedOverhead = order.planned_overhead_cost || 0;
+    const totalPlanned = plannedMaterial + plannedLabor + plannedOverhead;
+
+    const materialVariance = plannedMaterial - materialCost;
+    const laborVariance = plannedLabor - laborCost;
+    const overheadVariance = plannedOverhead - overheadCost;
+    const totalVariance = totalPlanned - totalCost;
+    const variancePct = totalPlanned > 0 ? (totalVariance / totalPlanned) * 100 : 0;
 
     const today = new Date().toISOString().slice(0, 10);
     const period = today.slice(0, 7);
@@ -76,7 +89,7 @@ Deno.serve(async (req) => {
       notes: `قيد تكاليف إنتاج — ${order.order_number} — ${order.product_name}`,
     });
 
-    // Mark order as completed and posted
+    // Mark order as completed, posted, and store variance analysis
     await base44.asServiceRole.entities.ProductionOrder.update(order_id, {
       status: 'مكتمل',
       end_date: today,
@@ -85,6 +98,11 @@ Deno.serve(async (req) => {
       actual_overhead_cost: overheadCost,
       total_actual_cost: totalCost,
       actual_unit_cost: (order.completed_quantity || 0) > 0 ? totalCost / order.completed_quantity : 0,
+      material_variance: materialVariance,
+      labor_variance: laborVariance,
+      overhead_variance: overheadVariance,
+      total_variance: totalVariance,
+      variance_pct: variancePct,
       completed_stages: stages.filter(s => s.status === 'مكتمل').length,
       stages_count: stages.length,
     });
@@ -96,6 +114,14 @@ Deno.serve(async (req) => {
       labor_cost: laborCost,
       overhead_cost: overheadCost,
       total_cost: totalCost,
+      total_planned: totalPlanned,
+      variances: {
+        material: materialVariance,
+        labor: laborVariance,
+        overhead: overheadVariance,
+        total: totalVariance,
+        pct: variancePct,
+      },
       cost_entries_created: costEntries.length,
     });
   } catch (error) {
