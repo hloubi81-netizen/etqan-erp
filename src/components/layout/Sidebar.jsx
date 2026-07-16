@@ -11,7 +11,7 @@ import {
   ArrowRightLeft, ClipboardList, BookOpen, BarChart3, Scale, Coins,
   ChevronDown, Building2, Users, Users as UsersIcon, Truck, ShoppingCart, UserCog,
   CalendarCheck, Calendar, Banknote, Landmark, Sparkles, Settings, ChevronLeft, Bell,
-  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, UserCircle, Bot, Stethoscope } from
+  ShoppingBag, TrendingUp, PieChart, MessageSquare, Mail, HelpCircle, Wrench, Activity, Archive, Tag, Wallet, DollarSign, CreditCard, ClipboardCheck, UserCircle, Bot, Stethoscope, Factory } from
 "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -113,6 +113,7 @@ function getMenuItems(lang) {
     { label: l('costCenters'), path: "/cost-centers", icon: Building2 },
     { label: l('costManagement'), path: "/costs/management", icon: Calculator },
     { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
+    { label: lang === 'ar' ? "أوامر الإنتاج" : "Production Orders", path: "/production/orders", icon: Factory },
     { label: l('manageBranches'), path: "/branches", icon: GitBranch },
     { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }]
 

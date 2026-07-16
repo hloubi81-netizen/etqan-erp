@@ -107,6 +107,7 @@ import PayrollRuns from './pages/PayrollRuns';
 import SalesAgent from './pages/SalesAgent';
 import ShippingHub from './pages/shipping/ShippingHub';
 import ClinicHub from './pages/clinic/ClinicHub';
+import ProductionOrders from './pages/production/ProductionOrders';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -228,6 +229,7 @@ const AuthenticatedApp = () => {
         <Route path="/sales-agent" element={<SalesAgent />} />
         <Route path="/shipping" element={<ShippingHub />} />
         <Route path="/clinic" element={<ClinicHub />} />
+        <Route path="/production/orders" element={<ProductionOrders />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
