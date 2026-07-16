@@ -114,6 +114,7 @@ function getMenuItems(lang) {
     { label: l('costManagement'), path: "/costs/management", icon: Calculator },
     { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
     { label: lang === 'ar' ? "أوامر الإنتاج" : "Production Orders", path: "/production/orders", icon: Factory },
+    { label: lang === 'ar' ? "تقرير تكاليف الإنتاج" : "Production Cost Report", path: "/production/cost-report", icon: TrendingUp },
     { label: l('manageBranches'), path: "/branches", icon: GitBranch },
     { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }]
 

@@ -82,6 +82,7 @@ export const PAGE_GROUPS = [
       { path: "/costs/management", label: "إدارة التكاليف", section: "costs" },
       { path: "/costs/report", label: "تقرير التكاليف", section: "costs" },
       { path: "/production/orders", label: "أوامر الإنتاج", section: "costs" },
+      { path: "/production/cost-report", label: "تقرير تكاليف الإنتاج", section: "costs" },
       { path: "/branches", label: "إدارة الفروع", section: "branches" },
       { path: "/reports/branches", label: "تقرير الفروع", section: "branches" },
     ],

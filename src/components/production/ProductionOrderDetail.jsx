@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Plus, Pencil, Trash2, PlayCircle, CheckCircle2, Layers, DollarSign } from "lucide-react";
+import { ArrowRight, Plus, Pencil, Trash2, PlayCircle, CheckCircle2, Layers, DollarSign, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 const EMPTY_STAGE = {
@@ -92,6 +92,23 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
       total_actual_cost: total, actual_unit_cost: output > 0 ? total / output : 0,
       completed_quantity: output, completed_stages: completed, stages_count: all.length,
     });
+    setOrder(o => ({ ...o, actual_material_cost: material, actual_labor_cost: labor, actual_overhead_cost: overhead, total_actual_cost: total }));
+  }
+
+  const [posting, setPosting] = useState(false);
+
+  async function closeAndPost() {
+    if (!order.cost_center_id) { toast.error("الأمر غير مرتبط بمركز تكلفة — لا يمكن الترحيل"); return; }
+    if (!confirm("ترحيل التكاليف وإغلاق الأمر؟ سيتم إنشاء قيود تكلفة وقيد محاسبي نهائي لا يمكن التراجع عنه.")) return;
+    setPosting(true);
+    try {
+      const res = await base44.functions.invoke("closeProductionOrder", { order_id: orderId });
+      toast.success(`تم ترحيل التكاليف — الإجمالي: ${(res.data.total_cost || 0).toLocaleString()}`);
+      load();
+    } catch (e) {
+      const msg = e?.response?.data?.error || e?.message || "تعذّر الترحيل";
+      toast.error(msg);
+    } finally { setPosting(false); }
   }
 
   const stageColor = { "بانتظار": "secondary", "جاري": "default", "مكتمل": "success", "متوقف": "warning" };
@@ -133,7 +150,14 @@ export default function ProductionOrderDetail({ orderId, onBack }) {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold flex items-center gap-2"><Layers className="h-5 w-5 text-primary" /> مراحل الإنتاج</h3>
-          <Button onClick={openAdd} size="sm" className="gap-1"><Plus className="h-4 w-4" /> مرحلة</Button>
+          <div className="flex gap-2">
+            {order.status !== "مكتمل" && order.status !== "ملغي" && (
+              <Button onClick={closeAndPost} disabled={posting} variant="default" size="sm" className="gap-1">
+                <Lock className="h-4 w-4" /> {posting ? "جاري الترحيل..." : "إغلاق وترحيل التكاليف"}
+              </Button>
+            )}
+            <Button onClick={openAdd} size="sm" className="gap-1"><Plus className="h-4 w-4" /> مرحلة</Button>
+          </div>
         </div>
 
         <div className="space-y-3">
