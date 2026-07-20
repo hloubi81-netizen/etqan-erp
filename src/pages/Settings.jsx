@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useLang } from "@/hooks/useLang.jsx";
-import { useTheme } from "@/hooks/useTheme.jsx";
+import { useTheme, THEMES as APP_THEMES } from "@/hooks/useTheme.jsx";
 import { base44 } from "@/api/base44Client";
 import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import {
@@ -46,16 +46,7 @@ const TABS = [
   { id: "upgrade",       label: "الاشتراك والترقية", icon: Crown },
 ];
 
-const THEMES = [
-  { key: "blue",   label: "أزرق",     color: "#1d4ed8" },
-  { key: "indigo", label: "نيلي",     color: "#4338ca" },
-  { key: "violet", label: "بنفسجي",  color: "#7c3aed" },
-  { key: "green",  label: "أخضر",    color: "#16a34a" },
-  { key: "teal",   label: "زيتي",    color: "#0d9488" },
-  { key: "rose",   label: "وردي",    color: "#e11d48" },
-  { key: "orange", label: "برتقالي", color: "#ea580c" },
-  { key: "slate",  label: "رمادي",   color: "#475569" },
-];
+
 
 
 
@@ -92,7 +83,7 @@ function FieldRow({ label, children }) {
 
 export default function Settings() {
   const { lang, setLang } = useLang();
-  const { theme, setTheme } = useTheme();
+  const { theme, changeTheme } = useTheme();
   const { settings, update, saveSettings } = useAppSettings();
   const [activeTab, setActiveTab] = useState("general");
   const [saved, setSaved] = useState(false);
@@ -134,16 +125,17 @@ export default function Settings() {
             <div>
               <Label className="mb-3 block">لون السمة</Label>
               <div className="grid grid-cols-4 gap-3">
-                {THEMES.map((t) => (
-                  <button key={t.key} onClick={() => setTheme && setTheme(t.key)}
+                {Object.entries(APP_THEMES).map(([key, t]) => (
+                  <button key={key} onClick={() => changeTheme(key)}
                     className={cn("flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                      theme === t.key ? "border-primary shadow-md" : "border-border hover:border-primary/50"
+                      theme === key ? "border-primary shadow-md" : "border-border hover:border-primary/50"
                     )}>
-                    <div className="w-8 h-8 rounded-full shadow-sm" style={{ backgroundColor: t.color }} />
+                    <div className="w-8 h-8 rounded-full shadow-sm" style={{ backgroundColor: t.preview }} />
                     <span className="text-xs text-muted-foreground">{t.label}</span>
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground mt-3">يُحفظ اختيارك في حسابك ويُطبّق على كل أجهزتك.</p>
             </div>
           </div>
         );
