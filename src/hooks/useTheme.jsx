@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 
 export const THEMES = {
   blue: {
@@ -93,15 +95,30 @@ function applyTheme(themeKey) {
 }
 
 export function ThemeProvider({ children }) {
+  const { user } = useAuth();
   const [theme, setTheme] = useState(() => localStorage.getItem("appTheme") || "blue");
 
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
-  function changeTheme(key) {
+  // When the authenticated user loads, sync their saved theme preference.
+  useEffect(() => {
+    if (user?.theme && THEMES[user.theme] && user.theme !== theme) {
+      setTheme(user.theme);
+      localStorage.setItem("appTheme", user.theme);
+    }
+  }, [user]);
+
+  async function changeTheme(key) {
     setTheme(key);
     localStorage.setItem("appTheme", key);
+    // Persist to the user's profile so it applies across devices/sessions.
+    try {
+      await base44.auth.updateMe({ theme: key });
+    } catch (e) {
+      console.error("Failed to persist theme to user profile", e);
+    }
   }
 
   return (
