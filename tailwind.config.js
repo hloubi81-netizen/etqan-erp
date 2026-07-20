@@ -24,9 +24,14 @@ module.exports = {
   				foreground: 'hsl(var(--popover-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
+  					DEFAULT: 'hsl(var(--primary))',
+  					foreground: 'hsl(var(--primary-foreground))'
+  				},
+  				button: {
+  					DEFAULT: 'hsl(var(--button))',
+  					foreground: 'hsl(var(--button-foreground))',
+  					hover: 'hsl(var(--button-hover))'
+  				},
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
   				foreground: 'hsl(var(--secondary-foreground))'

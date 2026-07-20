@@ -51,6 +51,21 @@
         "slate"
       ],
       "title": "\u062b\u064a\u0645 \u0627\u0644\u0648\u0627\u062c\u0647\u0629"
+    },
+    "button_color": {
+      "type": "string",
+      "enum": [
+        "theme",
+        "blue",
+        "green",
+        "red",
+        "amber",
+        "teal",
+        "slate",
+        "purple"
+      ],
+      "title": "\u0644\u0648\u0646 \u0627\u0644\u0623\u0632\u0631\u0627\u0631",
+      "default": "theme"
     }
   },
   "required": [

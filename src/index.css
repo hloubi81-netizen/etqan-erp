@@ -26,6 +26,9 @@
     --border: 220 13% 91%;
     --input: 220 13% 91%;
     --ring: 217 91% 40%;
+    --button: 217 91% 40%;
+    --button-foreground: 0 0% 100%;
+    --button-hover: 217 91% 32%;
     --chart-1: 217 91% 40%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -66,6 +69,9 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 217 91% 60%;
+    --button: 217 91% 60%;
+    --button-foreground: 0 0% 100%;
+    --button-hover: 217 91% 48%;
     --chart-1: 217 91% 60%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useLang } from "@/hooks/useLang.jsx";
-import { useTheme, THEMES as APP_THEMES } from "@/hooks/useTheme.jsx";
+import { useTheme, THEMES as APP_THEMES, BUTTON_COLORS as APP_BUTTON_COLORS } from "@/hooks/useTheme.jsx";
 import { base44 } from "@/api/base44Client";
 import { useAppSettings } from "@/hooks/useAppSettings.jsx";
 import {
@@ -83,7 +83,7 @@ function FieldRow({ label, children }) {
 
 export default function Settings() {
   const { lang, setLang } = useLang();
-  const { theme, changeTheme } = useTheme();
+  const { theme, changeTheme, buttonColor, changeButtonColor } = useTheme();
   const { settings, update, saveSettings } = useAppSettings();
   const [activeTab, setActiveTab] = useState("general");
   const [saved, setSaved] = useState(false);
@@ -136,6 +136,35 @@ export default function Settings() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-3">يُحفظ اختيارك في حسابك ويُطبّق على كل أجهزتك.</p>
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <Label className="mb-3 block">لون الأزرار</Label>
+              <div className="grid grid-cols-4 gap-3">
+                {Object.entries(APP_BUTTON_COLORS).map(([key, b]) => {
+                  const preview = b.preview || APP_THEMES[theme]?.preview || "#1d4ed8";
+                  return (
+                    <button key={key} onClick={() => changeButtonColor(key)}
+                      className={cn("flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                        buttonColor === key ? "border-primary shadow-md" : "border-border hover:border-primary/50"
+                      )}>
+                      <div className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white text-xs font-bold"
+                        style={{ backgroundColor: preview }}>
+                        A
+                      </div>
+                      <span className="text-xs text-muted-foreground">{b.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                اختر "لون الثيم" لتتبع الأزرار لون الواجهة، أو اختر لوناً مستقلاً للأزرار.
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <Button size="sm">زر رئيسي</Button>
+                <Button size="sm" variant="secondary">زر ثانوي</Button>
+                <Button size="sm" variant="outline">زر محدد</Button>
+              </div>
             </div>
           </div>
         );
