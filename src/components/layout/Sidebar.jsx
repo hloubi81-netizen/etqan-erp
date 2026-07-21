@@ -115,6 +115,7 @@ function getMenuItems(lang) {
     { label: l('costReport'), path: "/costs/report", icon: BarChart3 },
     { label: lang === 'ar' ? "أوامر الإنتاج" : "Production Orders", path: "/production/orders", icon: Factory },
     { label: lang === 'ar' ? "تقرير تكاليف الإنتاج" : "Production Cost Report", path: "/production/cost-report", icon: TrendingUp },
+    { label: lang === 'ar' ? "انحرافات التكاليف والمواد" : "Cost & Material Variances", path: "/production/variance-report", icon: Scale },
     { label: l('manageBranches'), path: "/branches", icon: GitBranch },
     { label: l('branchReport'), path: "/reports/branches", icon: BarChart3 }]
 
@@ -143,11 +144,6 @@ function getMenuItems(lang) {
 
   // ── العيادات الطبية ──
   { label: lang === 'ar' ? "العيادات الطبية" : "Clinics", icon: Stethoscope, path: "/clinic" },
-
-  // ── الإنتاج الصناعي ──
-  { label: lang === 'ar' ? "أوامر الإنتاج" : "Production Orders", icon: Factory, path: "/production/orders" },
-  { label: lang === 'ar' ? "تكاليف الإنتاج" : "Production Cost Report", icon: TrendingUp, path: "/production/cost-report" },
-  { label: lang === 'ar' ? "انحرافات التكاليف والمواد" : "Cost & Material Variances", icon: Scale, path: "/production/variance-report" },
 
   // ── التقارير ──
   {
