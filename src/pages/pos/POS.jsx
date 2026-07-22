@@ -75,6 +75,7 @@ export default function POS() {
   const [selectedCurrencyId, setSelectedCurrencyId] = useState("");
   const [exchangeRate, setExchangeRate] = useState(1);
   const [loyaltyClients, setLoyaltyClients] = useState([]);
+  const [loyaltySettings, setLoyaltySettings] = useState(null);
   const [loyaltyCardInput, setLoyaltyCardInput] = useState("");
 
   // POS settings defaults
@@ -105,6 +106,7 @@ export default function POS() {
       ));
     });
     base44.entities.LoyaltyPoints.list().then(setLoyaltyClients).catch(() => {});
+    base44.entities.PointsSettings.list().then(r => setLoyaltySettings(r[0] || null)).catch(() => {});
     setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
 
@@ -290,6 +292,34 @@ export default function POS() {
       });
       setShowReceiptPreview(true);
     }
+
+    // إرسال تفاصيل النقاط عبر واتساب تلقائياً للعميل المسجّل في الولاء
+    try {
+      const loyClient = loyaltyClients.find(c => c.client_name === clientName);
+      if (loyClient && loyClient.client_phone && loyaltySettings && loyaltySettings.enable_loyalty !== false) {
+        const rate = loyaltySettings.points_per_currency || 0;
+        const earned = rate > 0 ? Math.round(total * rate) : 0;
+        if (earned > 0) {
+          const newAvail = (loyClient.available_points || 0) + earned;
+          const msg = encodeURIComponent(
+            `⭐ *نظام الولاء*\n\n` +
+            `مرحباً ${clientName}،\n` +
+            `تم إضافة ${earned.toLocaleString()} نقطة من عملية الشراء.\n` +
+            `رقم الجلسة: ${num}\n` +
+            `إجمالي الفاتورة: ${total.toLocaleString()}\n\n` +
+            `*النقاط المتاحة: ${newAvail.toLocaleString()}*\n` +
+            `المستوى: ${loyClient.tier || "برونزي"}\n\n` +
+            `شكراً لكم 🌟`
+          );
+          const number = loyClient.client_phone.replace(/\D/g, "");
+          const waUrl = `https://wa.me/${number}?text=${msg}`;
+          const w = window.open(waUrl, "_blank");
+          if (!w) {
+            toast("تعذّر الفتح التلقائي — اضغط للإرسال", { action: { label: "واتساب", onClick: () => window.open(waUrl, "_blank") } });
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
 
     setCart([]);
     setDiscount(0);
