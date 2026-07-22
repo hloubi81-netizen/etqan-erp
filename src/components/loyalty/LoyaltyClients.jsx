@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard } from "lucide-react";
+import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard, ScanBarcode } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import LoyaltyCardDialog from "@/components/loyalty/LoyaltyCardDialog";
+import LoyaltyCardScanner from "@/components/loyalty/LoyaltyCardScanner";
 
 const TIER_COLORS = {
   "برونزي": "bg-amber-100 text-amber-800",
@@ -38,6 +39,7 @@ export default function LoyaltyClients() {
   const [txForm, setTxForm] = useState({ type: "إضافة", points: "", notes: "" });
   const [cardClient, setCardClient] = useState(null);
   const [showCardDialog, setShowCardDialog] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -167,6 +169,7 @@ export default function LoyaltyClients() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pr-9" placeholder="بحث باسم أو هاتف..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <Button variant="outline" onClick={() => setShowScanner(true)} className="gap-1.5"><ScanBarcode className="h-4 w-4" /> مسح بطاقة</Button>
         <Button onClick={openAdd} className="gap-1.5"><Plus className="h-4 w-4" /> إضافة عميل</Button>
       </div>
 
@@ -299,6 +302,8 @@ export default function LoyaltyClients() {
       {showCardDialog && cardClient && (
         <LoyaltyCardDialog client={cardClient} onClose={() => { setShowCardDialog(false); setCardClient(null); }} />
       )}
+
+      <LoyaltyCardScanner open={showScanner} clients={clients} onClose={() => setShowScanner(false)} />
     </div>
   );
 }
