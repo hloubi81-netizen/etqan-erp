@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard, ScanBarcode } from "lucide-react";
+import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard, ScanBarcode, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import LoyaltyCardDialog from "@/components/loyalty/LoyaltyCardDialog";
 import LoyaltyCardScanner from "@/components/loyalty/LoyaltyCardScanner";
@@ -100,6 +100,17 @@ export default function LoyaltyClients() {
     setSelectedClient(c);
     setTxForm({ type: "إضافة", points: "", notes: "" });
     setShowTxDialog(true);
+  };
+
+  const deleteClient = async (c) => {
+    if (!window.confirm(`هل أنت متأكد من حذف العميل "${c.client_name}"؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    try {
+      await base44.entities.LoyaltyPoints.delete(c.id);
+      toast({ title: "تم حذف العميل" });
+      load();
+    } catch (e) {
+      toast({ title: "تعذّر الحذف", description: e?.message || "", variant: "destructive" });
+    }
   };
 
   const saveTransaction = async () => {
@@ -209,6 +220,7 @@ export default function LoyaltyClients() {
                         <Button size="sm" variant="outline" onClick={() => openTransaction(c)}>نقاط</Button>
                         <Button size="sm" variant="outline" onClick={() => { setCardClient(c); setShowCardDialog(true); }}><CreditCard className="h-3.5 w-3.5" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>تعديل</Button>
+                        <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => deleteClient(c)} title="حذف"><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </td>
                   </tr>
