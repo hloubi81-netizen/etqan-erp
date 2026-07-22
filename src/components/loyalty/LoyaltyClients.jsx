@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import LoyaltyCardDialog from "@/components/loyalty/LoyaltyCardDialog";
 
 const TIER_COLORS = {
   "برونزي": "bg-amber-100 text-amber-800",
@@ -33,8 +34,10 @@ export default function LoyaltyClients() {
   const [showDialog, setShowDialog] = useState(false);
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [form, setForm] = useState({ client_name: "", client_phone: "", notes: "" });
+  const [form, setForm] = useState({ client_name: "", client_phone: "", card_number: "", notes: "" });
   const [txForm, setTxForm] = useState({ type: "إضافة", points: "", notes: "" });
+  const [cardClient, setCardClient] = useState(null);
+  const [showCardDialog, setShowCardDialog] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -53,20 +56,28 @@ export default function LoyaltyClients() {
   useEffect(() => { load(); }, []);
 
   const filtered = clients.filter(c =>
-    c.client_name?.includes(search) || c.client_phone?.includes(search)
+    c.client_name?.includes(search) || c.client_phone?.includes(search) || c.card_number?.includes(search)
   );
 
   const totalPoints = clients.reduce((s, c) => s + (c.total_points || 0), 0);
   const totalAvailable = clients.reduce((s, c) => s + (c.available_points || 0), 0);
 
+  const generateCardNumber = () => {
+    const maxNum = clients.reduce((m, c) => {
+      const n = parseInt((c.card_number || "").replace(/\D/g, ""), 10);
+      return isNaN(n) ? m : Math.max(m, n);
+    }, 0);
+    return "LOY" + String(maxNum + 1).padStart(6, "0");
+  };
+
   const openAdd = () => {
-    setForm({ client_name: "", client_phone: "", notes: "" });
+    setForm({ client_name: "", client_phone: "", card_number: generateCardNumber(), notes: "" });
     setSelectedClient(null);
     setShowDialog(true);
   };
 
   const openEdit = (c) => {
-    setForm({ client_name: c.client_name, client_phone: c.client_phone || "", notes: c.notes || "" });
+    setForm({ client_name: c.client_name, client_phone: c.client_phone || "", card_number: c.card_number || "", notes: c.notes || "" });
     setSelectedClient(c);
     setShowDialog(true);
   };
@@ -168,6 +179,7 @@ export default function LoyaltyClients() {
                 <tr>
                   <th className="px-4 py-3 text-right font-medium">العميل</th>
                   <th className="px-4 py-3 text-right font-medium">الهاتف</th>
+                  <th className="px-4 py-3 text-right font-medium">رقم البطاقة</th>
                   <th className="px-4 py-3 text-right font-medium">المستوى</th>
                   <th className="px-4 py-3 text-right font-medium">إجمالي النقاط</th>
                   <th className="px-4 py-3 text-right font-medium">النقاط المتاحة</th>
@@ -176,13 +188,14 @@ export default function LoyaltyClients() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">جارٍ التحميل...</td></tr>
+                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">جارٍ التحميل...</td></tr>
                 ) : filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد بيانات</td></tr>
+                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">لا توجد بيانات</td></tr>
                 ) : filtered.map(c => (
                   <tr key={c.id} className="border-t hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 font-medium">{c.client_name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{c.client_phone || "—"}</td>
+                    <td className="px-4 py-3"><span className="font-mono text-xs">{c.card_number || "—"}</span></td>
                     <td className="px-4 py-3">
                       <Badge className={TIER_COLORS[c.tier] || TIER_COLORS["برونزي"]}>{c.tier || "برونزي"}</Badge>
                     </td>
@@ -191,6 +204,7 @@ export default function LoyaltyClients() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" onClick={() => openTransaction(c)}>نقاط</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setCardClient(c); setShowCardDialog(true); }}><CreditCard className="h-3.5 w-3.5" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>تعديل</Button>
                       </div>
                     </td>
@@ -212,6 +226,10 @@ export default function LoyaltyClients() {
             <div>
               <label className="text-sm font-medium mb-1 block">اسم العميل *</label>
               <Input value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} placeholder="الاسم الكامل" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">رقم بطاقة الولاء</label>
+              <Input value={form.card_number} onChange={e => setForm({ ...form, card_number: e.target.value })} placeholder="LOY000001" className="font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">رقم الهاتف</label>
@@ -277,6 +295,10 @@ export default function LoyaltyClients() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {showCardDialog && cardClient && (
+        <LoyaltyCardDialog client={cardClient} onClose={() => { setShowCardDialog(false); setCardClient(null); }} />
+      )}
     </div>
   );
 }

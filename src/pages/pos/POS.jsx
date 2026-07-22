@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag, Undo2, Coins } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Printer, RotateCcw, CheckCircle, ScanBarcode, X, Tag, Undo2, Coins, Award } from "lucide-react";
 import SalesReturnDialog from "@/components/pos/SalesReturnDialog";
 import { toBaseUnit, priceForUnit, getBaseUnit } from "@/utils/unitConvert";
 import { printPOSOrder, buildReceiptHTML, printHTML } from "@/utils/posPrinter";
@@ -74,6 +74,8 @@ export default function POS() {
   const [currencies, setCurrencies] = useState([]);
   const [selectedCurrencyId, setSelectedCurrencyId] = useState("");
   const [exchangeRate, setExchangeRate] = useState(1);
+  const [loyaltyClients, setLoyaltyClients] = useState([]);
+  const [loyaltyCardInput, setLoyaltyCardInput] = useState("");
 
   // POS settings defaults
   const enableDiscount = posSettings.enableDiscount !== false;
@@ -102,6 +104,7 @@ export default function POS() {
         (!l.valid_to || l.valid_to >= today)
       ));
     });
+    base44.entities.LoyaltyPoints.list().then(setLoyaltyClients).catch(() => {});
     setTimeout(() => searchRef.current?.focus(), 100);
   }, []);
 
@@ -126,6 +129,21 @@ export default function POS() {
         } else {
           toast.error("لم يتم العثور على منتج بهذا الباركود");
         }
+      }
+    }
+  }
+
+  function handleLoyaltyCardScan(e) {
+    if (e.key === "Enter") {
+      const term = loyaltyCardInput.trim();
+      if (!term) return;
+      const match = loyaltyClients.find(c => c.card_number === term);
+      if (match) {
+        setClientName(match.client_name);
+        setLoyaltyCardInput("");
+        toast.success(`مرحباً ${match.client_name} — ${(match.available_points || 0).toLocaleString()} نقطة متاحة`);
+      } else {
+        toast.error("بطاقة ولاء غير مسجّلة");
       }
     }
   }
@@ -527,7 +545,13 @@ export default function POS() {
               <Input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1)} min="0.0001" step="0.0001" className="h-8 text-xs w-24" title="سعر الصرف (محلي/أجنبي)" />
             )}
           </div>
-          <Input placeholder="اسم العميل (اختياري)" value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8 text-sm" />
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Award className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary" />
+              <Input placeholder="مسح بطاقة الولاء" value={loyaltyCardInput} onChange={(e) => setLoyaltyCardInput(e.target.value)} onKeyDown={handleLoyaltyCardScan} className="h-8 text-xs pr-7 font-mono" />
+            </div>
+            <Input placeholder="اسم العميل" value={clientName} onChange={(e) => setClientName(e.target.value)} className="h-8 text-sm flex-1" />
+          </div>
           <div className="flex items-center gap-2">
             {enableDiscount && (
               <Input type="number" placeholder={`خصم (حد أقصى ${maxDiscountPercent}%)`} value={discount}
