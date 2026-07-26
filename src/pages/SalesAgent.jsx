@@ -99,6 +99,12 @@ export default function SalesAgent() {
 
   const whatsappLink = base44.agents?.getWhatsAppConnectURL?.(AGENT_NAME) || `https://base44.app/api/apps/69ffe09178af8150a6277332/agents/etqan_sales/whatsapp`;
 
+  // On Android, deep-link into WhatsApp Business app; elsewhere use the web connect URL.
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const whatsappBusinessLink = isAndroid
+    ? `intent://connect#Intent;package=com.whatsapp.w4b;scheme=https;launchIntentByDefault=true;end`
+    : whatsappLink;
+
   const stats = {
     total: conversations.length,
     leads: leadsCount,
@@ -109,11 +115,14 @@ export default function SalesAgent() {
     <div className="space-y-4 p-4 md:p-6">
       <PageHeader title="وكيل مبيعات إتقان" subtitle="إدارة محادثات الوكيل الذكي عبر واتساب ومتابعة العملاء المحتملين" />
 
-      <div className="flex justify-end gap-2">
-        <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+      <div className="flex justify-end gap-2 items-center">
+        <a href={whatsappBusinessLink} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" className="gap-2 border-success/40 text-success hover:bg-success/5">
-            <MessageCircle className="w-4 h-4" /> ربط واتساب
+            <MessageCircle className="w-4 h-4" /> ربط واتساب بزنس
           </Button>
+        </a>
+        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground underline hover:text-foreground">
+          رابط الربط عبر الويب
         </a>
         <Button onClick={handleNewConversation} disabled={creating} className="gap-2">
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -140,11 +149,11 @@ export default function SalesAgent() {
             <div><p className="text-2xl font-bold">{stats.demos}</p><p className="text-xs text-muted-foreground">عروض توضيحية</p></div>
           </CardContent>
         </Card>
-        <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="block">
+        <a href={whatsappBusinessLink} target="_blank" rel="noopener noreferrer" className="block">
           <Card className="border-success/30 bg-success/5 hover:bg-success/10 transition-colors cursor-pointer h-full">
             <CardContent className="flex items-center gap-3 p-4">
               <div className="p-2 rounded-lg bg-success/15"><MessageCircle className="w-5 h-5 text-success" /></div>
-              <div><p className="text-sm font-bold text-success">واتساب</p><p className="text-xs text-muted-foreground">ربط / بدء محادثة</p></div>
+              <div><p className="text-sm font-bold text-success">واتساب بزنس</p><p className="text-xs text-muted-foreground">ربط / بدء محادثة</p></div>
             </CardContent>
           </Card>
         </a>
