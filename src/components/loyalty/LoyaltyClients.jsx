@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard, ScanBarcode, Trash2 } from "lucide-react";
+import { Plus, Search, Star, Gift, TrendingUp, User, ChevronDown, ChevronUp, CreditCard, ScanBarcode, Trash2, SlidersHorizontal, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import LoyaltyCardDialog from "@/components/loyalty/LoyaltyCardDialog";
 import LoyaltyCardScanner from "@/components/loyalty/LoyaltyCardScanner";
@@ -41,6 +41,14 @@ export default function LoyaltyClients() {
   const [showCardDialog, setShowCardDialog] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    tier: "all",
+    pointsMin: "",
+    pointsMax: "",
+    lastPurchaseFrom: "",
+    lastPurchaseTo: "",
+  });
 
   const load = async () => {
     setLoading(true);
@@ -57,9 +65,46 @@ export default function LoyaltyClients() {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = clients.filter(c =>
-    c.client_name?.includes(search) || c.client_phone?.includes(search) || c.card_number?.includes(search)
-  );
+  // Build a map of last purchase (points-awarding transaction) date per client
+  const lastPurchaseMap = {};
+  transactions.forEach(t => {
+    const lid = t.loyalty_id;
+    if (!lid) return;
+    const d = t.created_date || t.date;
+    if (!d) return;
+    if (!lastPurchaseMap[lid] || new Date(d) > new Date(lastPurchaseMap[lid])) {
+      lastPurchaseMap[lid] = d;
+    }
+  });
+
+  const hasActiveFilters =
+    filters.tier !== "all" ||
+    filters.pointsMin !== "" ||
+    filters.pointsMax !== "" ||
+    filters.lastPurchaseFrom !== "" ||
+    filters.lastPurchaseTo !== "";
+
+  const filtered = clients.filter(c => {
+    const matchSearch =
+      c.client_name?.includes(search) || c.client_phone?.includes(search) || c.card_number?.includes(search);
+    if (!matchSearch) return false;
+    if (!hasActiveFilters) return true;
+
+    if (filters.tier !== "all" && (c.tier || "برونزي") !== filters.tier) return false;
+
+    const avail = c.available_points || 0;
+    if (filters.pointsMin !== "" && avail < Number(filters.pointsMin)) return false;
+    if (filters.pointsMax !== "" && avail > Number(filters.pointsMax)) return false;
+
+    const lastDate = lastPurchaseMap[c.id];
+    if (filters.lastPurchaseFrom && (!lastDate || new Date(lastDate) < new Date(filters.lastPurchaseFrom))) return false;
+    if (filters.lastPurchaseTo && (!lastDate || new Date(lastDate) > new Date(filters.lastPurchaseTo))) return false;
+
+    return true;
+  });
+
+  const resetFilters = () =>
+    setFilters({ tier: "all", pointsMin: "", pointsMax: "", lastPurchaseFrom: "", lastPurchaseTo: "" });
 
   const totalPoints = clients.reduce((s, c) => s + (c.total_points || 0), 0);
   const totalAvailable = clients.reduce((s, c) => s + (c.available_points || 0), 0);
@@ -180,9 +225,63 @@ export default function LoyaltyClients() {
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input className="pr-9" placeholder="بحث باسم أو هاتف..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <Button variant="outline" onClick={() => setShowFilters(v => !v)} className="gap-1.5">
+          <SlidersHorizontal className="h-4 w-4" /> فلترة
+          {hasActiveFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
+        </Button>
         <Button variant="outline" onClick={() => setShowScanner(true)} className="gap-1.5"><ScanBarcode className="h-4 w-4" /> مسح بطاقة</Button>
         <Button onClick={openAdd} className="gap-1.5"><Plus className="h-4 w-4" /> إضافة عميل</Button>
       </div>
+
+      {/* Advanced Filters */}
+      {showFilters && (
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">بحث وفلترة متقدمة</p>
+              {hasActiveFilters && (
+                <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={resetFilters}>
+                  <X className="h-3.5 w-3.5" /> مسح الفلاتر
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">المستوى</label>
+                <Select value={filters.tier} onValueChange={v => setFilters({ ...filters, tier: v })}>
+                  <SelectTrigger><SelectValue placeholder="كل المستويات" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل المستويات</SelectItem>
+                    <SelectItem value="برونزي">برونزي</SelectItem>
+                    <SelectItem value="فضي">فضي</SelectItem>
+                    <SelectItem value="ذهبي">ذهبي</SelectItem>
+                    <SelectItem value="بلاتيني">بلاتيني</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">رصيد النقاط (من)</label>
+                <Input type="number" value={filters.pointsMin} onChange={e => setFilters({ ...filters, pointsMin: e.target.value })} placeholder="0" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">رصيد النقاط (إلى)</label>
+                <Input type="number" value={filters.pointsMax} onChange={e => setFilters({ ...filters, pointsMax: e.target.value })} placeholder="∞" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">آخر عملية شراء (من)</label>
+                <Input type="date" value={filters.lastPurchaseFrom} onChange={e => setFilters({ ...filters, lastPurchaseFrom: e.target.value })} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">آخر عملية شراء (إلى)</label>
+                <Input type="date" value={filters.lastPurchaseTo} onChange={e => setFilters({ ...filters, lastPurchaseTo: e.target.value })} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              نتائج الفلترة: <span className="font-medium text-foreground">{filtered.length}</span> من {clients.length} عميل
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Table */}
       <Card>
@@ -197,14 +296,15 @@ export default function LoyaltyClients() {
                   <th className="px-4 py-3 text-right font-medium">المستوى</th>
                   <th className="px-4 py-3 text-right font-medium">إجمالي النقاط</th>
                   <th className="px-4 py-3 text-right font-medium">النقاط المتاحة</th>
+                  <th className="px-4 py-3 text-right font-medium">آخر عملية شراء</th>
                   <th className="px-4 py-3 text-right font-medium">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">جارٍ التحميل...</td></tr>
-                ) : filtered.length === 0 ? (
-                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">لا توجد بيانات</td></tr>
+                  <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">جارٍ التحميل...</td></tr>
+                  ) : filtered.length === 0 ? (
+                  <tr><td colSpan={8} className="text-center py-8 text-muted-foreground">لا توجد بيانات</td></tr>
                 ) : filtered.map(c => (
                   <tr key={c.id} className="border-t hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 font-medium">{c.client_name}</td>
@@ -215,6 +315,11 @@ export default function LoyaltyClients() {
                     </td>
                     <td className="px-4 py-3 font-semibold">{(c.total_points || 0).toLocaleString()}</td>
                     <td className="px-4 py-3 text-green-700 font-semibold">{(c.available_points || 0).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">
+                      {lastPurchaseMap[c.id]
+                        ? new Date(lastPurchaseMap[c.id]).toLocaleDateString("ar-EG")
+                        : <span className="text-muted-foreground/60">لا توجد</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" onClick={() => openTransaction(c)}>نقاط</Button>
