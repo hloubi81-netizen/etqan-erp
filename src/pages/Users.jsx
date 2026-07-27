@@ -11,10 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch, Briefcase, Crown, Users as UsersIcon, Calendar } from "lucide-react";
+import { Shield, User, Mail, CheckCircle, XCircle, Copy, GitBranch, Briefcase, Crown, Users as UsersIcon, Calendar, MessageSquare } from "lucide-react";
 import PermissionGuard from "../components/shared/PermissionGuard";
 import PageAccessEditor from "../components/users/PageAccessEditor";
 import RoleTemplatesDialog from "../components/users/RoleTemplates";
+import UserMessageDialog from "../components/users/UserMessageDialog";
 import { MODULES, SECTIONS, ACTIONS, SECTION_LABELS, ACTION_LABELS, ROLE_LABELS } from "@/hooks/usePermissions";
 import { useSubscription, PLAN_PRESETS } from "@/hooks/useSubscription";
 
@@ -50,6 +51,8 @@ export default function Users() {
   const [inviteRole, setInviteRole] = useState("user");
   const [showInvite, setShowInvite] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [messageTarget, setMessageTarget] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const { isAdmin } = useBranchFilter();
   const { subscription } = useSubscription();
 
@@ -57,14 +60,15 @@ export default function Users() {
 
   async function loadData() {
     try {
-      const currentUser = await base44.auth.me();
-      const isOwner = currentUser?.email === 'hloubi81@gmail.com';
+      const me = await base44.auth.me();
+      setCurrentUser(me);
+      const isOwner = me?.email === 'hloubi81@gmail.com';
 
       if (isOwner) {
         const usersRes = await base44.functions.invoke('getAllUsers', {});
         setUsers(usersRes.data?.users || []);
       } else {
-        const selfUser = await base44.entities.User.filter({ id: currentUser.id });
+        const selfUser = await base44.entities.User.filter({ id: me.id });
         setUsers(selfUser || []);
       }
     } catch (error) {
@@ -302,10 +306,17 @@ export default function Users() {
                   <p className="text-xs text-muted-foreground mb-3">صلاحيات افتراضية حسب الدور</p>
                 )}
 
-                <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs"
-                  onClick={() => { setEditUser({ ...u, permissions: u.permissions || {} }); setShowDialog(true); }}>
-                  <Shield className="h-3.5 w-3.5" /> تعديل الصلاحيات
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                    onClick={() => { setEditUser({ ...u, permissions: u.permissions || {} }); setShowDialog(true); }}>
+                    <Shield className="h-3.5 w-3.5" /> الصلاحيات
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs"
+                    onClick={() => setMessageTarget(u)}
+                    disabled={u.email === currentUser?.email}>
+                    <MessageSquare className="h-3.5 w-3.5" /> مراسلة
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -333,6 +344,14 @@ export default function Users() {
             <DialogFooter><Button onClick={handleInvite}>إرسال الدعوة</Button></DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* User Message Dialog */}
+        <UserMessageDialog
+          user={messageTarget}
+          currentUser={currentUser}
+          open={!!messageTarget}
+          onOpenChange={(v) => !v && setMessageTarget(null)}
+        />
 
         {/* Role Templates Dialog */}
         <RoleTemplatesDialog
