@@ -30,7 +30,8 @@
       "entity_name": "Notification",
       "allowed_operations": [
         "create",
-        "read"
+        "read",
+        "update"
       ]
     },
     {
