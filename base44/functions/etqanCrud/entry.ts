@@ -5,7 +5,7 @@ export default async function(req: Request): Promise<Response> {
 
   let body: any;
   try { body = await req.json(); } catch { body = {}; }
-  const { operation, entity_name, data = {}, query = {}, limit = 50, skip = 0, sort, record_id } = body;
+  const { operation, entity_name, data = {}, query = {}, limit = 500, skip = 0, sort, record_id } = body;
 
   function ok(d: object) {
     return new Response(JSON.stringify({ success: true, ...d }), {
@@ -20,7 +20,7 @@ export default async function(req: Request): Promise<Response> {
   }
 
   try {
-    const entity = (base44.entities as any)[entity_name];
+    const entity = (base44.asServiceRole.entities as any)[entity_name];
     if (!entity) return err(`Entity ${entity_name} not found`);
 
     switch (operation) {
