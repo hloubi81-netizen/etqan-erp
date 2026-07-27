@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, Send, Users, Calendar, TrendingUp, Loader2, MessageCircle, Plus } from "lucide-react";
+import { MessageSquare, Send, Users, Calendar, TrendingUp, Loader2, MessageCircle, Plus, Trash2 } from "lucide-react";
 import CalendarAvailability from "@/components/sales/CalendarAvailability";
 
 const AGENT_NAME = "etqan_sales";
@@ -57,6 +57,18 @@ export default function SalesAgent() {
   }, []);
 
   useEffect(() => { loadConversations(); loadStats(); }, [loadConversations, loadStats]);
+
+  const handleDeleteConversation = async (e, convId) => {
+    e.stopPropagation();
+    if (!window.confirm("هل أنت متأكد من حذف هذه المحادثة؟")) return;
+    try {
+      await base44.agents.deleteConversation?.(convId);
+    } catch (err) {
+      console.error("deleteConversation not available, trying via messages:", err);
+    }
+    if (selectedId === convId) setSelectedId(null);
+    await loadConversations();
+  };
 
   const handleNewConversation = async () => {
     setCreating(true);
@@ -172,11 +184,18 @@ export default function SalesAgent() {
             ) : (
               <div className="space-y-1 px-2">
                 {conversations.map((conv) => (
-                  <button key={conv.id} onClick={() => setSelectedId(conv.id)}
-                    className={`w-full text-right p-3 rounded-lg transition-colors ${selectedId === conv.id ? "bg-primary/10" : "hover:bg-muted"}`}>
-                    <p className="text-sm font-medium truncate">{conv.metadata?.name || conv.id.slice(0, 8)}</p>
-                    <p className="text-xs text-muted-foreground truncate">{conv.metadata?.description || "محادثة جديدة"}</p>
-                  </button>
+                  <div key={conv.id} onClick={() => setSelectedId(conv.id)}
+                    className={`group w-full text-right p-3 rounded-lg transition-colors cursor-pointer flex items-center justify-between gap-2 ${selectedId === conv.id ? "bg-primary/10" : "hover:bg-muted"}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{conv.metadata?.name || conv.id.slice(0, 8)}</p>
+                      <p className="text-xs text-muted-foreground truncate">{conv.metadata?.description || "محادثة جديدة"}</p>
+                    </div>
+                    <button onClick={(e) => handleDeleteConversation(e, conv.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+                      title="حذف المحادثة">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
