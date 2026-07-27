@@ -8,7 +8,7 @@ import { tr } from "@/lib/translations";
 import {
   Package, Receipt, FileText, Warehouse, DollarSign,
   BarChart3, ArrowUpLeft, ArrowDownLeft, TrendingUp, Users,
-  ShoppingCart, Landmark, RefreshCw
+  ShoppingCart, Landmark, RefreshCw, MessageCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -170,7 +170,7 @@ export default function Dashboard() {
           <CardTitle className="text-sm font-semibold">{l('quickAccess')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-8 gap-3">
             <QuickAction icon={Receipt}      label={l('salesInvoice')}     path="/invoices/sales"     color="bg-blue-600" />
             <QuickAction icon={Receipt}      label={l('purchasesInvoice')} path="/invoices/purchases" color="bg-green-600" />
             <QuickAction icon={FileText}     label={l('receiptVoucher')}   path="/vouchers/receipt"   color="bg-purple-600" />
@@ -178,6 +178,7 @@ export default function Dashboard() {
             <QuickAction icon={ShoppingCart} label="نقطة البيع"           path="/pos"                color="bg-teal-600" />
             <QuickAction icon={Package}      label={l('productsLabel')}    path="/products"           color="bg-orange-500" />
             <QuickAction icon={BarChart3}    label={l('reports')}          path="/reports/advanced"   color="bg-slate-600" />
+            <QuickAction icon={MessageCircle} label="وكيل واتساب"          path="/sales-agent"        color="bg-success" />
           </div>
         </CardContent>
       </Card>
