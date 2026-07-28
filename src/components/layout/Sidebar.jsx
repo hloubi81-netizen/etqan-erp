@@ -64,7 +64,8 @@ function getMenuItems(lang) {
     { label: l('purchasesReturn'), path: "/invoices/purchases-return", icon: Receipt },
     { label: lang === 'ar' ? "أوامر الشراء" : "Purchase Orders", path: "/orders", icon: ShoppingBag },
          { label: lang === 'ar' ? "طلبات الشراء" : "Purchase Requests", path: "/purchase-requests", icon: ClipboardList },
-         { label: lang === 'ar' ? "الاعتمادات المستندية" : "Letters of Credit", path: "/imports/letters-of-credit", icon: CreditCard }]
+         { label: lang === 'ar' ? "الاعتمادات المستندية" : "Letters of Credit", path: "/imports/letters-of-credit", icon: CreditCard },
+     { label: lang === 'ar' ? "مسارات الاعتماد" : "Approval Workflows", path: "/settings/approval-workflows", icon: ClipboardCheck }]
 
   },
 
@@ -196,7 +197,6 @@ function getMenuItems(lang) {
   { label: l('users'), icon: Users, path: "/users" },
   { label: l('subscriptions'), icon: Crown, path: "/subscriptions" },
   { label: lang === 'ar' ? "لوحة تحكم المدير" : "Admin Control Panel", icon: Crown, path: "/admin/control-panel" },
-  { label: lang === 'ar' ? "مسارات الاعتماد" : "Approval Workflows", icon: ClipboardCheck, path: "/settings/approval-workflows" },
   { label: lang === 'ar' ? "الإعدادات" : "Settings", icon: Settings, path: "/settings" },
   { label: lang === 'ar' ? "دليل الاستخدام" : "User Guide", icon: HelpCircle, path: "/user-guide" }];
 
