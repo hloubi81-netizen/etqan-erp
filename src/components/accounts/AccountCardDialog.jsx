@@ -6,6 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Printer, FolderTree, Phone, GitBranch, Coins } from "lucide-react";
 
+function DetailRow({ label, value, icon, highlight }) {
+  if (!value && value !== 0) return null;
+  return (
+    <div className="flex items-center gap-1">
+      {icon}
+      <span className="text-muted-foreground whitespace-nowrap">{label}: </span>
+      <span className={highlight || "font-medium"}>{value}</span>
+    </div>
+  );
+}
+
 export default function AccountCardDialog({ open, onClose, account, allAccounts }) {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -80,24 +91,48 @@ export default function AccountCardDialog({ open, onClose, account, allAccounts 
               {account.currency && (
                 <Badge variant="outline"><Coins className="h-3 w-3 ml-1" />{account.currency}</Badge>
               )}
+              {account.is_parent && (
+                <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">حساب رئيسي</Badge>
+              )}
               {account.is_active === false && (
                 <Badge variant="outline" className="border-red-300 text-red-600 bg-red-50">غير نشط</Badge>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {parent && (
-                <div><span className="text-muted-foreground">الحساب الرئيسي: </span>{parent.name}</div>
-              )}
-              {account.phone && (
-                <div className="flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground">الهاتف: </span>{account.phone}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted/50 px-3 py-1.5 text-xs font-semibold">تفاصيل الحساب</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm p-3">
+                <DetailRow label="الحساب الختامي" value={account.final_account} />
+                <DetailRow label="طبيعة الحساب" value={account.account_nature} />
+                <DetailRow label="القائمة المالية" value={account.financial_statement} />
+                <DetailRow label="الفرع" value={account.branch_name} />
+                <DetailRow label="العملة" value={account.currency} />
+                <DetailRow label="المستوى" value={account.level != null ? String(account.level) : ""} />
+                <DetailRow label="الحساب الرئيسي" value={parent?.name || account.parent_account_name} />
+                <DetailRow label="مصدر الدليل" value={account.chart_source} />
+                <DetailRow
+                  label="الهاتف / واتساب"
+                  value={account.phone}
+                  icon={<Phone className="h-3.5 w-3.5 text-muted-foreground" />}
+                />
+                <DetailRow
+                  label="رصيد مدين"
+                  value={account.debit_balance != null ? account.debit_balance.toLocaleString("en-US", { minimumFractionDigits: 2 }) : ""}
+                />
+                <DetailRow
+                  label="رصيد دائن"
+                  value={account.credit_balance != null ? account.credit_balance.toLocaleString("en-US", { minimumFractionDigits: 2 }) : ""}
+                />
+                <DetailRow
+                  label="الرصيد الصافي"
+                  value={balance != null ? Math.abs(balance).toLocaleString("en-US", { minimumFractionDigits: 2 }) : ""}
+                  highlight={balance >= 0 ? "text-emerald-600" : "text-red-600"}
+                />
+                <div className="col-span-2">
+                  <span className="text-muted-foreground">الوصف: </span>
+                  {account.description || "—"}
                 </div>
-              )}
-              {account.level != null && (
-                <div><span className="text-muted-foreground">المستوى: </span>{account.level}</div>
-              )}
+              </div>
             </div>
 
             <div>
