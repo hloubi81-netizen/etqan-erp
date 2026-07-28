@@ -28,7 +28,6 @@ export default function StoreConnections() {
 
   // EasyOrder form state
   const [easyUrl, setEasyUrl] = useState("");
-  const [easyToken, setEasyToken] = useState("");
 
   useEffect(() => {
     loadConnections();
@@ -65,7 +64,6 @@ export default function StoreConnections() {
       const easy = data.find(c => c.platform === "EasyOrder");
       if (easy) {
         setEasyUrl(easy.store_url || "");
-        setEasyToken(easy.access_token || "");
       }
     } catch (error) {
       toast.error("فشل في تحميل بيانات المتاجر");
@@ -157,8 +155,8 @@ export default function StoreConnections() {
   };
 
   const handleSaveEasyOrder = async () => {
-    if (!easyUrl || !easyToken) {
-      toast.error("يرجى إدخال جميع بيانات Easy Order");
+    if (!easyUrl) {
+      toast.error("يرجى إدخال رابط متجر Easy Order");
       return;
     }
 
@@ -167,7 +165,6 @@ export default function StoreConnections() {
       const data = {
         platform: "EasyOrder",
         store_url: easyUrl,
-        access_token: easyToken,
         status: "متصل"
       };
 
@@ -338,27 +335,16 @@ export default function StoreConnections() {
                 <span className="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-700 rounded font-bold">E</span>
                 إعدادات Easy Order
               </CardTitle>
-              <CardDescription>قم بإدخال رابط متجر Easy Order ورمز الوصول (API Token) من إعدادات المتجر</CardDescription>
+              <CardDescription>قم بإدخال رابط متجر Easy Order الخاص بك</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="easy-url">رابط المتجر</Label>
+                <Label htmlFor="easy-url">رابط الموقع</Label>
                 <Input
                   id="easy-url"
-                  placeholder="مثال: mystore.easyorder.me"
+                  placeholder="مثال: https://mystore.easyorder.me"
                   value={easyUrl}
                   onChange={e => setEasyUrl(e.target.value)}
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="easy-token">رمز الوصول (API Token)</Label>
-                <Input
-                  id="easy-token"
-                  type="password"
-                  placeholder="ابحث عنه في إعدادات المتجر › API"
-                  value={easyToken}
-                  onChange={e => setEasyToken(e.target.value)}
                   dir="ltr"
                 />
               </div>
