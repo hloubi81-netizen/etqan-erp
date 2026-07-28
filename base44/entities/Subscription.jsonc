@@ -9,6 +9,7 @@
     "plan": {
       "type": "string",
       "enum": [
+        "free_trial",
         "basic",
         "advanced",
         "enterprise"
@@ -65,6 +66,11 @@
     "is_active": {
       "type": "boolean",
       "title": "\u0646\u0634\u0637"
+    },
+    "is_trial": {
+      "type": "boolean",
+      "title": "\u0627\u0634\u062a\u0631\u0627\u0643 \u062a\u062c\u0631\u064a\u0628\u064a (\u063a\u064a\u0631 \u0642\u0627\u0628\u0644 \u0644\u0644\u062a\u062c\u062f\u064a\u062f)",
+      "default": false
     },
     "notes": {
       "type": "string",

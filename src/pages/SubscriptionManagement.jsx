@@ -103,6 +103,10 @@ export default function SubscriptionManagement() {
   async function save() {
     if (!form.client_name) return toast.error("يرجى إدخال اسم العميل");
     if (editId) {
+      const existing = subscriptions.find(s => s.id === editId);
+      if (existing?.is_trial && existing.end_date && form.end_date && form.end_date > existing.end_date) {
+        return toast.error("لا يمكن تجديد الاشتراك التجريبي أو تمديد فترته");
+      }
       await base44.entities.Subscription.update(editId, form);
       toast.success("تم تحديث الاشتراك");
     } else {
@@ -122,6 +126,10 @@ export default function SubscriptionManagement() {
   }
 
   async function toggleActive(sub) {
+    if (!sub.is_active && sub.is_trial && sub.end_date) {
+      const today = new Date().toISOString().split("T")[0];
+      if (sub.end_date < today) return toast.error("انتهت فترة التجربة المجانية ولا يمكن إعادة تفعيلها");
+    }
     await base44.entities.Subscription.update(sub.id, { is_active: !sub.is_active });
     toast.success(!sub.is_active ? "تم تفعيل الاشتراك" : "تم إيقاف الاشتراك");
     load();
