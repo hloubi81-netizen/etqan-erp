@@ -20,6 +20,7 @@ import BranchMonthlyReport from "@/components/dashboard/BranchMonthlyReport";
 import SalesReturnsChart from "@/components/dashboard/SalesReturnsChart";
 import SubscriptionSummary from "@/components/dashboard/SubscriptionSummary";
 import CompanyDataExport from "@/components/dashboard/CompanyDataExport";
+import FinancialSummary from "@/components/dashboard/FinancialSummary";
 
 function StatCard({ icon: Icon, label, value, sub, color, loading }) {
   if (loading) return <SkeletonCard />;
@@ -163,6 +164,9 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Financial Summary: Balances + Recent Operations */}
+      <FinancialSummary />
 
       {/* Quick Actions */}
       <Card>
