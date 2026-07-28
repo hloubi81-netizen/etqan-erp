@@ -14,22 +14,35 @@ function formatNumber(n) {
   return new Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
+const FIELD_LABELS = {
+  pattern_type: "النوع",
+  client_name: "العميل",
+  supplier_name: "المورد",
+  account_name: "الحساب",
+  patient_name: "المريض",
+  branch_name: "الفرع",
+  warehouse_name: "المستودع",
+  cost_type: "نوع التكلفة",
+  cost_center_name: "مركز التكلفة",
+  type: "النوع",
+  description: "الوصف",
+  status: "الحالة",
+  notes: "ملاحظات",
+};
+
 function buildMessage(event, data) {
   const cfg = ENTITY_LABELS[event.entity_name];
   if (!cfg) return null;
   const lines = [];
-  lines.push(`${cfg.emoji} *${cfg.name} جديد*`);
-  lines.push(`━━━━━━━━━━━━━━━`);
-  if (data[cfg.numberField]) lines.push(`رقم: \`${data[cfg.numberField]}\``);
+  lines.push(`${cfg.emoji} ${cfg.name} جديد`);
+  lines.push("━━━━━━━━━━━━━━━");
+  if (data[cfg.numberField]) lines.push(`الرقم: ${data[cfg.numberField]}`);
   if (data.date) lines.push(`التاريخ: ${data.date}`);
   cfg.extraFields.forEach((f) => {
-    if (data[f]) lines.push(`${f}: ${data[f]}`);
+    if (data[f]) lines.push(`${FIELD_LABELS[f] || f}: ${data[f]}`);
   });
   if (data[cfg.amountField] !== undefined && data[cfg.amountField] !== null) {
-    lines.push(`المبلغ: *${formatNumber(data[cfg.amountField])}*`);
-  }
-  if (data.created_by_id || data.user_name) {
-    lines.push(`بواسطة: ${data.user_name || data.created_by_id || "—"}`);
+    lines.push(`المبلغ: ${formatNumber(data[cfg.amountField])}`);
   }
   return lines.join("\n");
 }
@@ -58,7 +71,6 @@ export default async function(req) {
       body: JSON.stringify({
         chat_id: chatId,
         text,
-        parse_mode: "Markdown",
         disable_web_page_preview: true,
       }),
     });
