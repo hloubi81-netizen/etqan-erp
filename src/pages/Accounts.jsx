@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard, Building2, ArrowUpLeft, Eye } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard, Building2, ArrowUpLeft, Eye } from "lucide-react";
 import ClientSupplierCard from "../components/accounts/ClientSupplierCard";
 import AccountCardDialog from "../components/accounts/AccountCardDialog";
 import ExcelImport from "../components/shared/ExcelImport";
@@ -187,6 +187,7 @@ export default function Accounts() {
   const [acctCardOpen, setAcctCardOpen] = useState(false);
   const [acctCardAccount, setAcctCardAccount] = useState(null);
   const [editing, setEditing] = useState(null);
+  const [navIndex, setNavIndex] = useState(-1);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
     final_account: "", account_nature: "", financial_statement: "", currency: "",
@@ -219,6 +220,7 @@ export default function Accounts() {
 
   function openNew() {
     setEditing(null);
+    setNavIndex(-1);
     setForm({
       account_number: "", name: "", parent_account_id: "", parent_account_name: "",
       final_account: "", account_nature: "", financial_statement: "", currency: "",
@@ -227,7 +229,7 @@ export default function Accounts() {
     setDialogOpen(true);
   }
 
-  function openEdit(acc) {
+  function loadAccountIntoForm(acc) {
     setEditing(acc);
     setForm({
       account_number: acc.account_number, name: acc.name,
@@ -244,7 +246,33 @@ export default function Accounts() {
       branch_id: acc.branch_id || "",
       branch_name: acc.branch_name || "",
     });
+  }
+
+  function getRecentAccounts() {
+    return [...accounts].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
+  }
+
+  function openEdit(acc) {
+    loadAccountIntoForm(acc);
+    const recent = getRecentAccounts();
+    const idx = recent.findIndex(a => a.id === acc.id);
+    setNavIndex(idx >= 0 ? idx : -1);
     setDialogOpen(true);
+  }
+
+  function navigateAccount(direction) {
+    const recent = getRecentAccounts();
+    if (recent.length === 0) return;
+    let newIndex;
+    if (navIndex < 0) {
+      newIndex = 0;
+    } else if (direction === "next") {
+      newIndex = Math.min(navIndex + 1, recent.length - 1);
+    } else {
+      newIndex = Math.max(navIndex - 1, 0);
+    }
+    setNavIndex(newIndex);
+    loadAccountIntoForm(recent[newIndex]);
   }
 
   function isClientOrSupplier(acc) {
@@ -565,7 +593,24 @@ export default function Accounts() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? "تعديل الحساب" : "حساب جديد"}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2">
+              <DialogTitle>{editing ? "تعديل الحساب" : "حساب جديد"}</DialogTitle>
+              {accounts.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigateAccount("prev")} disabled={navIndex === 0} title="الحساب الأحدث">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground min-w-[60px] text-center">
+                    {navIndex >= 0 ? navIndex + 1 : 0} / {accounts.length}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigateAccount("next")} disabled={navIndex === accounts.length - 1} title="الحساب الأقدم">
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
