@@ -100,6 +100,9 @@ function getMenuItems(lang) {
     children: [
     { label: l('financialDashboard'), path: "/financial/dashboard", icon: BarChart3 },
     { label: l('incomeStatement'), path: "/financial/income-statement", icon: BarChart3 },
+    { label: lang === 'ar' ? "حساب المتاجرة" : "Trading Account", path: "/financial/trading-account", icon: TrendingUp },
+    { label: lang === 'ar' ? "حساب التشغيل" : "Operating Account", path: "/financial/operating-account", icon: Calculator },
+    { label: lang === 'ar' ? "حساب الأرباح والخسائر" : "Profit & Loss Account", path: "/financial/profit-loss-account", icon: BarChart3 },
     { label: l('balanceSheet'), path: "/financial/balance-sheet", icon: Scale },
     { label: l('cashFlow'), path: "/financial/cash-flow", icon: Coins },
     { label: lang === 'ar' ? "تقويم التدفقات النقدية" : "Cash Calendar", path: "/financial/cash-calendar", icon: CalendarCheck },
@@ -239,6 +242,8 @@ const ITEM_FEATURES = {
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
   "/financial/cash-calendar": "financial", "/budget": "financial",
+  "/financial/trading-account": "financial", "/financial/operating-account": "financial",
+  "/financial/profit-loss-account": "financial",
   "/hr/employees": "users", "/hr/attendance": "users", "/hr/payroll": "users", "/hr/payroll-runs": "users", "/hr/leaves": "users",
   "/ai-copilot": "users",
   "/users": "users"
@@ -262,6 +267,8 @@ const ITEM_PERMISSIONS = {
   "/reports/trial-balance": "reports", "/reports/advanced": "reports",
   "/financial/dashboard": "financial", "/financial/income-statement": "financial",
   "/financial/balance-sheet": "financial", "/financial/cash-flow": "financial",
+  "/financial/trading-account": "financial", "/financial/operating-account": "financial",
+  "/financial/profit-loss-account": "financial",
   "/costs/management": "costs", "/costs/report": "costs",
   "/branches": "branches", "/reports/branches": "branches", "/users": "users"
 };
