@@ -9,9 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard, Building2, ArrowUpLeft, Eye } from "lucide-react";
+import { ChevronDown, ChevronLeft, Pencil, Trash2, Plus, FolderTree, Download, Phone, MessageCircle, GitBranch, FileSpreadsheet, ChevronsUpDown, Search, IdCard, Building2, ArrowUpLeft } from "lucide-react";
 import ClientSupplierCard from "../components/accounts/ClientSupplierCard";
-import AccountCardDialog from "../components/accounts/AccountCardDialog";
 import ExcelImport from "../components/shared/ExcelImport";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,7 +43,7 @@ function AssetChildRow({ asset, level }) {
   );
 }
 
-function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds, onOpenCard, onOpenAcctCard, clientSupplierIds, hasCardIds, fixedAssets }) {
+function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLevel, autoExpand, searchQuery, matchingIds, ancestorIds, onOpenCard, clientSupplierIds, hasCardIds, fixedAssets }) {
   const isParentOfMatch = ancestorIds && ancestorIds.has(account.id);
   const isDirectMatch = matchingIds && matchingIds.has(account.id);
   const [expanded, setExpanded] = useState(autoExpand || isParentOfMatch);
@@ -127,11 +126,6 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
           {balance > 0 ? "+" : balance < 0 ? "-" : ""}{formatBalance(balance)} ج.م
         </span>
         <div className="opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-          {onOpenAcctCard && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" title="بطاقة الحساب" onClick={() => onOpenAcctCard(account)}>
-              <Eye className="h-3 w-3" />
-            </Button>
-          )}
           {isCSLeaf && onOpenCard && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" title="بطاقة العميل / المورد" onClick={() => onOpenCard(account)}>
               <IdCard className="h-3 w-3" />
@@ -157,7 +151,7 @@ function AccountNode({ account, allAccounts, level, onEdit, onDelete, selectedLe
       {expanded && (
         <>
           {children.map((child) => (
-            <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={onOpenCard} onOpenAcctCard={onOpenAcctCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
+            <AccountNode key={child.id} account={child} allAccounts={allAccounts} level={level + 1} onEdit={onEdit} onDelete={onDelete} selectedLevel={selectedLevel} autoExpand={autoExpand} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={onOpenCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
           ))}
           {linkedAssets.map((asset) => (
             <AssetChildRow key={asset.id} asset={asset} level={level + 1} />
@@ -184,10 +178,7 @@ export default function Accounts() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cardOpen, setCardOpen] = useState(false);
   const [cardAccount, setCardAccount] = useState(null);
-  const [acctCardOpen, setAcctCardOpen] = useState(false);
-  const [acctCardAccount, setAcctCardAccount] = useState(null);
   const [editing, setEditing] = useState(null);
-  const [navIndex, setNavIndex] = useState(-1);
   const [form, setForm] = useState({
     account_number: "", name: "", parent_account_id: "", parent_account_name: "",
     final_account: "", account_nature: "", financial_statement: "", currency: "",
@@ -220,7 +211,6 @@ export default function Accounts() {
 
   function openNew() {
     setEditing(null);
-    setNavIndex(-1);
     setForm({
       account_number: "", name: "", parent_account_id: "", parent_account_name: "",
       final_account: "", account_nature: "", financial_statement: "", currency: "",
@@ -229,7 +219,7 @@ export default function Accounts() {
     setDialogOpen(true);
   }
 
-  function loadAccountIntoForm(acc) {
+  function openEdit(acc) {
     setEditing(acc);
     setForm({
       account_number: acc.account_number, name: acc.name,
@@ -246,33 +236,7 @@ export default function Accounts() {
       branch_id: acc.branch_id || "",
       branch_name: acc.branch_name || "",
     });
-  }
-
-  function getRecentAccounts() {
-    return [...accounts].sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
-  }
-
-  function openEdit(acc) {
-    loadAccountIntoForm(acc);
-    const recent = getRecentAccounts();
-    const idx = recent.findIndex(a => a.id === acc.id);
-    setNavIndex(idx >= 0 ? idx : -1);
     setDialogOpen(true);
-  }
-
-  function navigateAccount(direction) {
-    const recent = getRecentAccounts();
-    if (recent.length === 0) return;
-    let newIndex;
-    if (navIndex < 0) {
-      newIndex = 0;
-    } else if (direction === "next") {
-      newIndex = Math.min(navIndex + 1, recent.length - 1);
-    } else {
-      newIndex = Math.max(navIndex - 1, 0);
-    }
-    setNavIndex(newIndex);
-    loadAccountIntoForm(recent[newIndex]);
   }
 
   function isClientOrSupplier(acc) {
@@ -321,11 +285,6 @@ export default function Accounts() {
   function openCard(acc) {
     setCardAccount(acc);
     setCardOpen(true);
-  }
-
-  function openAcctCard(acc) {
-    setAcctCardAccount(acc);
-    setAcctCardOpen(true);
   }
 
   async function handleDelete(acc) {
@@ -585,7 +544,7 @@ export default function Accounts() {
         ) : (
           <div className="p-2">
             {rootAccounts.map((acc) => (
-              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={openCard} onOpenAcctCard={openAcctCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
+              <AccountNode key={acc.id} account={acc} allAccounts={filteredAccounts} level={0} onEdit={openEdit} onDelete={handleDelete} selectedLevel={levelFilter} autoExpand={autoExpandAll} searchQuery={searchQuery} matchingIds={matchingIds} ancestorIds={ancestorIds} onOpenCard={openCard} clientSupplierIds={clientSupplierIds} hasCardIds={hasCardIds} fixedAssets={fixedAssets} />
             ))}
           </div>
         )}
@@ -593,24 +552,7 @@ export default function Accounts() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between gap-2">
-              <DialogTitle>{editing ? "تعديل الحساب" : "حساب جديد"}</DialogTitle>
-              {accounts.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigateAccount("prev")} disabled={navIndex === 0} title="الحساب الأحدث">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground min-w-[60px] text-center">
-                    {navIndex >= 0 ? navIndex + 1 : 0} / {accounts.length}
-                  </span>
-                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => navigateAccount("next")} disabled={navIndex === accounts.length - 1} title="الحساب الأقدم">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "تعديل الحساب" : "حساب جديد"}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -746,13 +688,6 @@ export default function Accounts() {
         onClose={() => { setCardOpen(false); loadData(); }}
         account={cardAccount}
         onSaved={loadData}
-      />
-
-      <AccountCardDialog
-        open={acctCardOpen}
-        onClose={() => setAcctCardOpen(false)}
-        account={acctCardAccount}
-        allAccounts={accounts}
       />
     </div>
   );

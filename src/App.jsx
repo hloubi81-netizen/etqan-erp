@@ -47,9 +47,6 @@ import AdvancedReports from './pages/reports/AdvancedReports';
 import FixedAssets from './pages/assets/FixedAssets';
 import CashFlow from './pages/financial/CashFlow';
 import CashCalendar from './pages/financial/CashCalendar';
-import TradingAccount from './pages/financial/TradingAccount';
-import OperatingAccount from './pages/financial/OperatingAccount';
-import ProfitLossAccount from './pages/financial/ProfitLossAccount';
 import Settings from './pages/Settings';
 import ApprovalWorkflows from './pages/settings/ApprovalWorkflows';
 import LeaveRequests from './pages/hr/LeaveRequests';
@@ -165,9 +162,6 @@ const AuthenticatedApp = () => {
         <Route path="/financial/balance-sheet" element={<BalanceSheet />} />
         <Route path="/financial/cash-flow" element={<CashFlow />} />
         <Route path="/financial/cash-calendar" element={<CashCalendar />} />
-        <Route path="/financial/trading-account" element={<TradingAccount />} />
-        <Route path="/financial/operating-account" element={<OperatingAccount />} />
-        <Route path="/financial/profit-loss-account" element={<ProfitLossAccount />} />
         <Route path="/branches" element={<Branches />} />
         <Route path="/reports/branches" element={<BranchReport />} />
         <Route path="/costs/management" element={<CostManagement />} />
