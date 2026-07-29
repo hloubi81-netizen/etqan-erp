@@ -26,9 +26,6 @@ export default function StoreConnections() {
   const [wooKey, setWooKey] = useState("");
   const [wooSecret, setWooSecret] = useState("");
 
-  // EasyOrder form state
-  const [easyUrl, setEasyUrl] = useState("");
-
   useEffect(() => {
     loadConnections();
     checkWixConnection();
@@ -59,11 +56,6 @@ export default function StoreConnections() {
         setWooUrl(woo.store_url || "");
         setWooKey(woo.api_key || "");
         setWooSecret(woo.api_secret || "");
-      }
-
-      const easy = data.find(c => c.platform === "EasyOrder");
-      if (easy) {
-        setEasyUrl(easy.store_url || "");
       }
     } catch (error) {
       toast.error("فشل في تحميل بيانات المتاجر");
@@ -154,32 +146,6 @@ export default function StoreConnections() {
     }
   };
 
-  const handleSaveEasyOrder = async () => {
-    if (!easyUrl) {
-      toast.error("يرجى إدخال رابط متجر Easy Order");
-      return;
-    }
-
-    try {
-      const existing = connections.find(c => c.platform === "EasyOrder");
-      const data = {
-        platform: "EasyOrder",
-        store_url: easyUrl,
-        status: "متصل"
-      };
-
-      if (existing) {
-        await base44.entities.StoreConnection.update(existing.id, data);
-      } else {
-        await base44.entities.StoreConnection.create(data);
-      }
-      toast.success("تم حفظ بيانات Easy Order بنجاح");
-      loadConnections();
-    } catch (error) {
-      toast.error("فشل في حفظ البيانات");
-    }
-  };
-
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
 
   return (
@@ -190,11 +156,10 @@ export default function StoreConnections() {
       />
 
       <Tabs defaultValue="wix" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="wix">Wix</TabsTrigger>
           <TabsTrigger value="shopify">Shopify</TabsTrigger>
           <TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
-          <TabsTrigger value="easyorder">Easy Order</TabsTrigger>
         </TabsList>
 
         <TabsContent value="wix">
@@ -323,34 +288,6 @@ export default function StoreConnections() {
               <Button onClick={handleSaveWoo} className="gap-2 bg-purple-600 hover:bg-purple-700 w-full mt-4">
                 <Save className="h-4 w-4" />
                 حفظ بيانات WooCommerce
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="easyorder">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="w-8 h-8 flex items-center justify-center bg-orange-100 text-orange-700 rounded font-bold">E</span>
-                إعدادات Easy Order
-              </CardTitle>
-              <CardDescription>قم بإدخال رابط متجر Easy Order الخاص بك</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="easy-url">رابط الموقع</Label>
-                <Input
-                  id="easy-url"
-                  placeholder="مثال: https://mystore.easyorder.me"
-                  value={easyUrl}
-                  onChange={e => setEasyUrl(e.target.value)}
-                  dir="ltr"
-                />
-              </div>
-              <Button onClick={handleSaveEasyOrder} className="gap-2 bg-orange-600 hover:bg-orange-700 w-full mt-4">
-                <Save className="h-4 w-4" />
-                حفظ بيانات Easy Order
               </Button>
             </CardContent>
           </Card>

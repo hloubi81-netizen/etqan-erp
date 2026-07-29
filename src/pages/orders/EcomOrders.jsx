@@ -62,7 +62,6 @@ export default function EcomOrders() {
       case "Wix": return "bg-blue-100 text-blue-800 border-blue-200";
       case "Shopify": return "bg-green-100 text-green-800 border-green-200";
       case "WooCommerce": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "EasyOrder": return "bg-orange-100 text-orange-800 border-orange-200";
       default: return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
@@ -73,7 +72,7 @@ export default function EcomOrders() {
     <div>
       <PageHeader 
         title="طلبات المتاجر الإلكترونية" 
-        subtitle="عرض ومزامنة الطلبات من منصات Wix و Shopify و WooCommerce و Easy Order"
+        subtitle="عرض ومزامنة الطلبات من منصات Wix و Shopify و WooCommerce"
       />
 
       <div className="flex justify-end mb-4 gap-2">
