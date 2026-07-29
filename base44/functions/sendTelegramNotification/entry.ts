@@ -83,6 +83,13 @@ const BUILDERS = {
             line("مركز التكلفة", d.cost_center_name) + line("المسؤول", d.responsible_name) +
             line("الحالة", d.status) + line("التاريخ", d.date),
   }),
+  ClinicInvoice: (d) => ({
+    icon: "🏥",
+    title: "فاتورة عيادة",
+    fields: line("الرقم", d.invoice_number) + line("المريض", d.patient_name) +
+            line("الإجمالي", fmtNum(d.total)) + line("المدفوع", fmtNum(d.paid)) +
+            line("المتبقي", fmtNum(d.remaining)) + line("الحالة", d.status) + line("التاريخ", d.date),
+  }),
   GoodsReceipt: (d) => ({
     icon: "📥",
     title: "استلام بضائع",
