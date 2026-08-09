@@ -103,11 +103,19 @@ export default function Onboarding({ onComplete }) {
         notes: "تجربة مجانية 15 يوم",
       });
 
-      await base44.functions.invoke('updateSubscriptionUser', {
-        userId: user.id,
-        updates: { subscription_id: sub.id, role: user.role || "admin" }
-      });
+      // حفظ معرف الاشتراك على المستخدم أولاً — هذا هو الإجراء الحاسم
+      // ويعمل بدون وظائف خلفية عبر updateMe.
       await base44.auth.updateMe({ subscription_id: sub.id });
+
+      // مزامنة جانبية اختيارية عبر وظيفة خلفية (قد لا تكون متاحة على بعض الباقات).
+      try {
+        await base44.functions.invoke('updateSubscriptionUser', {
+          userId: user.id,
+          updates: { subscription_id: sub.id, role: user.role || "admin" }
+        });
+      } catch (e) {
+        console.error("updateSubscriptionUser unavailable, relying on updateMe", e);
+      }
 
       toast.success("تم تفعيل التجربة المجانية! 🎉");
       setStep(4);
