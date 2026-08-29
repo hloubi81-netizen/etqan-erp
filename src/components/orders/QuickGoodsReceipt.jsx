@@ -125,10 +125,53 @@ export default function QuickGoodsReceipt() {
         match_status: "غير محدد",
         notes: form.notes,
       });
-      toast.success("تم استلام البضائع وتحديث المخزون");
+
+      // تحديث كميات المخزون مباشرة (بديل عن الوظيفة الخلفية updateInventoryOnReceipt)
+      const itemsByProduct = {};
+      for (const item of form.items) {
+        if (!item.product_id) continue;
+        if (!itemsByProduct[item.product_id]) itemsByProduct[item.product_id] = [];
+        itemsByProduct[item.product_id].push(item);
+      }
+
+      const updateResults = [];
+      for (const [productId, items] of Object.entries(itemsByProduct)) {
+        const product = products.find(p => p.id === productId);
+        if (!product || product.is_service) continue;
+
+        let totalReceivedQty = 0;
+        let totalValue = 0;
+        for (const item of items) {
+          const qty = item.received_quantity || item.quantity || 0;
+          totalReceivedQty += qty;
+          totalValue += qty * (item.price || 0);
+        }
+        if (totalReceivedQty <= 0) continue;
+
+        const oldQty = product.available_qty || 0;
+        const newQty = oldQty + totalReceivedQty;
+        const oldAvgCost = product.avg_purchase_price || product.cost_price || 0;
+        const avgPrice = totalValue / totalReceivedQty;
+        const newAvgCost = oldQty + totalReceivedQty > 0
+          ? ((oldQty * oldAvgCost) + (totalReceivedQty * avgPrice)) / (oldQty + totalReceivedQty)
+          : avgPrice;
+
+        await base44.entities.Product.update(productId, {
+          available_qty: newQty,
+          last_stock_update: new Date().toISOString(),
+          last_stock_warehouse_id: form.warehouse_id,
+          last_purchase_price: avgPrice,
+          avg_purchase_price: parseFloat(newAvgCost.toFixed(4)),
+          total_cost_value: parseFloat((newQty * newAvgCost).toFixed(2)),
+        });
+        updateResults.push({ productId, name: product.name, oldQty, addedQty: totalReceivedQty, newQty });
+      }
+
+      toast.success(`تم استلام البضائع وتحديث ${updateResults.length} صنف في المخزون`);
       setSaved(true);
       resetForm();
-    } catch (e) { toast.error("حدث خطأ أثناء الحفظ"); }
+      loadData(); // إعادة تحميل المنتجات بالكميات الجديدة
+    } catch (e) { toast.error("حدث خطأ أثناء الحفظ"); console.error(e); }
     setLoading(false);
   };
 
