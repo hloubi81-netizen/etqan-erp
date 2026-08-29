@@ -49,6 +49,7 @@ export async function deductSalesInventory(invoice) {
       warehouse_name: invoice.warehouse_name || "",
       type: "تسوية جردية",
       status: "معتمد",
+      subscription_id: invoice.subscription_id || "",
       notes: `ترحيل تلقائي من فاتورة مبيعات ${invoice.invoice_number} - ${invoice.client_name || ""}`,
       items: items.map(item => {
         const baseQty = (item.quantity || 0) * (item.conversion_factor || 1);
@@ -99,6 +100,7 @@ export async function addPurchaseInventory(invoice) {
       warehouse_name: invoice.warehouse_name || "",
       type: "تسوية جردية",
       status: "معتمد",
+      subscription_id: invoice.subscription_id || "",
       notes: `إضافة مخزون من فاتورة مشتريات ${invoice.invoice_number} - ${invoice.client_name || ""}`,
       items: items.map(item => {
         const baseQty = (item.quantity || 0) * (item.conversion_factor || 1);

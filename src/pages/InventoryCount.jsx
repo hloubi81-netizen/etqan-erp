@@ -36,9 +36,13 @@ export default function InventoryCount() {
 
   async function handleDelete(item) {
     if (confirm("هل أنت متأكد من الحذف؟")) {
-      await base44.entities.InventoryCount.delete(item.id);
-      toast.success("تم الحذف");
-      loadData();
+      try {
+        await base44.entities.InventoryCount.delete(item.id);
+        toast.success("تم الحذف");
+        loadData();
+      } catch (e) {
+        toast.error("تعذّر الحذف — قد يكون السجل قديماً بدون اشتراك أو لا تملك صلاحية الحذف");
+      }
     }
   }
 
