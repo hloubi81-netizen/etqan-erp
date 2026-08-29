@@ -58,7 +58,7 @@ export default function InventoryDashboard() {
     const withVariants = filtered.filter(p => p.color || p.size);
     const withBarcode = filtered.filter(p => p.barcode);
     const lowStock = filtered.filter(p => (p.available_qty || 0) <= 5 && (p.available_qty || 0) > 0 && !p.is_service);
-    const outOfStock = filtered.filter(p => (p.available_qty || 0) === 0 && !p.is_service);
+    const outOfStock = filtered.filter(p => (p.available_qty || 0) === 0 && !p.is_service && p.last_stock_update);
     const totalStockValue = filtered.reduce((sum, p) => sum + ((p.available_qty || 0) * (p.cost_price || 0)), 0);
 
     return {
