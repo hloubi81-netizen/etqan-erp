@@ -85,6 +85,11 @@ export async function addPurchaseInventory(invoice) {
     base44.entities.StockTransfer.list().catch(() => []),
   ]);
 
+  // جلب فرع المستودع لربط المنتجات به
+  const wh = await base44.entities.Warehouse.get(invoice.warehouse_id).catch(() => null);
+  const receiptBranchId = wh?.branch_id || "";
+  const receiptBranchName = wh?.branch_name || "";
+
   try {
     const countNumber = `PURCH-${invoice.invoice_number}-${Date.now()}`;
     await base44.entities.InventoryCount.create({
@@ -110,6 +115,14 @@ export async function addPurchaseInventory(invoice) {
     });
   } catch (e) {
     console.error("خطأ في تسجيل حركة المخزون:", e);
+  }
+
+  // ربط المنتجات بفرع المستودع لتظهر عند الفلترة بالفرع
+  if (receiptBranchId) {
+    const productIds = [...new Set(items.map(i => i.product_id))];
+    await Promise.all(productIds.map(pid =>
+      base44.entities.Product.update(pid, { branch_id: receiptBranchId, branch_name: receiptBranchName }).catch(() => {})
+    ));
   }
 
   // فحص التنبيهات بعد إضافة المشتريات (للتحقق من حالة الفائض)

@@ -127,6 +127,10 @@ export default function QuickGoodsReceipt() {
       });
 
       // تحديث كميات المخزون مباشرة (بديل عن الوظيفة الخلفية updateInventoryOnReceipt)
+      const wh = warehouses.find(w => w.id === form.warehouse_id);
+      const receiptBranchId = wh?.branch_id || "";
+      const receiptBranchName = wh?.branch_name || "";
+
       const itemsByProduct = {};
       for (const item of form.items) {
         if (!item.product_id) continue;
@@ -163,6 +167,8 @@ export default function QuickGoodsReceipt() {
           last_purchase_price: avgPrice,
           avg_purchase_price: parseFloat(newAvgCost.toFixed(4)),
           total_cost_value: parseFloat((newQty * newAvgCost).toFixed(2)),
+          // ربط المنتج بفرع المستودع المُستلم فيه ليظهر عند الفلترة بالفرع
+          ...(receiptBranchId ? { branch_id: receiptBranchId, branch_name: receiptBranchName } : {}),
         });
         updateResults.push({ productId, name: product.name, oldQty, addedQty: totalReceivedQty, newQty });
       }
