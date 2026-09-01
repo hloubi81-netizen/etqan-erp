@@ -429,8 +429,8 @@ export default function ProductForm({ open, onClose, onSave, product, groups, wa
                         type="number"
                         className="h-9"
                         placeholder="مثال: 60"
-                        value={form.service_duration}
-                        onChange={(e) => updateField("service_duration", parseFloat(e.target.value) || "")}
+                        value={form.service_duration ?? ""}
+                        onChange={(e) => updateField("service_duration", e.target.value === "" ? null : parseFloat(e.target.value))}
                       />
                       <Select value={form.service_unit || "دقيقة"} onValueChange={(v) => updateField("service_unit", v)}>
                         <SelectTrigger className="h-9 w-28"><SelectValue /></SelectTrigger>
