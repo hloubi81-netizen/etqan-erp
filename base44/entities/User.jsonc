@@ -69,48 +69,6 @@
     }
   },
   "required": [
-    "role",
-    "permissions"
-  ],
-  "rls": {
-    "read": {
-      "$or": [
-        {
-          "id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "subscription_id": "{{user.subscription_id}}"
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "$and": [
-            {
-              "subscription_id": "{{user.subscription_id}}"
-            },
-            {
-              "user_condition": {
-                "role": "admin"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
+    "role"
+  ]
 }
