@@ -101,7 +101,6 @@ export async function createCurrencyDiffEntry({
     amount: absDiff,
     notes: `فرق صرف عملة ${foreignCurrency} | سعر الصرف: ${exchangeRate} | فاتورة: ${sourceNumber}`,
     currency: foreignCurrency,
-    exchange_rate: exchangeRate,
   };
 
   await base44.entities.JournalEntry.create(entry);

@@ -72,19 +72,87 @@ async function createServiceJournalEntries(invoice, products) {
     if (!debitAccountId || !creditAccountId) continue;
 
     await base44.entities.JournalEntry.create({
+      entry_number: `SVC-${invoice.invoice_number}-${count + 1}`,
       date: invoice.date,
-      description: `${invoice.pattern_type} خدمة - ${item.product_name} - فاتورة ${invoice.invoice_number}`,
+      source_type: "فاتورة",
+      source_id: invoice.id || "",
+      source_number: invoice.invoice_number,
       debit_account_id: debitAccountId,
       debit_account_name: debitAccountName,
       credit_account_id: creditAccountId,
       credit_account_name: creditAccountName,
       amount,
-      reference: invoice.invoice_number,
-      notes: `ترحيل تلقائي - خدمة: ${item.product_name}`,
+      currency: invoice.currency || "",
+      cost_center_id: invoice.cost_center_id || "",
+      notes: `${invoice.pattern_type} خدمة - ${item.product_name} - فاتورة ${invoice.invoice_number}`,
     }).catch(() => {});
     count++;
   }
   return count;
+}
+
+/**
+ * ترحيل القيد الرئيسي للفاتورة (مبيعات/مشتريات/مرتجعات)
+ * - مبيعات:       مدين (العميل)     | دائن (حساب المبيعات)
+ * - مشتريات:      مدين (حساب المشتريات) | دائن (المورد)
+ * - مرتجع مبيعات:  مدين (حساب المبيعات) | دائن (العميل)
+ * - مرتجع مشتريات: مدين (المورد)     | دائن (حساب المشتريات)
+ */
+async function createInvoiceJournalEntry(invoice, pattern, accounts) {
+  if (!pattern?.sales_account_id || !invoice.client_account_id || !invoice.total || invoice.total <= 0) return null;
+
+  const salesAccount = accounts.find(a => a.id === pattern.sales_account_id);
+  if (!salesAccount) return null;
+
+  const isSales = invoice.pattern_type?.includes("مبيعات") && !invoice.pattern_type?.includes("مرتجع");
+  const isPurchase = invoice.pattern_type?.includes("مشتريات") && !invoice.pattern_type?.includes("مرتجع");
+  const isSalesReturn = invoice.pattern_type?.includes("مرتجع مبيعات");
+  const isPurchaseReturn = invoice.pattern_type?.includes("مرتجع مشتريات");
+
+  let debitAccountId, debitAccountName, creditAccountId, creditAccountName;
+
+  if (isSales) {
+    debitAccountId = invoice.client_account_id;
+    debitAccountName = invoice.client_name;
+    creditAccountId = pattern.sales_account_id;
+    creditAccountName = salesAccount.name;
+  } else if (isPurchase) {
+    debitAccountId = pattern.sales_account_id;
+    debitAccountName = salesAccount.name;
+    creditAccountId = invoice.client_account_id;
+    creditAccountName = invoice.client_name;
+  } else if (isSalesReturn) {
+    debitAccountId = pattern.sales_account_id;
+    debitAccountName = salesAccount.name;
+    creditAccountId = invoice.client_account_id;
+    creditAccountName = invoice.client_name;
+  } else if (isPurchaseReturn) {
+    debitAccountId = invoice.client_account_id;
+    debitAccountName = invoice.client_name;
+    creditAccountId = pattern.sales_account_id;
+    creditAccountName = salesAccount.name;
+  } else {
+    return null;
+  }
+
+  const entry = {
+    entry_number: `INV-${invoice.invoice_number}`,
+    date: invoice.date,
+    source_type: "فاتورة",
+    source_id: invoice.id || "",
+    source_number: invoice.invoice_number,
+    debit_account_id: debitAccountId,
+    debit_account_name: debitAccountName,
+    credit_account_id: creditAccountId,
+    credit_account_name: creditAccountName,
+    amount: invoice.total,
+    currency: invoice.currency || "",
+    cost_center_id: invoice.cost_center_id || "",
+    notes: `${invoice.pattern_type} - فاتورة ${invoice.invoice_number} - ${invoice.client_name || ""}`,
+  };
+
+  await base44.entities.JournalEntry.create(entry).catch(() => {});
+  return entry;
 }
 
 async function createCostEntryFromInvoice(invoice, costCenters) {
@@ -588,12 +656,15 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
 
               await onSave(saved);
 
-              // تحديث أرصدة الحسابات للفرع المحدد
-              if (saved.client_account_id && saved.branch_id) {
-                await refreshAccountBalances([saved.client_account_id], saved.branch_id);
-              } else if (saved.client_account_id) {
-                await refreshAccountBalances([saved.client_account_id]);
-              }
+              // ترحيل القيد الرئيسي للفاتورة (مدين/دائن)
+              const mainEntry = await createInvoiceJournalEntry(saved, pattern, accounts);
+
+              // تحديث أرصدة الحسابات (العميل/المورد + حساب المبيعات/المشتريات)
+              const balanceAccountIds = [
+                saved.client_account_id,
+                pattern?.sales_account_id,
+              ].filter(Boolean);
+              if (balanceAccountIds.length) await refreshAccountBalances(balanceAccountIds);
 
               // ترحيل المخزون تلقائياً (استبعاد البنود الخدمية)
               let inventoryMsg = "";
@@ -654,7 +725,7 @@ export default function InvoiceForm({ open, onClose, onSave, invoice, invoiceTyp
                 if (fxEntry) fxMsg = " وقيد فرق الصرف";
               }
 
-              toast.success(`تم ترحيل الفاتورة وتحديث الأرصدة${inventoryMsg}${serviceMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}${fxMsg}`);
+              toast.success(`تم ترحيل الفاتورة${mainEntry ? " وقيد اليومية" : ""} وتحديث الأرصدة${inventoryMsg}${serviceMsg}${saved.cost_center_id ? " وقيد مركز التكلفة" : ""}${fxMsg}`);
             }}
             disabled={!form.invoice_number}
             className="gap-1.5"
