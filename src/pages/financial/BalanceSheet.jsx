@@ -14,6 +14,8 @@ export default function BalanceSheet() {
 
   const [accounts, setAccounts] = useState([]);
   const [currencies, setCurrencies] = useState([]);
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
   const [filters, setFilters] = useState({ date: new Date().toISOString().split("T")[0] });
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,30 +23,62 @@ export default function BalanceSheet() {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [a, curs] = await Promise.all([
+    const [a, curs, entries, vouchs] = await Promise.all([
       base44.entities.Account.list(),
       base44.entities.Currency.list(),
+      base44.entities.JournalEntry.list().catch(() => []),
+      base44.entities.Voucher.filter({ status: "مرحّل" }).catch(() => []),
     ]);
     setAccounts(a); setCurrencies(curs);
+    setJournalEntries(entries); setVouchers(vouchs);
     setLoading(false);
   }
 
-  function getAccountBalance(acc, field) {
-    const val = acc[field] || 0;
-    if (!showInLocal || !acc.currency) return val;
+  // حساب رصيد حساب من القيود والسندات (مدين - دائن)
+  function calcBalance(accountId) {
+    let debit = 0, credit = 0;
+    for (const e of journalEntries) {
+      if (e.debit_account_id === accountId)  debit  += (e.amount || 0);
+      if (e.credit_account_id === accountId) credit += (e.amount || 0);
+    }
+    for (const v of vouchers) {
+      if (!v.entries || v.entries.length === 0) {
+        if (v.account_id === accountId)         debit  += (v.amount || 0);
+        if (v.counter_account_id === accountId) credit += (v.amount || 0);
+      } else {
+        for (const e of v.entries) {
+          if (e.account_id === accountId) {
+            debit  += (e.debit  || 0);
+            credit += (e.credit || 0);
+          }
+        }
+      }
+    }
+    return { debit, credit, balance: Math.abs(debit - credit) };
+  }
+
+  function getConverted(value, acc) {
+    if (!showInLocal || !acc?.currency) return value;
     const rate = getDisplayRate ? getDisplayRate(acc.currency) : 1;
-    return val * rate;
+    return value * rate;
   }
 
   function generateReport() {
     const balanceAccounts = accounts.filter((a) => a.financial_statement === "المركز المالي" || a.final_account === "الميزانية");
-    const assets = balanceAccounts.filter((a) => a.account_nature === "مدين");
-    const liabilities = balanceAccounts.filter((a) => a.account_nature === "دائن");
-    const equity = balanceAccounts.filter((a) => a.account_nature === "كلاهما");
 
-    const totalAssets = assets.reduce((s, a) => s + getAccountBalance(a, "balance") || getAccountBalance(a, "debit_balance"), 0);
-    const totalLiabilities = liabilities.reduce((s, a) => s + (getAccountBalance(a, "balance") || getAccountBalance(a, "credit_balance")), 0);
-    const totalEquity = equity.reduce((s, a) => s + getAccountBalance(a, "balance"), 0);
+    // حساب الأرصدة من القيود والسندات لكل حساب
+    const withBalances = balanceAccounts.map((a) => {
+      const { debit, credit, balance } = calcBalance(a.id);
+      return { ...a, debit_balance: debit, credit_balance: credit, balance };
+    });
+
+    const assets = withBalances.filter((a) => a.account_nature === "مدين" && a.balance > 0);
+    const liabilities = withBalances.filter((a) => a.account_nature === "دائن" && a.balance > 0);
+    const equity = withBalances.filter((a) => a.account_nature === "كلاهما" && a.balance > 0);
+
+    const totalAssets = assets.reduce((s, a) => s + getConverted(a.balance, a), 0);
+    const totalLiabilities = liabilities.reduce((s, a) => s + getConverted(a.balance, a), 0);
+    const totalEquity = equity.reduce((s, a) => s + getConverted(a.balance, a), 0);
 
     setReport({
       assets, liabilities, equity,
